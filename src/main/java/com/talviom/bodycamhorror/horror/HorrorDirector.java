@@ -100,16 +100,45 @@ public final class HorrorDirector {
         }
     }
 
+    /**
+     * Шаги за спиной: кто-то подходит, становится громче, потом разворачивается и уходит.
+     * На уходе каждый шаг тише и чуть медленнее предыдущего, поэтому шаги затихают постепенно,
+     * а не обрываются.
+     */
     private void footsteps(ServerPlayer p) {
         Vec3 back = behind(p);
-        Vec3 side = new Vec3(-back.z, 0, back.x).scale((rnd.nextDouble() - 0.5) * 4);
+        Vec3 sideDir = new Vec3(-back.z, 0, back.x);
         Vec3 origin = p.position();
-        double start = 7 + rnd.nextDouble() * 4;
-        int steps = 4 + rnd.nextInt(4);
-        for (int i = 0; i < steps; i++) {
-            Vec3 pos = origin.add(back.scale(start - i * 0.8)).add(side);
+        double dist = 7 + rnd.nextDouble() * 4;
+        double sideOffset = (rnd.nextDouble() - 0.5) * 4;
+        // При уходе шаги чуть уводит в сторону, как будто идущий свернул.
+        double drift = (rnd.nextBoolean() ? 1 : -1) * (0.2 + rnd.nextDouble() * 0.3);
+
+        int approach = 3 + rnd.nextInt(3);
+        int leave = 5 + rnd.nextInt(3);
+        int delay = 0;
+        int interval = 7;
+        float volume = 0.5f;
+
+        for (int i = 0; i < approach + leave; i++) {
+            boolean leaving = i >= approach;
+            if (!leaving) {
+                // Подходит: ближе и громче.
+                volume = Math.min(0.9f, 0.5f + 0.4f * (i + 1) / approach);
+                if (i > 0) dist -= 0.8;
+            } else {
+                // Уходит: дальше, тише, реже.
+                dist += 0.9;
+                sideOffset += drift;
+                volume *= 0.72f;
+                interval = Math.min(11, interval + 1);
+            }
+            Vec3 pos = origin.add(back.scale(dist)).add(sideDir.scale(sideOffset));
+            float vol = volume;
             float pitch = 0.85f + rnd.nextFloat() * 0.25f;
-            schedule(i * 7 + rnd.nextInt(2), () -> playTo(p, "minecraft:block.stone.step", pos, 0.9f, pitch));
+            schedule(delay, () -> playTo(p, "minecraft:block.stone.step", pos, vol, pitch));
+            // Короткая пауза на месте перед разворотом.
+            delay += interval + rnd.nextInt(2) + (i == approach - 1 ? 10 + rnd.nextInt(10) : 0);
         }
     }
 
