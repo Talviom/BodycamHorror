@@ -1,4 +1,4 @@
-# Собирает архив сборки для друзей.
+﻿# Собирает архив сборки для друзей.
 # Запуск:  powershell -ExecutionPolicy Bypass -File pack\make-pack.ps1
 # Результат: D:\Minecraft\dist\BodycamHorror-pack-<дата>.zip
 param(
