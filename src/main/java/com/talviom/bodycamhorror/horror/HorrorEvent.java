@@ -10,7 +10,9 @@ public enum HorrorEvent {
     /** Лампы вокруг цели мигают и ненадолго гаснут, видят все. */
     FLICKER("flicker", 4),
     /** Помехи на бодикаме цели. */
-    GLITCH("glitch", 3);
+    GLITCH("glitch", 3),
+    /** Помехи в рации команды цели: часть слов пропадает. */
+    RADIO("radio", 2);
 
     public final String id;
     public final int weight;

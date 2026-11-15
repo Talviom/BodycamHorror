@@ -6,6 +6,7 @@ import com.talviom.bodycamhorror.match.BhTeam;
 import com.talviom.bodycamhorror.match.MatchManager;
 import com.talviom.bodycamhorror.match.MatchState;
 import com.talviom.bodycamhorror.net.BhNetwork;
+import com.talviom.bodycamhorror.radio.RadioState;
 import com.talviom.bodycamhorror.sabotage.Sabotage;
 import net.minecraft.core.Holder;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
@@ -69,6 +70,7 @@ public final class HorrorDirector {
 
         Sabotage.tick(level);
         runTasks();
+        if (tick % 10 == 0) RadioState.update(server, match);
 
         if (state != MatchState.LIVE || !HorrorConfig.ENABLED.get()) return;
         liveTicks++;
@@ -144,6 +146,11 @@ public final class HorrorDirector {
                 if (!Sabotage.flickerAround(target.serverLevel(), target.blockPosition(), radius)) whisper(target);
             }
             case GLITCH -> BhNetwork.sendGlitch(target, 30 + rnd.nextInt(40), 0.5f + rnd.nextFloat() * 0.5f);
+            case RADIO -> {
+                BhTeam team = MatchManager.INSTANCE.teamOf(target);
+                if (team != null) RadioState.jam(team, 120 + rnd.nextInt(100));
+                BhNetwork.sendGlitch(target, 20, 0.3f);
+            }
         }
     }
 
