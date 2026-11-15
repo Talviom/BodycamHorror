@@ -9,10 +9,17 @@ public final class HorrorConfig {
 
     public static final ForgeConfigSpec.BooleanValue ENABLED;
     public static final ForgeConfigSpec.IntValue QUIET_SECONDS;
-    public static final ForgeConfigSpec.IntValue MIN_INTERVAL_SECONDS;
-    public static final ForgeConfigSpec.IntValue MAX_INTERVAL_SECONDS;
+    public static final ForgeConfigSpec.IntValue DARK_LIGHT_LEVEL;
+    public static final ForgeConfigSpec.DoubleValue FEAR_DARK_PER_SECOND;
+    public static final ForgeConfigSpec.DoubleValue FEAR_ALONE_PER_SECOND;
+    public static final ForgeConfigSpec.DoubleValue FEAR_CALM_PER_SECOND;
+    public static final ForgeConfigSpec.IntValue COMBAT_SECONDS;
     public static final ForgeConfigSpec.IntValue FLICKER_RADIUS;
     public static final ForgeConfigSpec.BooleanValue HEARTBEAT;
+
+    public static final ForgeConfigSpec.IntValue BATTERY_SECONDS;
+    public static final ForgeConfigSpec.IntValue RECHARGE_SECONDS;
+    public static final ForgeConfigSpec.IntValue BEAM_RANGE;
 
     public static final ForgeConfigSpec.IntValue BREAKER_RADIUS;
     public static final ForgeConfigSpec.IntValue SWITCH_COOLDOWN_SECONDS;
@@ -26,10 +33,20 @@ public final class HorrorConfig {
         b.push("horror");
         ENABLED = b.comment("Horror director on/off").define("enabled", true);
         QUIET_SECONDS = b.comment("Seconds of silence at the start of each round").defineInRange("quietSeconds", 20, 0, 600);
-        MIN_INTERVAL_SECONDS = b.comment("Shortest pause between events (late in the round)").defineInRange("minIntervalSeconds", 10, 2, 600);
-        MAX_INTERVAL_SECONDS = b.comment("Longest pause between events (early in the round)").defineInRange("maxIntervalSeconds", 30, 2, 600);
         FLICKER_RADIUS = b.comment("Radius of lamp flicker around a player").defineInRange("flickerRadius", 16, 4, 64);
-        HEARTBEAT = b.comment("Heartbeat for wounded players and the last one alive").define("heartbeat", true);
+        HEARTBEAT = b.comment("Heartbeat sound when fear is high").define("heartbeat", true);
+        b.pop();
+        b.push("fear");
+        DARK_LIGHT_LEVEL = b.comment("Light level at eye height that counts as darkness (0..15)").defineInRange("darkLightLevel", 2, 0, 15);
+        FEAR_DARK_PER_SECOND = b.comment("Fear gained per second in darkness without a flashlight").defineInRange("darkPerSecond", 4.0, 0.0, 100.0);
+        FEAR_ALONE_PER_SECOND = b.comment("Fear gained per second with no teammate nearby").defineInRange("alonePerSecond", 1.0, 0.0, 100.0);
+        FEAR_CALM_PER_SECOND = b.comment("Fear lost per second in light, with the flashlight on, or next to a teammate").defineInRange("calmPerSecond", 3.0, 0.0, 100.0);
+        COMBAT_SECONDS = b.comment("No horror events for this long after a player hits or gets hit").defineInRange("combatSeconds", 8, 0, 120);
+        b.pop();
+        b.push("flashlight");
+        BATTERY_SECONDS = b.comment("Seconds a full battery lasts").defineInRange("batterySeconds", 90, 5, 3600);
+        RECHARGE_SECONDS = b.comment("Seconds to recharge an empty battery while the flashlight is off").defineInRange("rechargeSeconds", 45, 1, 3600);
+        BEAM_RANGE = b.comment("Beam length in blocks").defineInRange("beamRange", 10, 3, 24);
         b.pop();
         b.push("sabotage");
         BREAKER_RADIUS = b.comment("Radius (blocks) of lamps controlled by one breaker box").defineInRange("breakerRadius", 24, 4, 128);

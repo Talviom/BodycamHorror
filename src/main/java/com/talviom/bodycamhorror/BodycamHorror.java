@@ -5,6 +5,8 @@ import com.talviom.bodycamhorror.command.BhCommand;
 import com.talviom.bodycamhorror.command.HorrorCommand;
 import com.talviom.bodycamhorror.flashlight.FlashlightEvents;
 import com.talviom.bodycamhorror.horror.HorrorDirector;
+import com.talviom.bodycamhorror.inventory.InventoryRules;
+import com.talviom.bodycamhorror.inventory.ModMenus;
 import com.talviom.bodycamhorror.match.MatchEvents;
 import com.talviom.bodycamhorror.net.BhNetwork;
 import net.minecraftforge.common.MinecraftForge;
@@ -37,5 +39,9 @@ public class BodycamHorror {
         MinecraftForge.EVENT_BUS.register(new FlashlightEvents());
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent e) -> HorrorCommand.register(e.getDispatcher()));
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent e) -> ArenaCommand.register(e.getDispatcher()));
+
+        // v0.5.0: свой инвентарь на 20 слотов.
+        ModMenus.register(FMLJavaModLoadingContext.get().getModEventBus());
+        MinecraftForge.EVENT_BUS.register(new InventoryRules());
     }
 }

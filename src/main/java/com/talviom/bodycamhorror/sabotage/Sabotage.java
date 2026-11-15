@@ -61,11 +61,11 @@ public final class Sabotage {
     /** @return сообщение для игрока, который нажал на выключатель */
     public static String tryToggle(ServerLevel level, BlockPos pos, BlockState state, PowerSwitchBlock block) {
         MatchState st = MatchManager.INSTANCE.state();
-        if (st == MatchState.PREP || st == MatchState.ROUND_END) return "Сейчас нельзя";
+        if (st == MatchState.PREP || st == MatchState.ROUND_END) return "Not now";
 
         long now = level.getGameTime();
         Long until = COOLDOWN_UNTIL.get(pos);
-        if (until != null && now < until) return "Подождите " + ((until - now) / 20 + 1) + " с";
+        if (until != null && now < until) return "Wait " + ((until - now) / 20 + 1) + " s";
 
         boolean on = !state.getValue(PowerSwitchBlock.POWERED);
         level.setBlock(pos, state.setValue(PowerSwitchBlock.POWERED, on), 3);
@@ -80,8 +80,8 @@ public final class Sabotage {
             play(level, pos, on ? "bodycamhorror:breaker_on" : "bodycamhorror:breaker_off", 2.0f, 1.0f);
         }
 
-        if (block.global) return on ? "Генератор запущен" : "Генератор заглушен";
-        return on ? "Питание включено" : "Питание отключено";
+        if (block.global) return on ? "Generator started" : "Generator stopped";
+        return on ? "Power on" : "Power off";
     }
 
     /** Перед каждым раундом: всё включено, кулдауны и мигания сброшены. */

@@ -4,5 +4,7 @@
   "block.bodycamhorror.generator": "Генератор",
   "item.bodycamhorror.flashlight": "Фонарик",
   "key.bodycamhorror.flashlight": "Фонарик",
-  "key.categories.bodycamhorror": "Bodycam Horror"
+  "key.categories.bodycamhorror": "Bodycam Horror",
+  "key.bodycamhorror.inventory": "Инвентарь",
+  "container.bodycamhorror.inventory": "Inventory"
 }

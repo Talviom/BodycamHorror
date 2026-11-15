@@ -11,7 +11,8 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.Optional;
 
 public final class BhNetwork {
-    private static final String PROTOCOL = "1";
+    /** Меняется при изменении пакетов: клиент и сервер разных версий мода не соединятся. */
+    private static final String PROTOCOL = "2";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(BodycamHorror.MOD_ID, "main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 
@@ -22,9 +23,23 @@ public final class BhNetwork {
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(1, ToggleFlashlightPacket.class, ToggleFlashlightPacket::encode, ToggleFlashlightPacket::decode,
                 ToggleFlashlightPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(2, HudStatePacket.class, HudStatePacket::encode, HudStatePacket::decode,
+                HudStatePacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(3, BannerPacket.class, BannerPacket::encode, BannerPacket::decode,
+                BannerPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(4, OpenInventoryPacket.class, OpenInventoryPacket::encode, OpenInventoryPacket::decode,
+                OpenInventoryPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
     public static void sendGlitch(ServerPlayer player, int ticks, float strength) {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new GlitchPacket(ticks, strength));
+    }
+
+    public static void sendHud(ServerPlayer player, HudStatePacket packet) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    }
+
+    public static void sendBanner(ServerPlayer player, BannerPacket packet) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
 }

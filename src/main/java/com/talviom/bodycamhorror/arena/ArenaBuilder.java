@@ -74,8 +74,8 @@ public final class ArenaBuilder {
         }
         map.setDirty();
 
-        return "Арена построена: " + lamps + " ламп, 2 щитка, генератор, по 3 спавна на команду, "
-                + map.lootPoints().size() + " точек лута";
+        return "Arena built: " + lamps + " lamps, 2 breakers, 1 generator, 3 spawns per team, "
+                + map.lootPoints().size() + " loot points";
     }
 
     /** Проёмы шириной 3 блока посередине каждой внутренней стены. */

@@ -19,6 +19,7 @@ public final class BhConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> LOOT_TABLE;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> START_KIT;
     public static final ForgeConfigSpec.IntValue SWAP_SIDES_AFTER_ROUNDS;
+    public static final ForgeConfigSpec.BooleanValue LIMIT_INVENTORY;
     public static final ForgeConfigSpec.BooleanValue SLOT_STRIP;
 
     public static final ForgeConfigSpec.BooleanValue HIDE_VANILLA_HUD;
@@ -33,6 +34,8 @@ public final class BhConfig {
         ROUND_END_SECONDS = b.comment("Pause between rounds in seconds").defineInRange("roundEndSeconds", 6, 1, 60);
         ROUNDS_TO_WIN = b.comment("Round wins needed to win the match").defineInRange("roundsToWin", 5, 1, 30);
         SWAP_SIDES_AFTER_ROUNDS = b.comment("Teams swap spawn sides every N rounds (0 = never)").defineInRange("swapSidesAfterRounds", 3, 0, 30);
+        LIMIT_INVENTORY = b.comment("Players carry only 20 slots (2 rows of 10); the rest of the inventory is locked (not in creative)")
+                .define("limitInventory", true);
         START_KIT = b.comment(
                         "Items every player gets at the start of each round: item_id;count;nbt (nbt optional).",
                         "Empty list = players start with nothing and rely on loot.")
@@ -65,9 +68,9 @@ public final class BhConfig {
         ForgeConfigSpec.Builder c = new ForgeConfigSpec.Builder();
         c.push("hud");
         HIDE_VANILLA_HUD = c.comment("Hide vanilla hotbar, hearts, hunger, xp (not in creative)").define("hideVanillaHud", true);
-        BLOCK_INVENTORY = c.comment("Block the vanilla inventory screen (not in creative)").define("blockInventory", true);
+        BLOCK_INVENTORY = c.comment("Replace the vanilla inventory screen with the bodycam inventory (not in creative)").define("blockInventory", true);
         BODYCAM_OVERLAY = c.comment("Draw the REC / timecode bodycam overlay").define("bodycamOverlay", true);
-        SLOT_STRIP = c.comment("Briefly show carried items when the slot or inventory changes").define("slotStrip", true);
+        SLOT_STRIP = c.comment("Show carried items as a strip in the bottom right corner").define("slotStrip", true);
         c.pop();
         CLIENT_SPEC = c.build();
     }

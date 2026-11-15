@@ -1,10 +1,12 @@
 package com.talviom.bodycamhorror.match;
 
+import com.talviom.bodycamhorror.horror.FearSystem;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -29,6 +31,13 @@ public class MatchEvents {
     @SubscribeEvent
     public void onAttack(LivingAttackEvent e) {
         if (e.getEntity() instanceof ServerPlayer && match.damageBlocked()) e.setCanceled(true);
+    }
+
+    /** Получил или нанёс урон: перестрелка, хоррор-события ненадолго замолкают. */
+    @SubscribeEvent
+    public void onMatchHurt(LivingHurtEvent e) {
+        if (e.getEntity() instanceof ServerPlayer victim) FearSystem.INSTANCE.markCombat(victim);
+        if (e.getSource().getEntity() instanceof ServerPlayer attacker) FearSystem.INSTANCE.markCombat(attacker);
     }
 
     @SubscribeEvent

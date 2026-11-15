@@ -1,13 +1,14 @@
 package com.talviom.bodycamhorror.match;
 
 import com.talviom.bodycamhorror.BhConfig;
+import com.talviom.bodycamhorror.flashlight.Flashlight;
+import com.talviom.bodycamhorror.horror.FearSystem;
 import com.talviom.bodycamhorror.loot.LootSpawner;
+import com.talviom.bodycamhorror.net.BannerPacket;
+import com.talviom.bodycamhorror.net.BhNetwork;
 import com.talviom.bodycamhorror.util.ItemSpec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
-import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
-import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,6 +37,7 @@ public final class MatchManager {
     private boolean testMode;
     private int ticksLeft;
     private int round;
+    private boolean swapped;
 
     private MatchManager() {
         resetScore();
@@ -103,17 +105,17 @@ public final class MatchManager {
      * @return текст ошибки или null, если матч запущен
      */
     public String start(MinecraftServer server, boolean test) {
-        if (running()) return "Матч уже идёт";
+        if (running()) return "A match is already running";
         ServerLevel level = server.overworld();
         MapData map = MapData.get(level);
         int players = 0;
         for (BhTeam t : BhTeam.values()) {
-            if (map.spawns(t).isEmpty()) return "Нет точек спавна для команды " + t.displayName + " (/bh spawn add " + t.id + ")";
+            if (map.spawns(t).isEmpty()) return "No spawn points for " + t.displayName + " (/bh spawn add " + t.id + ")";
             int n = onlineMembers(server, t).size();
-            if (n == 0 && !test) return "В команде " + t.displayName + " нет игроков (/bh team " + t.id + " <игрок>). Для проверки одному: /bh start test";
+            if (n == 0 && !test) return t.displayName + " has no players (/bh team " + t.id + " <player>). To test alone: /bh start test";
             players += n;
         }
-        if (players == 0) return "Ни в одной команде нет игроков (/bh team alpha <игрок>)";
+        if (players == 0) return "No players in any team (/bh team alpha <player>)";
         testMode = test;
         resetScore();
         round = 0;
@@ -130,7 +132,7 @@ public final class MatchManager {
             p.setGameMode(GameType.ADVENTURE);
             p.setCamera(p);
         }
-        broadcastTitle(server, Component.literal("Матч остановлен"), Component.empty());
+        broadcastBanner(server, BannerPacket.Kind.STOPPED, 60);
     }
 
     private void startRound(MinecraftServer server) {
@@ -143,7 +145,9 @@ public final class MatchManager {
 
         // Смена сторон: каждые N раундов команды меняются точками спавна.
         int swapAfter = BhConfig.SWAP_SIDES_AFTER_ROUNDS.get();
-        boolean swapped = swapAfter > 0 && ((round - 1) / swapAfter) % 2 == 1;
+        boolean wasSwapped = swapped;
+        swapped = swapAfter > 0 && ((round - 1) / swapAfter) % 2 == 1;
+        boolean justSwapped = swapped != wasSwapped && round > 1;
 
         alive.clear();
         frozenAt.clear();
@@ -163,14 +167,18 @@ public final class MatchManager {
 
         state = MatchState.PREP;
         ticksLeft = BhConfig.PREP_SECONDS.get() * 20;
-        broadcastTitle(server, Component.literal("Раунд " + round), scoreLine());
+        // Экран затемнён, пока игроки заморожены: заставка VHS с номером раунда и счётом.
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            BhTeam t = teams.get(p.getUUID());
+            BhNetwork.sendBanner(p, banner(BannerPacket.Kind.ROUND_START, t, justSwapped, ticksLeft));
+        }
     }
 
     private void goLive(MinecraftServer server) {
         state = MatchState.LIVE;
         frozenAt.clear();
         ticksLeft = BhConfig.ROUND_SECONDS.get() * 20;
-        broadcastTitle(server, Component.empty(), Component.literal("Вперёд"));
+        broadcastBanner(server, BannerPacket.Kind.GO, 30);
     }
 
     private void endRound(MinecraftServer server, BhTeam winner) {
@@ -178,13 +186,23 @@ public final class MatchManager {
         ticksLeft = BhConfig.ROUND_END_SECONDS.get() * 20;
         if (winner != null) score.merge(winner, 1, Integer::sum);
 
-        Component title = winner == null
-                ? Component.literal("Ничья")
-                : Component.literal("Раунд за командой " + winner.displayName).withStyle(winner.color);
-        broadcastTitle(server, title, scoreLine());
+        boolean matchOver = winner != null && score.get(winner) >= BhConfig.ROUNDS_TO_WIN.get();
+        int showTicks = matchOver ? 120 : ticksLeft;
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            BhTeam t = teams.get(p.getUUID());
+            BannerPacket.Kind kind;
+            if (winner == null) kind = BannerPacket.Kind.DRAW;
+            else if (matchOver) kind = t == winner ? BannerPacket.Kind.MATCH_WON : BannerPacket.Kind.MATCH_LOST;
+            else kind = t == winner ? BannerPacket.Kind.ROUND_WON : BannerPacket.Kind.ROUND_LOST;
+            // Зритель без команды видит итог глазами победителя.
+            if (t == null && winner != null) {
+                kind = matchOver ? BannerPacket.Kind.MATCH_WON : BannerPacket.Kind.ROUND_WON;
+                t = winner;
+            }
+            BhNetwork.sendBanner(p, banner(kind, t, false, showTicks));
+        }
 
-        if (winner != null && score.get(winner) >= BhConfig.ROUNDS_TO_WIN.get()) {
-            broadcastTitle(server, Component.literal("Победа: " + winner.displayName).withStyle(winner.color), scoreLine());
+        if (matchOver) {
             state = MatchState.LOBBY;
             for (ServerPlayer p : participants(server)) {
                 p.setGameMode(GameType.ADVENTURE);
@@ -202,9 +220,6 @@ public final class MatchManager {
         switch (state) {
             case PREP -> {
                 holdFrozenPlayers(server);
-                if (ticksLeft % 20 == 0 && ticksLeft > 0) {
-                    actionBarAll(server, Component.literal("Старт через " + secondsLeft()));
-                }
                 if (ticksLeft <= 0) goLive(server);
             }
             case LIVE -> {
@@ -224,6 +239,7 @@ public final class MatchManager {
     public boolean onPlayerKilled(MinecraftServer server, ServerPlayer victim) {
         if (!running() || !alive.contains(victim.getUUID())) return false;
         alive.remove(victim.getUUID());
+        FearSystem.INSTANCE.onPlayerDied(server, victim);
 
         // Снаряжение падает на землю: его можно подобрать.
         victim.getInventory().dropAll();
@@ -245,11 +261,11 @@ public final class MatchManager {
 
     /** Перемотать текущую фазу: заморозка → раунд → пауза → следующий раунд. Для проверки. */
     public String skip(MinecraftServer server) {
-        if (!running()) return "Матч не идёт";
+        if (!running()) return "No match is running";
         MatchState before = state;
         ticksLeft = 1;
         tick(server);
-        return "Пропущено: " + before + " → " + state;
+        return "Skipped: " + before + " -> " + state;
     }
 
     public boolean testMode() {
@@ -319,6 +335,7 @@ public final class MatchManager {
         p.getFoodData().setSaturation(5f);
         p.setRemainingFireTicks(0);
         p.fallDistance = 0;
+        Flashlight.resetPlayer(p);
         for (String spec : BhConfig.START_KIT.get()) {
             ItemStack stack = ItemSpec.parse(spec);
             if (!stack.isEmpty()) p.getInventory().add(stack);
@@ -351,15 +368,16 @@ public final class MatchManager {
                 .append(Component.literal(score.get(BhTeam.BRAVO) + " " + BhTeam.BRAVO.displayName).withStyle(BhTeam.BRAVO.color));
     }
 
-    private void broadcastTitle(MinecraftServer server, Component title, Component subtitle) {
-        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            p.connection.send(new ClientboundSetTitlesAnimationPacket(5, 50, 15));
-            p.connection.send(new ClientboundSetTitleTextPacket(title));
-            p.connection.send(new ClientboundSetSubtitleTextPacket(subtitle));
-        }
+    /** Заставка с точки зрения команды {@code team} (null = зритель). */
+    private BannerPacket banner(BannerPacket.Kind kind, BhTeam team, boolean justSwapped, int ticks) {
+        BhTeam me = team == null ? BhTeam.ALPHA : team;
+        return new BannerPacket(kind, round, score.get(me), score.get(me.other()),
+                team == null ? "" : team.displayName.toUpperCase(Locale.ROOT), justSwapped, ticks);
     }
 
-    private void actionBarAll(MinecraftServer server, Component msg) {
-        for (ServerPlayer p : participants(server)) p.displayClientMessage(msg, true);
+    private void broadcastBanner(MinecraftServer server, BannerPacket.Kind kind, int ticks) {
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            BhNetwork.sendBanner(p, banner(kind, teams.get(p.getUUID()), false, ticks));
+        }
     }
 }

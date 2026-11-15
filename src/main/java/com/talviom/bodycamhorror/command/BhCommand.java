@@ -78,8 +78,8 @@ public final class BhCommand {
             if (t == null) MatchManager.INSTANCE.removeFromTeam(c.getSource().getServer(), p);
             else MatchManager.INSTANCE.setTeam(c.getSource().getServer(), p, t);
         }
-        String where = t == null ? "убраны из команд" : "в команде " + t.displayName;
-        c.getSource().sendSuccess(() -> Component.literal(players.size() + " игр. " + where), true);
+        String where = t == null ? "removed from teams" : "now in " + t.displayName;
+        c.getSource().sendSuccess(() -> Component.literal(players.size() + " player(s) " + where), true);
         return players.size();
     }
 
@@ -89,7 +89,7 @@ public final class BhCommand {
         BlockPos pos = BlockPos.containing(c.getSource().getPosition());
         map.spawns(t).add(pos);
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal("Спавн " + t.displayName + " #" + map.spawns(t).size() + " на " + pos.toShortString()), true);
+        c.getSource().sendSuccess(() -> Component.literal(t.displayName + " spawn #" + map.spawns(t).size() + " at " + pos.toShortString()), true);
         return 1;
     }
 
@@ -97,7 +97,7 @@ public final class BhCommand {
         MapData map = MapData.get(c.getSource().getServer().overworld());
         map.spawns(t).clear();
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal("Спавны " + t.displayName + " очищены"), true);
+        c.getSource().sendSuccess(() -> Component.literal(t.displayName + " spawns cleared"), true);
         return 1;
     }
 
@@ -106,7 +106,7 @@ public final class BhCommand {
         BlockPos pos = BlockPos.containing(c.getSource().getPosition());
         map.lootPoints().add(pos);
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal("Точка лута #" + map.lootPoints().size() + " на " + pos.toShortString()), true);
+        c.getSource().sendSuccess(() -> Component.literal("Loot point #" + map.lootPoints().size() + " at " + pos.toShortString()), true);
         return 1;
     }
 
@@ -114,7 +114,7 @@ public final class BhCommand {
         MapData map = MapData.get(c.getSource().getServer().overworld());
         map.lootPoints().clear();
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal("Точки лута очищены"), true);
+        c.getSource().sendSuccess(() -> Component.literal("Loot points cleared"), true);
         return 1;
     }
 
@@ -122,7 +122,7 @@ public final class BhCommand {
         ServerLevel level = c.getSource().getServer().overworld();
         LootSpawner.clearGroundItems(level);
         int n = LootSpawner.spawn(level, MapData.get(level).lootPoints());
-        c.getSource().sendSuccess(() -> Component.literal("Разложено предметов: " + n), false);
+        c.getSource().sendSuccess(() -> Component.literal("Items spawned: " + n), false);
         return n;
     }
 
@@ -137,17 +137,17 @@ public final class BhCommand {
             return 0;
         }
         c.getSource().sendSuccess(() -> Component.literal(test
-                ? "Тестовый матч начат. /bh skip перематывает фазу, /bh stop останавливает"
-                : "Матч начат"), true);
+                ? "Test match started. /bh skip skips a phase, /bh stop stops, /bh horror fear 80 sets your fear"
+                : "Match started"), true);
         return 1;
     }
 
     private static int status(CommandContext<CommandSourceStack> c) {
         MatchManager m = MatchManager.INSTANCE;
         MapData map = MapData.get(c.getSource().getServer().overworld());
-        c.getSource().sendSuccess(() -> Component.literal("Состояние: " + m.state() + ", раунд " + m.round()
-                + ", осталось " + m.secondsLeft() + " с. Спавны: альфа " + map.spawns(BhTeam.ALPHA).size()
-                + ", браво " + map.spawns(BhTeam.BRAVO).size() + ". Точек лута: " + map.lootPoints().size()), false);
+        c.getSource().sendSuccess(() -> Component.literal("State: " + m.state() + ", round " + m.round()
+                + ", " + m.secondsLeft() + " s left. Spawns: alpha " + map.spawns(BhTeam.ALPHA).size()
+                + ", bravo " + map.spawns(BhTeam.BRAVO).size() + ". Loot points: " + map.lootPoints().size()), false);
         c.getSource().sendSuccess(m::scoreLine, false);
         return 1;
     }

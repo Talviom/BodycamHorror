@@ -3,8 +3,8 @@ package com.talviom.bodycamhorror.match;
 import net.minecraft.ChatFormatting;
 
 public enum BhTeam {
-    ALPHA("alpha", "Альфа", ChatFormatting.BLUE),
-    BRAVO("bravo", "Браво", ChatFormatting.RED);
+    ALPHA("alpha", "Alpha", ChatFormatting.BLUE),
+    BRAVO("bravo", "Bravo", ChatFormatting.RED);
 
     public final String id;
     public final String displayName;

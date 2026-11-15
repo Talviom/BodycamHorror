@@ -9,7 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /**
- * Нагрудный фонарик. Работает, пока лежит в инвентаре: включается клавишей (по умолчанию L)
+ * Нагрудный фонарик. Работает, пока лежит в инвентаре: включается клавишей (по умолчанию O)
  * или правым кликом с фонариком в руке.
  */
 public class FlashlightItem extends Item {

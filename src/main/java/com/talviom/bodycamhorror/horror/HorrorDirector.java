@@ -1,6 +1,5 @@
 package com.talviom.bodycamhorror.horror;
 
-import com.talviom.bodycamhorror.BhConfig;
 import com.talviom.bodycamhorror.HorrorConfig;
 import com.talviom.bodycamhorror.flashlight.Flashlight;
 import com.talviom.bodycamhorror.match.BhTeam;
@@ -29,9 +28,9 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Хоррор-режиссёр. Следит за раундом и подкидывает события, которые давят на нервы,
- * но не наносят урон и не решают исход перестрелки. Чем дольше идёт раунд и чем меньше
- * осталось живых, тем чаще события. Игрок, оставшийся один, получает их чаще остальных.
+ * Хоррор-режиссёр. Следит за раундом и умеет проигрывать события, которые давят на нервы,
+ * но не наносят урон и не решают исход перестрелки. Когда и какое событие получит игрок,
+ * решает его шкала страха (FearSystem).
  */
 public final class HorrorDirector {
     public static final HorrorDirector INSTANCE = new HorrorDirector();
@@ -43,7 +42,6 @@ public final class HorrorDirector {
     private MatchState lastState = MatchState.LOBBY;
     private long tick;
     private int liveTicks;
-    private int nextEventAt;
 
     private HorrorDirector() {}
 
@@ -61,11 +59,9 @@ public final class HorrorDirector {
             if (state == MatchState.PREP) {
                 tasks.clear();
                 Sabotage.resetAll(level);
+                FearSystem.INSTANCE.resetAll();
             }
-            if (state == MatchState.LIVE) {
-                liveTicks = 0;
-                nextEventAt = HorrorConfig.QUIET_SECONDS.get() * 20;
-            }
+            if (state == MatchState.LIVE) liveTicks = 0;
             lastState = state;
         }
 
@@ -73,66 +69,9 @@ public final class HorrorDirector {
         runTasks();
         if (tick % 10 == 0) RadioState.update(server, match);
 
-        if (state != MatchState.LIVE || !HorrorConfig.ENABLED.get()) return;
-        liveTicks++;
-
-        List<ServerPlayer> alive = alivePlayers(server, match);
-        if (alive.isEmpty()) return;
-
-        if (HorrorConfig.HEARTBEAT.get() && liveTicks % 25 == 0) heartbeat(alive, match);
-
-        if (liveTicks >= nextEventAt) {
-            ServerPlayer target = pickTarget(alive, match);
-            fire(pickEvent(), target);
-            nextEventAt = liveTicks + nextInterval(alive.size());
-        }
-    }
-
-    // ---------- выбор цели и события ----------
-
-    private List<ServerPlayer> alivePlayers(MinecraftServer server, MatchManager match) {
-        List<ServerPlayer> out = new ArrayList<>();
-        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            if (match.teamOf(p) != null && !p.isSpectator() && p.isAlive()) out.add(p);
-        }
-        return out;
-    }
-
-    private boolean isAlone(ServerPlayer p, List<ServerPlayer> alive, MatchManager match) {
-        BhTeam team = match.teamOf(p);
-        for (ServerPlayer other : alive) {
-            if (other != p && match.teamOf(other) == team && other.distanceToSqr(p) < 12 * 12) return false;
-        }
-        return true;
-    }
-
-    private ServerPlayer pickTarget(List<ServerPlayer> alive, MatchManager match) {
-        // Одиночки попадают в список дважды: им достаётся больше.
-        List<ServerPlayer> pool = new ArrayList<>(alive);
-        for (ServerPlayer p : alive) if (isAlone(p, alive, match)) pool.add(p);
-        return pool.get(rnd.nextInt(pool.size()));
-    }
-
-    private HorrorEvent pickEvent() {
-        int total = 0;
-        for (HorrorEvent ev : HorrorEvent.values()) total += ev.weight;
-        int r = rnd.nextInt(total);
-        for (HorrorEvent ev : HorrorEvent.values()) {
-            r -= ev.weight;
-            if (r < 0) return ev;
-        }
-        return HorrorEvent.WHISPER;
-    }
-
-    private int nextInterval(int aliveCount) {
-        int min = HorrorConfig.MIN_INTERVAL_SECONDS.get();
-        int max = Math.max(min, HorrorConfig.MAX_INTERVAL_SECONDS.get());
-        float roundTicks = BhConfig.ROUND_SECONDS.get() * 20f;
-        float tension = Math.min(1f, liveTicks / roundTicks);
-        if (aliveCount <= 2) tension = Math.min(1f, tension + 0.35f);
-        float seconds = max - (max - min) * tension;
-        seconds *= 0.7f + rnd.nextFloat() * 0.6f;
-        return Math.max(40, (int) (seconds * 20));
+        if (state == MatchState.LIVE) liveTicks++;
+        // Когда и что случится, решает шкала страха каждого игрока (FearSystem).
+        FearSystem.INSTANCE.tick(server, liveTicks);
     }
 
     // ---------- события ----------
@@ -194,23 +133,6 @@ public final class HorrorDirector {
         }
     }
 
-    private void heartbeat(List<ServerPlayer> alive, MatchManager match) {
-        for (ServerPlayer p : alive) {
-            boolean wounded = p.getHealth() <= p.getMaxHealth() * 0.4f;
-            boolean last = true;
-            boolean enemies = false;
-            BhTeam team = match.teamOf(p);
-            for (ServerPlayer other : alive) {
-                if (other == p) continue;
-                if (match.teamOf(other) == team) last = false;
-                else enemies = true;
-            }
-            if (wounded || (last && enemies)) {
-                playTo(p, "bodycamhorror:heartbeat", p.position(), wounded ? 1.0f : 0.6f, 1.0f);
-            }
-        }
-    }
-
     // ---------- вспомогательное ----------
 
     private Vec3 behind(ServerPlayer p) {
@@ -218,6 +140,11 @@ public final class HorrorDirector {
         Vec3 back = new Vec3(-look.x, 0, -look.z);
         if (back.lengthSqr() < 1.0E-4) return new Vec3(1, 0, 0);
         return back.normalize();
+    }
+
+    /** Звук, который слышит только один игрок (для FearSystem). */
+    public void playSound(ServerPlayer p, String soundId, Vec3 pos, float volume, float pitch) {
+        playTo(p, soundId, pos, volume, pitch);
     }
 
     /** Звук, который слышит только один игрок. */

@@ -4,5 +4,7 @@
   "block.bodycamhorror.generator": "Generator",
   "item.bodycamhorror.flashlight": "Flashlight",
   "key.bodycamhorror.flashlight": "Flashlight",
-  "key.categories.bodycamhorror": "Bodycam Horror"
+  "key.categories.bodycamhorror": "Bodycam Horror",
+  "key.bodycamhorror.inventory": "Inventory",
+  "container.bodycamhorror.inventory": "Inventory"
 }
