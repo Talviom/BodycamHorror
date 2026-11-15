@@ -118,7 +118,7 @@ def font_json():
         chars.append("".join(ch if ch != "\u007f" else "\u0000" for ch in row))
     return {"providers": [
         {"type": "space", "advances": {" ": 4}},
-        {"type": "bitmap", "file": "bodycamhorror:font/vhs.png", "height": 9, "ascent": 8, "chars": chars},
+        {"type": "bitmap", "file": "bodycamhorror:font/vhs.png", "height": 9, "ascent": 7, "chars": chars},
     ]}
 
 
@@ -250,7 +250,7 @@ def heart_frames():
 
 def battery_frames():
     frames = []
-    for level in (4, 3, 2, 1, 0):
+    for level in (0, 1, 2, 3, 4):  # empty, 25, 50, 75, 100 %
         f = np.zeros((16, 16, 4), np.uint8)
         col = (230, 230, 220, 255) if level > 1 else (230, 60, 45, 255)
         # Body outline x1..14, y4..11, terminal at x15.
@@ -303,15 +303,15 @@ def inventory():
     box = (8, 16, 60, 120)
     inv[box[1], box[0]:box[2]] = inv[box[3], box[0]:box[2]] = (120, 120, 112, 220)
     inv[box[1]:box[3], box[0]] = inv[box[1]:box[3], box[2]] = (120, 120, 112, 220)
-    # Slot grid: 10 x 2, 18 px pitch, origin (66, 40).
+    # Slot grid: 10 x 2, 18 px pitch, origin (70, 40); ends at x=250, so the panel is 252 wide.
     for r in range(2):
         for c in range(10):
-            x, y = 66 + c * 18, 40 + r * 18
+            x, y = 70 + c * 18, 40 + r * 18
             inv[y:y + 18, x:x + 18] = (8, 8, 10, 235)
             inv[y, x:x + 18] = inv[y + 17, x:x + 18] = (110, 110, 104, 255)
             inv[y:y + 18, x] = inv[y:y + 18, x + 17] = (110, 110, 104, 255)
-    paste(inv, text_pixels("SLOTS 1-10: HOTBAR", (150, 150, 140)), 66, 28)
-    paste(inv, text_pixels("DRAG TO SWAP / Q TO DROP", (120, 120, 112)), 66, 82)
+    paste(inv, text_pixels("SLOTS 1-10: HOTBAR", (150, 150, 140)), 70, 28)
+    paste(inv, text_pixels("DRAG TO SWAP / Q TO DROP", (120, 120, 112)), 70, 82)
     return chroma_bleed(inv, 1)
 
 
