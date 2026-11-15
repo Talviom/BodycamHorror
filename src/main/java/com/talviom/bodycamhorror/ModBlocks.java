@@ -1,5 +1,6 @@
 package com.talviom.bodycamhorror;
 
+import com.talviom.bodycamhorror.flashlight.FlashlightItem;
 import com.talviom.bodycamhorror.sabotage.LampBlock;
 import com.talviom.bodycamhorror.sabotage.PowerSwitchBlock;
 import net.minecraft.world.item.BlockItem;
@@ -31,6 +32,8 @@ public final class ModBlocks {
     public static final RegistryObject<Item> BREAKER_ITEM = ITEMS.register("breaker", () -> new BlockItem(BREAKER.get(), new Item.Properties()));
     public static final RegistryObject<Item> GENERATOR_ITEM = ITEMS.register("generator", () -> new BlockItem(GENERATOR.get(), new Item.Properties()));
 
+    public static final RegistryObject<Item> FLASHLIGHT = ITEMS.register("flashlight", () -> new FlashlightItem(new Item.Properties().stacksTo(1)));
+
     private ModBlocks() {}
 
     public static void register(IEventBus modBus) {
@@ -46,5 +49,6 @@ public final class ModBlocks {
             e.accept(BREAKER_ITEM);
             e.accept(GENERATOR_ITEM);
         }
+        if (e.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) e.accept(FLASHLIGHT);
     }
 }

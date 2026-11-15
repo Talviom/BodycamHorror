@@ -1,5 +1,8 @@
 {
-  "block.bodycamhorror.lamp": "Лампа (управляемая)",
+  "block.bodycamhorror.lamp": "Потолочный светильник",
   "block.bodycamhorror.breaker": "Электрощиток",
-  "block.bodycamhorror.generator": "Генератор"
+  "block.bodycamhorror.generator": "Генератор",
+  "item.bodycamhorror.flashlight": "Фонарик",
+  "key.bodycamhorror.flashlight": "Фонарик",
+  "key.categories.bodycamhorror": "Bodycam Horror"
 }

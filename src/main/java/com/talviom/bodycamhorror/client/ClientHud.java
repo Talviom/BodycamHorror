@@ -4,8 +4,12 @@ import com.talviom.bodycamhorror.BhConfig;
 import com.talviom.bodycamhorror.BodycamHorror;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
@@ -35,7 +39,55 @@ public final class ClientHud {
             VanillaGuiOverlay.ITEM_NAME.id()
     );
 
+    private static int lastSlot = -1;
+    private static int lastHotbarHash;
+    private static long slotStripUntil;
+
     private ClientHud() {}
+
+    /**
+     * Полоска слотов вместо хотбара: показывает только занятые слоты и появляется на пару секунд,
+     * когда игрок меняет слот или у него что-то меняется в руках.
+     */
+    private static void drawSlotStrip(GuiGraphics g, int width, int height) {
+        Minecraft mc = Minecraft.getInstance();
+        if (!BhConfig.SLOT_STRIP.get() || mc.player == null || mc.options.hideGui || creativeOrSpectator()) return;
+        Inventory inv = mc.player.getInventory();
+
+        int hash = 1;
+        int filled = 0;
+        for (int i = 0; i < 9; i++) {
+            ItemStack s = inv.getItem(i);
+            if (!s.isEmpty()) filled++;
+            hash = 31 * hash + (s.isEmpty() ? 0 : Item.getId(s.getItem()) * 31 + s.getCount());
+        }
+        long now = System.currentTimeMillis();
+        if (inv.selected != lastSlot || hash != lastHotbarHash) {
+            lastSlot = inv.selected;
+            lastHotbarHash = hash;
+            slotStripUntil = now + 2500;
+        }
+        if (now > slotStripUntil || filled == 0) return;
+
+        Font font = mc.font;
+        int x = width - 8 - filled * 20;
+        int y = height - 26;
+        for (int i = 0; i < 9; i++) {
+            ItemStack s = inv.getItem(i);
+            if (s.isEmpty()) continue;
+            boolean selected = i == inv.selected;
+            g.fill(x - 1, y - 1, x + 17, y + 17, selected ? 0x90FFFFFF : 0x50000000);
+            g.renderItem(s, x, y);
+            g.renderItemDecorations(font, s, x, y);
+            g.drawString(font, String.valueOf(i + 1), x, y - 10, selected ? 0xFFFFFFFF : 0xFF9E9E9E, false);
+            x += 20;
+        }
+        ItemStack held = inv.getItem(inv.selected);
+        if (!held.isEmpty()) {
+            String name = held.getHoverName().getString();
+            g.drawString(font, name, width - 8 - font.width(name), y - 22, 0xFFE0E0E0, false);
+        }
+    }
 
     private static boolean creativeOrSpectator() {
         Minecraft mc = Minecraft.getInstance();
@@ -63,6 +115,7 @@ public final class ClientHud {
     public static final class HudModEvents {
         @SubscribeEvent
         public static void registerHudOverlays(RegisterGuiOverlaysEvent e) {
+            e.registerAboveAll("bodycam_slots", (gui, g, partialTick, width, height) -> drawSlotStrip(g, width, height));
             e.registerAboveAll("bodycam", (gui, g, partialTick, width, height) -> {
                 Minecraft mc = Minecraft.getInstance();
                 if (!BhConfig.BODYCAM_OVERLAY.get() || mc.player == null || mc.options.hideGui) return;

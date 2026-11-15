@@ -2,6 +2,7 @@ package com.talviom.bodycamhorror.match;
 
 import com.talviom.bodycamhorror.BhConfig;
 import com.talviom.bodycamhorror.loot.LootSpawner;
+import com.talviom.bodycamhorror.util.ItemSpec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
@@ -10,6 +11,7 @@ import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
@@ -124,11 +126,15 @@ public final class MatchManager {
         LootSpawner.clearGroundItems(level);
         LootSpawner.spawn(level, map.lootPoints());
 
+        // Смена сторон: каждые N раундов команды меняются точками спавна.
+        int swapAfter = BhConfig.SWAP_SIDES_AFTER_ROUNDS.get();
+        boolean swapped = swapAfter > 0 && ((round - 1) / swapAfter) % 2 == 1;
+
         alive.clear();
         frozenAt.clear();
         for (BhTeam t : BhTeam.values()) {
             List<ServerPlayer> members = onlineMembers(server, t);
-            List<BlockPos> spawns = new ArrayList<>(map.spawns(t));
+            List<BlockPos> spawns = new ArrayList<>(map.spawns(swapped ? t.other() : t));
             Collections.shuffle(spawns);
             for (int i = 0; i < members.size(); i++) {
                 ServerPlayer p = members.get(i);
@@ -285,6 +291,10 @@ public final class MatchManager {
         p.getFoodData().setSaturation(5f);
         p.setRemainingFireTicks(0);
         p.fallDistance = 0;
+        for (String spec : BhConfig.START_KIT.get()) {
+            ItemStack stack = ItemSpec.parse(spec);
+            if (!stack.isEmpty()) p.getInventory().add(stack);
+        }
     }
 
     private List<ServerPlayer> onlineMembers(MinecraftServer server, BhTeam t) {

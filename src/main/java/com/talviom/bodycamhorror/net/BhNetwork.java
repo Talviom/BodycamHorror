@@ -20,6 +20,8 @@ public final class BhNetwork {
     public static void init() {
         CHANNEL.registerMessage(0, GlitchPacket.class, GlitchPacket::encode, GlitchPacket::decode, GlitchPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(1, ToggleFlashlightPacket.class, ToggleFlashlightPacket::encode, ToggleFlashlightPacket::decode,
+                ToggleFlashlightPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
     public static void sendGlitch(ServerPlayer player, int ticks, float strength) {

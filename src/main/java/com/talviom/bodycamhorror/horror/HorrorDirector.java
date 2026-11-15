@@ -2,6 +2,7 @@ package com.talviom.bodycamhorror.horror;
 
 import com.talviom.bodycamhorror.BhConfig;
 import com.talviom.bodycamhorror.HorrorConfig;
+import com.talviom.bodycamhorror.flashlight.Flashlight;
 import com.talviom.bodycamhorror.match.BhTeam;
 import com.talviom.bodycamhorror.match.MatchManager;
 import com.talviom.bodycamhorror.match.MatchState;
@@ -147,6 +148,8 @@ public final class HorrorDirector {
             }
             case GLITCH -> {
                 BhNetwork.sendGlitch(target, 30 + rnd.nextInt(40), 0.5f + rnd.nextFloat() * 0.5f);
+                // Вместе с помехами на секунду-две гаснет фонарик.
+                Flashlight.blackout(target, 20 + rnd.nextInt(25));
                 playTo(target, "bodycamhorror:radio_static", target.position(), 0.7f, 0.9f + rnd.nextFloat() * 0.2f);
             }
             case RADIO -> {
@@ -181,8 +184,10 @@ public final class HorrorDirector {
         double dist = 6 + rnd.nextDouble() * 6;
         Vec3 pos = p.position().add(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
         if (rnd.nextBoolean()) {
-            for (int i = 0; i < 3; i++) {
-                schedule(i * 9, () -> playTo(p, "bodycamhorror:knock", pos, 0.9f, 0.95f));
+            // Каждый следующий удар тише предыдущего, чтобы стук затихал, а не обрывался.
+            for (int i = 0; i < 4; i++) {
+                float volume = 0.9f * (float) Math.pow(0.65, i);
+                schedule(i * 9, () -> playTo(p, "bodycamhorror:knock", pos, volume, 0.95f));
             }
         } else {
             playTo(p, "minecraft:block.wooden_door.open", pos, 1.0f, 0.5f);

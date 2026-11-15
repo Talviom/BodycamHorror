@@ -3,6 +3,7 @@ package com.talviom.bodycamhorror;
 import com.talviom.bodycamhorror.command.ArenaCommand;
 import com.talviom.bodycamhorror.command.BhCommand;
 import com.talviom.bodycamhorror.command.HorrorCommand;
+import com.talviom.bodycamhorror.flashlight.FlashlightEvents;
 import com.talviom.bodycamhorror.horror.HorrorDirector;
 import com.talviom.bodycamhorror.match.MatchEvents;
 import com.talviom.bodycamhorror.net.BhNetwork;
@@ -33,6 +34,7 @@ public class BodycamHorror {
         ModBlocks.register(FMLJavaModLoadingContext.get().getModEventBus());
         BhNetwork.init();
         MinecraftForge.EVENT_BUS.register(HorrorDirector.INSTANCE);
+        MinecraftForge.EVENT_BUS.register(new FlashlightEvents());
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent e) -> HorrorCommand.register(e.getDispatcher()));
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent e) -> ArenaCommand.register(e.getDispatcher()));
     }
