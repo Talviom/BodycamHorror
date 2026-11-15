@@ -1,0 +1,9 @@
+# Сами jar-файлы модов в репозиторий не кладём: они большие и принадлежат авторам.
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+build/
+.gradle/
+run/
+out/
+.idea/
+*.iml
