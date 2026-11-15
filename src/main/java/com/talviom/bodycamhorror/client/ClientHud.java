@@ -45,7 +45,7 @@ public final class ClientHud {
     }
 
     @Mod.EventBusSubscriber(modid = BodycamHorror.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
-    public static final class ForgeEvents {
+    public static final class HudForgeEvents {
         @SubscribeEvent
         public static void onOverlay(RenderGuiOverlayEvent.Pre e) {
             if (!BhConfig.HIDE_VANILLA_HUD.get() || creativeOrSpectator()) return;
@@ -60,9 +60,9 @@ public final class ClientHud {
     }
 
     @Mod.EventBusSubscriber(modid = BodycamHorror.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
-    public static final class ModEvents {
+    public static final class HudModEvents {
         @SubscribeEvent
-        public static void registerOverlays(RegisterGuiOverlaysEvent e) {
+        public static void registerHudOverlays(RegisterGuiOverlaysEvent e) {
             e.registerAboveAll("bodycam", (gui, g, partialTick, width, height) -> {
                 Minecraft mc = Minecraft.getInstance();
                 if (!BhConfig.BODYCAM_OVERLAY.get() || mc.player == null || mc.options.hideGui) return;

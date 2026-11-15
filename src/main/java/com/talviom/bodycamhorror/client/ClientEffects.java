@@ -12,7 +12,13 @@ import net.minecraftforge.fml.common.Mod;
 
 import java.util.Random;
 
-/** Клиент: эффекты экрана. Здоровье через красные края, виньетка, помехи бодикама. */
+/**
+ * Клиент: эффекты экрана. Здоровье через красные края, виньетка, помехи бодикама.
+ *
+ * Важно: вложенные классы-подписчики и их методы должны называться не так, как в ClientHud.
+ * Шина событий Forge даёт обработчику имя из простого имени класса и имени метода,
+ * и два одинаковых имени в одном пакете склеиваются в один обработчик (игра падает при запуске).
+ */
 public final class ClientEffects {
     private static int glitchTicks;
     private static float glitchStrength;
@@ -25,17 +31,17 @@ public final class ClientEffects {
     }
 
     @Mod.EventBusSubscriber(modid = BodycamHorror.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
-    public static final class ForgeEvents {
+    public static final class FxForgeEvents {
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent e) {
+        public static void onFxClientTick(TickEvent.ClientTickEvent e) {
             if (e.phase == TickEvent.Phase.END && glitchTicks > 0) glitchTicks--;
         }
     }
 
     @Mod.EventBusSubscriber(modid = BodycamHorror.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
-    public static final class ModEvents {
+    public static final class FxModEvents {
         @SubscribeEvent
-        public static void registerOverlays(RegisterGuiOverlaysEvent e) {
+        public static void registerFxOverlays(RegisterGuiOverlaysEvent e) {
             e.registerBelowAll("bodycam_fx", (gui, g, partialTick, width, height) -> {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.player == null || mc.options.hideGui) return;
