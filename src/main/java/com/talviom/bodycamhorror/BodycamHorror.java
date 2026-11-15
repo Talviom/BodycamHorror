@@ -1,5 +1,6 @@
 package com.talviom.bodycamhorror;
 
+import com.talviom.bodycamhorror.command.ArenaCommand;
 import com.talviom.bodycamhorror.command.BhCommand;
 import com.talviom.bodycamhorror.command.HorrorCommand;
 import com.talviom.bodycamhorror.horror.HorrorDirector;
@@ -33,5 +34,6 @@ public class BodycamHorror {
         BhNetwork.init();
         MinecraftForge.EVENT_BUS.register(HorrorDirector.INSTANCE);
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent e) -> HorrorCommand.register(e.getDispatcher()));
+        MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent e) -> ArenaCommand.register(e.getDispatcher()));
     }
 }
