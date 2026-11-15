@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "powered=true": { "model": "bodycamhorror:block/generator" },
+    "powered=false": { "model": "bodycamhorror:block/generator_off" }
+  }
+}

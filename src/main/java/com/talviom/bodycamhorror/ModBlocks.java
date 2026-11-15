@@ -1,0 +1,49 @@
+package com.talviom.bodycamhorror;
+
+import com.talviom.bodycamhorror.sabotage.LampBlock;
+import com.talviom.bodycamhorror.sabotage.PowerSwitchBlock;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+public final class ModBlocks {
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, BodycamHorror.MOD_ID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BodycamHorror.MOD_ID);
+
+    public static final RegistryObject<Block> LAMP = BLOCKS.register("lamp", () -> new LampBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_YELLOW).strength(1.5f).sound(SoundType.GLASS).noLootTable()
+                    .lightLevel(s -> s.getValue(LampBlock.LIT) ? 15 : 0)));
+    public static final RegistryObject<Block> BREAKER = BLOCKS.register("breaker", () -> new PowerSwitchBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f).sound(SoundType.METAL).noLootTable(), false));
+    public static final RegistryObject<Block> GENERATOR = BLOCKS.register("generator", () -> new PowerSwitchBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f).sound(SoundType.METAL).noLootTable(), true));
+
+    public static final RegistryObject<Item> LAMP_ITEM = ITEMS.register("lamp", () -> new BlockItem(LAMP.get(), new Item.Properties()));
+    public static final RegistryObject<Item> BREAKER_ITEM = ITEMS.register("breaker", () -> new BlockItem(BREAKER.get(), new Item.Properties()));
+    public static final RegistryObject<Item> GENERATOR_ITEM = ITEMS.register("generator", () -> new BlockItem(GENERATOR.get(), new Item.Properties()));
+
+    private ModBlocks() {}
+
+    public static void register(IEventBus modBus) {
+        BLOCKS.register(modBus);
+        ITEMS.register(modBus);
+        modBus.addListener(ModBlocks::addToTabs);
+    }
+
+    private static void addToTabs(BuildCreativeModeTabContentsEvent e) {
+        if (e.getTabKey() == CreativeModeTabs.REDSTONE_BLOCKS) {
+            e.accept(LAMP_ITEM);
+            e.accept(BREAKER_ITEM);
+            e.accept(GENERATOR_ITEM);
+        }
+    }
+}

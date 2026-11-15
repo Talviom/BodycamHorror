@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "lit=true": { "model": "bodycamhorror:block/lamp" },
+    "lit=false": { "model": "bodycamhorror:block/lamp_off" }
+  }
+}
