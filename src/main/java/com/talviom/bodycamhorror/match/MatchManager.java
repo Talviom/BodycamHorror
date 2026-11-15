@@ -33,6 +33,7 @@ public final class MatchManager {
     private final EnumMap<BhTeam, Integer> score = new EnumMap<>(BhTeam.class);
 
     private MatchState state = MatchState.LOBBY;
+    private boolean testMode;
     private int ticksLeft;
     private int round;
 
@@ -93,13 +94,27 @@ public final class MatchManager {
 
     /** @return текст ошибки или null, если матч запущен */
     public String start(MinecraftServer server) {
+        return start(server, false);
+    }
+
+    /**
+     * @param test тестовый режим: матч можно запустить одному, пустая команда не мешает старту.
+     *             Раунд тогда заканчивается по таймеру, по смерти или командой /bh skip.
+     * @return текст ошибки или null, если матч запущен
+     */
+    public String start(MinecraftServer server, boolean test) {
         if (running()) return "Матч уже идёт";
         ServerLevel level = server.overworld();
         MapData map = MapData.get(level);
+        int players = 0;
         for (BhTeam t : BhTeam.values()) {
             if (map.spawns(t).isEmpty()) return "Нет точек спавна для команды " + t.displayName + " (/bh spawn add " + t.id + ")";
-            if (onlineMembers(server, t).isEmpty()) return "В команде " + t.displayName + " нет игроков (/bh team " + t.id + " <игрок>)";
+            int n = onlineMembers(server, t).size();
+            if (n == 0 && !test) return "В команде " + t.displayName + " нет игроков (/bh team " + t.id + " <игрок>). Для проверки одному: /bh start test";
+            players += n;
         }
+        if (players == 0) return "Ни в одной команде нет игроков (/bh team alpha <игрок>)";
+        testMode = test;
         resetScore();
         round = 0;
         startRound(server);
@@ -226,6 +241,19 @@ public final class MatchManager {
 
     public void onPlayerJoined(ServerPlayer p) {
         if (running()) p.setGameMode(GameType.SPECTATOR);
+    }
+
+    /** Перемотать текущую фазу: заморозка → раунд → пауза → следующий раунд. Для проверки. */
+    public String skip(MinecraftServer server) {
+        if (!running()) return "Матч не идёт";
+        MatchState before = state;
+        ticksLeft = 1;
+        tick(server);
+        return "Пропущено: " + before + " → " + state;
+    }
+
+    public boolean testMode() {
+        return testMode;
     }
 
     public boolean damageBlocked() {

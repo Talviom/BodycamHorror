@@ -25,6 +25,8 @@ import java.util.Collection;
  * /bh spawn add|clear alpha|bravo — точки спавна (add ставит точку там, где вы стоите)
  * /bh loot add|clear|test          — точки лута
  * /bh start | stop | status
+ * /bh start test                   — тестовый матч, можно одному
+ * /bh skip                         — перемотать текущую фазу (заморозка, раунд, пауза)
  */
 public final class BhCommand {
     private BhCommand() {}
@@ -55,7 +57,12 @@ public final class BhCommand {
                 .then(Commands.literal("clear").executes(BhCommand::clearLoot))
                 .then(Commands.literal("test").executes(BhCommand::testLoot)));
 
-        root.then(Commands.literal("start").executes(BhCommand::start));
+        root.then(Commands.literal("start").executes(c -> start(c, false))
+                .then(Commands.literal("test").executes(c -> start(c, true))));
+        root.then(Commands.literal("skip").executes(c -> {
+            c.getSource().sendSuccess(() -> Component.literal(MatchManager.INSTANCE.skip(c.getSource().getServer())), false);
+            return 1;
+        }));
         root.then(Commands.literal("stop").executes(c -> {
             MatchManager.INSTANCE.stop(c.getSource().getServer());
             return 1;
@@ -119,13 +126,19 @@ public final class BhCommand {
         return n;
     }
 
-    private static int start(CommandContext<CommandSourceStack> c) {
-        String err = MatchManager.INSTANCE.start(c.getSource().getServer());
+    private static int start(CommandContext<CommandSourceStack> c, boolean test) {
+        MatchManager m = MatchManager.INSTANCE;
+        ServerPlayer self = c.getSource().getPlayer();
+        // В тестовом режиме тот, кто запускает и ещё без команды, сам встаёт в «Альфу».
+        if (test && self != null && m.teamOf(self) == null) m.setTeam(c.getSource().getServer(), self, BhTeam.ALPHA);
+        String err = m.start(c.getSource().getServer(), test);
         if (err != null) {
             c.getSource().sendFailure(Component.literal(err));
             return 0;
         }
-        c.getSource().sendSuccess(() -> Component.literal("Матч начат"), true);
+        c.getSource().sendSuccess(() -> Component.literal(test
+                ? "Тестовый матч начат. /bh skip перематывает фазу, /bh stop останавливает"
+                : "Матч начат"), true);
         return 1;
     }
 
