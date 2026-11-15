@@ -3,7 +3,9 @@ package com.talviom.bodycamhorror.arena;
 import com.talviom.bodycamhorror.ModBlocks;
 import com.talviom.bodycamhorror.match.BhTeam;
 import com.talviom.bodycamhorror.match.MapData;
+import com.talviom.bodycamhorror.sabotage.PowerSwitchBlock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,19 +41,21 @@ public final class ArenaBuilder {
             }
         }
 
-        // Лампа в потолке каждой комнаты.
+        // Светильник под потолком каждой комнаты.
         BlockState lamp = ModBlocks.LAMP.get().defaultBlockState();
         int lamps = 0;
         for (int i = 0; i < SIZE / ROOM; i++) {
             for (int j = 0; j < SIZE / ROOM; j++) {
-                level.setBlock(base.offset(ROOM / 2 + ROOM * i, HEIGHT, ROOM / 2 + ROOM * j), lamp, 3);
+                level.setBlock(base.offset(ROOM / 2 + ROOM * i, HEIGHT - 1, ROOM / 2 + ROOM * j), lamp, 3);
                 lamps++;
             }
         }
 
         // Два щитка в противоположных углах и генератор у центра.
-        level.setBlock(base.offset(1, 0, 5), ModBlocks.BREAKER.get().defaultBlockState(), 3);
-        level.setBlock(base.offset(SIZE - 1, 0, SIZE - 5), ModBlocks.BREAKER.get().defaultBlockState(), 3);
+        // Щитки висят на внешних стенах на уровне глаз, дверцей внутрь здания.
+        BlockState breaker = ModBlocks.BREAKER.get().defaultBlockState();
+        level.setBlock(base.offset(1, 1, 5), breaker.setValue(PowerSwitchBlock.FACING, Direction.EAST), 3);
+        level.setBlock(base.offset(SIZE - 1, 1, SIZE - 5), breaker.setValue(PowerSwitchBlock.FACING, Direction.WEST), 3);
         level.setBlock(base.offset(22, 0, 22), ModBlocks.GENERATOR.get().defaultBlockState(), 3);
 
         // Точки матча: команды в противоположных углах, лут в центре каждой комнаты.

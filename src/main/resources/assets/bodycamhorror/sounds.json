@@ -1,0 +1,11 @@
+{
+  "whisper": { "sounds": ["bodycamhorror:whisper1", "bodycamhorror:whisper2", "bodycamhorror:whisper3"] },
+  "radio_static": { "sounds": ["bodycamhorror:radio_static1", "bodycamhorror:radio_static2"] },
+  "breaker_off": { "sounds": ["bodycamhorror:breaker_off"] },
+  "breaker_on": { "sounds": ["bodycamhorror:breaker_on"] },
+  "generator_down": { "sounds": ["bodycamhorror:generator_down"] },
+  "generator_up": { "sounds": ["bodycamhorror:generator_up"] },
+  "heartbeat": { "sounds": ["bodycamhorror:heartbeat"] },
+  "knock": { "sounds": ["bodycamhorror:knock1", "bodycamhorror:knock2"] },
+  "lamp_buzz": { "sounds": ["bodycamhorror:lamp_buzz1", "bodycamhorror:lamp_buzz2"] }
+}

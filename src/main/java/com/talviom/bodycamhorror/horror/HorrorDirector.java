@@ -145,11 +145,15 @@ public final class HorrorDirector {
                 int radius = HorrorConfig.FLICKER_RADIUS.get();
                 if (!Sabotage.flickerAround(target.serverLevel(), target.blockPosition(), radius)) whisper(target);
             }
-            case GLITCH -> BhNetwork.sendGlitch(target, 30 + rnd.nextInt(40), 0.5f + rnd.nextFloat() * 0.5f);
+            case GLITCH -> {
+                BhNetwork.sendGlitch(target, 30 + rnd.nextInt(40), 0.5f + rnd.nextFloat() * 0.5f);
+                playTo(target, "bodycamhorror:radio_static", target.position(), 0.7f, 0.9f + rnd.nextFloat() * 0.2f);
+            }
             case RADIO -> {
                 BhTeam team = MatchManager.INSTANCE.teamOf(target);
                 if (team != null) RadioState.jam(team, 120 + rnd.nextInt(100));
                 BhNetwork.sendGlitch(target, 20, 0.3f);
+                playTo(target, "bodycamhorror:radio_static", target.position(), 0.5f, 0.8f);
             }
         }
     }
@@ -169,7 +173,7 @@ public final class HorrorDirector {
 
     private void whisper(ServerPlayer p) {
         Vec3 pos = p.position().add(behind(p).scale(3 + rnd.nextDouble() * 3));
-        playTo(p, "minecraft:ambient.cave", pos, 0.8f, 0.5f + rnd.nextFloat() * 0.4f);
+        playTo(p, "bodycamhorror:whisper", pos, 0.9f, 0.9f + rnd.nextFloat() * 0.2f);
     }
 
     private void knock(ServerPlayer p) {
@@ -178,7 +182,7 @@ public final class HorrorDirector {
         Vec3 pos = p.position().add(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
         if (rnd.nextBoolean()) {
             for (int i = 0; i < 3; i++) {
-                schedule(i * 9, () -> playTo(p, "minecraft:entity.zombie.attack_wooden_door", pos, 0.7f, 0.6f));
+                schedule(i * 9, () -> playTo(p, "bodycamhorror:knock", pos, 0.9f, 0.95f));
             }
         } else {
             playTo(p, "minecraft:block.wooden_door.open", pos, 1.0f, 0.5f);
@@ -197,7 +201,7 @@ public final class HorrorDirector {
                 else enemies = true;
             }
             if (wounded || (last && enemies)) {
-                playTo(p, "minecraft:entity.warden.heartbeat", p.position(), wounded ? 1.0f : 0.6f, 1.0f);
+                playTo(p, "bodycamhorror:heartbeat", p.position(), wounded ? 1.0f : 0.6f, 1.0f);
             }
         }
     }

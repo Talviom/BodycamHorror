@@ -20,12 +20,12 @@ public final class ModBlocks {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BodycamHorror.MOD_ID);
 
     public static final RegistryObject<Block> LAMP = BLOCKS.register("lamp", () -> new LampBlock(
-            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_YELLOW).strength(1.5f).sound(SoundType.GLASS).noLootTable()
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_YELLOW).strength(1.5f).sound(SoundType.GLASS).noLootTable().noOcclusion()
                     .lightLevel(s -> s.getValue(LampBlock.LIT) ? 15 : 0)));
     public static final RegistryObject<Block> BREAKER = BLOCKS.register("breaker", () -> new PowerSwitchBlock(
-            BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f).sound(SoundType.METAL).noLootTable(), false));
+            BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f).sound(SoundType.METAL).noLootTable().noOcclusion(), false));
     public static final RegistryObject<Block> GENERATOR = BLOCKS.register("generator", () -> new PowerSwitchBlock(
-            BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f).sound(SoundType.METAL).noLootTable(), true));
+            BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f).sound(SoundType.METAL).noLootTable().noOcclusion(), true));
 
     public static final RegistryObject<Item> LAMP_ITEM = ITEMS.register("lamp", () -> new BlockItem(LAMP.get(), new Item.Properties()));
     public static final RegistryObject<Item> BREAKER_ITEM = ITEMS.register("breaker", () -> new BlockItem(BREAKER.get(), new Item.Properties()));
@@ -36,6 +36,7 @@ public final class ModBlocks {
     public static void register(IEventBus modBus) {
         BLOCKS.register(modBus);
         ITEMS.register(modBus);
+        ModSounds.SOUNDS.register(modBus);
         modBus.addListener(ModBlocks::addToTabs);
     }
 

@@ -74,9 +74,11 @@ public final class Sabotage {
         needsRecompute = true;
 
         // Громкий звук: переключение выдаёт позицию того, кто это сделал.
-        float volume = block.global ? 4.0f : 2.0f;
-        play(level, pos, "minecraft:block.lever.click", 1.0f, on ? 0.6f : 0.5f);
-        play(level, pos, on ? "minecraft:block.beacon.activate" : "minecraft:block.beacon.deactivate", volume, block.global ? 0.6f : 1.0f);
+        if (block.global) {
+            play(level, pos, on ? "bodycamhorror:generator_up" : "bodycamhorror:generator_down", 4.0f, 1.0f);
+        } else {
+            play(level, pos, on ? "bodycamhorror:breaker_on" : "bodycamhorror:breaker_off", 2.0f, 1.0f);
+        }
 
         if (block.global) return on ? "Генератор запущен" : "Генератор заглушен";
         return on ? "Питание включено" : "Питание отключено";
@@ -125,7 +127,7 @@ public final class Sabotage {
             t += off + 2 + rnd.nextInt(5);
         }
         PULSES.add(new Pulse(center.immutable(), r2, t, t + 15 + rnd.nextInt(35)));
-        play(level, center, "minecraft:block.redstone_torch.burnout", 1.0f, 0.6f);
+        play(level, center, "bodycamhorror:lamp_buzz", 1.0f, 0.9f + rnd.nextFloat() * 0.2f);
         return true;
     }
 
