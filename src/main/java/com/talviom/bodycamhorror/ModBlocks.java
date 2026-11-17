@@ -33,11 +33,20 @@ public final class ModBlocks {
             BlockBehaviour.Properties.of().replaceable().noCollission().noLootTable().noOcclusion()
                     .strength(-1f, 3600000f).lightLevel(s -> s.getValue(com.talviom.bodycamhorror.flashlight.BeamLightBlock.LEVEL))));
 
+    /** Знак выхода на полу: сюда команда выносит кассету. */
+    public static final RegistryObject<Block> EXIT_MARKER = BLOCKS.register("exit_marker", () -> new com.talviom.bodycamhorror.objective.ExitMarkerBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_GRAY).strength(-1f, 3600000f).sound(SoundType.METAL).noLootTable().noOcclusion()
+                    .lightLevel(s -> 3)));
+
     public static final RegistryObject<Item> LAMP_ITEM = ITEMS.register("lamp", () -> new BlockItem(LAMP.get(), new Item.Properties()));
     public static final RegistryObject<Item> BREAKER_ITEM = ITEMS.register("breaker", () -> new BlockItem(BREAKER.get(), new Item.Properties()));
     public static final RegistryObject<Item> GENERATOR_ITEM = ITEMS.register("generator", () -> new BlockItem(GENERATOR.get(), new Item.Properties()));
 
     public static final RegistryObject<Item> FLASHLIGHT = ITEMS.register("flashlight", () -> new FlashlightItem(new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<Item> EXIT_MARKER_ITEM = ITEMS.register("exit_marker", () -> new BlockItem(EXIT_MARKER.get(), new Item.Properties()));
+    /** Кассета, цель раунда. Не горит в лаве и не исчезает на земле во время матча (см. TapeObjective). */
+    public static final RegistryObject<Item> TAPE = ITEMS.register("tape", () -> new Item(new Item.Properties().stacksTo(1).fireResistant()));
 
     private ModBlocks() {}
 
@@ -53,7 +62,11 @@ public final class ModBlocks {
             e.accept(LAMP_ITEM);
             e.accept(BREAKER_ITEM);
             e.accept(GENERATOR_ITEM);
+            e.accept(EXIT_MARKER_ITEM);
         }
-        if (e.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) e.accept(FLASHLIGHT);
+        if (e.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            e.accept(FLASHLIGHT);
+            e.accept(TAPE);
+        }
     }
 }

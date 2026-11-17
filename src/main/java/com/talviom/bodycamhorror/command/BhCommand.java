@@ -5,7 +5,11 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.talviom.bodycamhorror.ModBlocks;
+import com.talviom.bodycamhorror.arena.LobbyBuilder;
+import com.talviom.bodycamhorror.lobby.LobbyManager;
 import com.talviom.bodycamhorror.loot.LootSpawner;
+import com.talviom.bodycamhorror.objective.TapeObjective;
 import com.talviom.bodycamhorror.match.BhTeam;
 import com.talviom.bodycamhorror.match.MapData;
 import com.talviom.bodycamhorror.match.MatchManager;
@@ -24,6 +28,13 @@ import java.util.Collection;
  * /bh team leave <игроки>          — убрать из команд
  * /bh spawn add|clear alpha|bravo — точки спавна (add ставит точку там, где вы стоите)
  * /bh loot add|clear|test          — точки лута
+ * /bh exit set alpha|bravo         — выход стороны карты (там, где вы стоите), туда выносят кассету
+ * /bh exit clear alpha|bravo
+ * /bh tape add|clear|test          — точки, где появляется кассета (test кладёт кассету в случайную точку)
+ * /bh lobby build                  — построить лобби там, где вы стоите
+ * /bh lobby set                    — точка лобби там, где вы стоите
+ * /bh lobby pad alpha|bravo        — площадка выбора команды там, где вы стоите
+ * /bh lobby return                 — отправить всех в лобби
  * /bh start | stop | status
  * /bh start test                   — тестовый матч, можно одному
  * /bh skip                         — перемотать текущую фазу (заморозка, раунд, пауза)
@@ -56,6 +67,31 @@ public final class BhCommand {
                 .then(Commands.literal("add").executes(BhCommand::addLoot))
                 .then(Commands.literal("clear").executes(BhCommand::clearLoot))
                 .then(Commands.literal("test").executes(BhCommand::testLoot)));
+
+        LiteralArgumentBuilder<CommandSourceStack> exitSet = Commands.literal("set");
+        LiteralArgumentBuilder<CommandSourceStack> exitClear = Commands.literal("clear");
+        LiteralArgumentBuilder<CommandSourceStack> padSet = Commands.literal("pad");
+        for (BhTeam t : BhTeam.values()) {
+            exitSet.then(Commands.literal(t.id).executes(c -> setExit(c, t)));
+            exitClear.then(Commands.literal(t.id).executes(c -> clearExit(c, t)));
+            padSet.then(Commands.literal(t.id).executes(c -> setPad(c, t)));
+        }
+        root.then(Commands.literal("exit").then(exitSet).then(exitClear));
+
+        root.then(Commands.literal("tape")
+                .then(Commands.literal("add").executes(BhCommand::addTapePoint))
+                .then(Commands.literal("clear").executes(BhCommand::clearTapePoints))
+                .then(Commands.literal("test").executes(BhCommand::testTape)));
+
+        root.then(Commands.literal("lobby")
+                .then(Commands.literal("build").executes(BhCommand::buildLobby))
+                .then(Commands.literal("set").executes(BhCommand::setLobby))
+                .then(padSet)
+                .then(Commands.literal("return").executes(c -> {
+                    LobbyManager.INSTANCE.sendAllToLobby(c.getSource().getServer());
+                    c.getSource().sendSuccess(() -> Component.literal("Everyone sent to the lobby"), true);
+                    return 1;
+                })));
 
         root.then(Commands.literal("start").executes(c -> start(c, false))
                 .then(Commands.literal("test").executes(c -> start(c, true))));
@@ -126,6 +162,76 @@ public final class BhCommand {
         return n;
     }
 
+    private static int setExit(CommandContext<CommandSourceStack> c, BhTeam side) {
+        ServerLevel level = c.getSource().getServer().overworld();
+        BlockPos pos = BlockPos.containing(c.getSource().getPosition());
+        MapData.get(level).setExit(side, pos);
+        if (level.getBlockState(pos).isAir()) level.setBlock(pos, ModBlocks.EXIT_MARKER.get().defaultBlockState(), 3);
+        c.getSource().sendSuccess(() -> Component.literal(side.displayName + " side exit at " + pos.toShortString()
+                + ". The team spawning on this side carries the tape here."), true);
+        return 1;
+    }
+
+    private static int clearExit(CommandContext<CommandSourceStack> c, BhTeam side) {
+        MapData.get(c.getSource().getServer().overworld()).setExit(side, null);
+        c.getSource().sendSuccess(() -> Component.literal(side.displayName + " side exit cleared"), true);
+        return 1;
+    }
+
+    private static int addTapePoint(CommandContext<CommandSourceStack> c) {
+        MapData map = MapData.get(c.getSource().getServer().overworld());
+        BlockPos pos = BlockPos.containing(c.getSource().getPosition());
+        map.tapePoints().add(pos);
+        map.setDirty();
+        c.getSource().sendSuccess(() -> Component.literal("Tape point #" + map.tapePoints().size() + " at " + pos.toShortString()), true);
+        return 1;
+    }
+
+    private static int clearTapePoints(CommandContext<CommandSourceStack> c) {
+        MapData map = MapData.get(c.getSource().getServer().overworld());
+        map.tapePoints().clear();
+        map.setDirty();
+        c.getSource().sendSuccess(() -> Component.literal("Tape points cleared"), true);
+        return 1;
+    }
+
+    private static int testTape(CommandContext<CommandSourceStack> c) {
+        ServerLevel level = c.getSource().getServer().overworld();
+        MapData map = MapData.get(level);
+        if (map.tapePoints().isEmpty()) {
+            c.getSource().sendFailure(Component.literal("No tape points (/bh tape add)"));
+            return 0;
+        }
+        BlockPos p = map.tapePoints().get(level.getRandom().nextInt(map.tapePoints().size()));
+        TapeObjective.spawnTape(level, net.minecraft.world.phys.Vec3.atBottomCenterOf(p));
+        c.getSource().sendSuccess(() -> Component.literal("Tape dropped at " + p.toShortString()
+                + (TapeObjective.mapReady(level) ? "" : ". Note: the tape mode also needs both exits (/bh exit set alpha|bravo)")), false);
+        return 1;
+    }
+
+    private static int buildLobby(CommandContext<CommandSourceStack> c) {
+        ServerLevel level = c.getSource().getServer().overworld();
+        String msg = LobbyBuilder.build(level, BlockPos.containing(c.getSource().getPosition()));
+        c.getSource().sendSuccess(() -> Component.literal(msg), true);
+        return 1;
+    }
+
+    private static int setLobby(CommandContext<CommandSourceStack> c) {
+        ServerLevel level = c.getSource().getServer().overworld();
+        BlockPos pos = BlockPos.containing(c.getSource().getPosition());
+        MapData.get(level).setLobby(pos);
+        level.setDefaultSpawnPos(pos, 0f);
+        c.getSource().sendSuccess(() -> Component.literal("Lobby at " + pos.toShortString() + " (also the world spawn)"), true);
+        return 1;
+    }
+
+    private static int setPad(CommandContext<CommandSourceStack> c, BhTeam t) {
+        BlockPos pos = BlockPos.containing(c.getSource().getPosition());
+        MapData.get(c.getSource().getServer().overworld()).setLobbyPad(t, pos);
+        c.getSource().sendSuccess(() -> Component.literal(t.displayName + " pad at " + pos.toShortString()), true);
+        return 1;
+    }
+
     private static int start(CommandContext<CommandSourceStack> c, boolean test) {
         MatchManager m = MatchManager.INSTANCE;
         ServerPlayer self = c.getSource().getPlayer();
@@ -147,7 +253,9 @@ public final class BhCommand {
         MapData map = MapData.get(c.getSource().getServer().overworld());
         c.getSource().sendSuccess(() -> Component.literal("State: " + m.state() + ", round " + m.round()
                 + ", " + m.secondsLeft() + " s left. Spawns: alpha " + map.spawns(BhTeam.ALPHA).size()
-                + ", bravo " + map.spawns(BhTeam.BRAVO).size() + ". Loot points: " + map.lootPoints().size()), false);
+                + ", bravo " + map.spawns(BhTeam.BRAVO).size() + ". Loot points: " + map.lootPoints().size()
+                + ". Exits: alpha " + (map.exit(BhTeam.ALPHA) != null ? "yes" : "no") + ", bravo " + (map.exit(BhTeam.BRAVO) != null ? "yes" : "no")
+                + ". Tape points: " + map.tapePoints().size() + ". Lobby: " + (map.lobby() != null ? map.lobby().toShortString() : "none")), false);
         c.getSource().sendSuccess(m::scoreLine, false);
         return 1;
     }

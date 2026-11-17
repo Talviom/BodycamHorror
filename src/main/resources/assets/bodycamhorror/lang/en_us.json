@@ -6,5 +6,7 @@
   "key.bodycamhorror.flashlight": "Flashlight",
   "key.categories.bodycamhorror": "Bodycam Horror",
   "key.bodycamhorror.inventory": "Inventory",
-  "container.bodycamhorror.inventory": "Inventory"
+  "container.bodycamhorror.inventory": "Inventory",
+  "block.bodycamhorror.exit_marker": "Exit Marker",
+  "item.bodycamhorror.tape": "VHS Tape"
 }
