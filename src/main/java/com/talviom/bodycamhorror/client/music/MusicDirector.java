@@ -18,7 +18,8 @@ import net.minecraftforge.fml.common.Mod;
  * Ванильная музыка Minecraft не играет совсем. Своя музыка:
  * - меню (главный экран, список серверов, настройки до входа в мир), по кругу;
  * - лобби (в мире, когда матч не идёт), по кругу, тише;
- * - начало раунда: играет всю заставку и ещё 5 секунд после старта, потом затухает;
+ * - начало раунда: один из четырёх отрывков (случайно, не тот же, что в прошлом раунде),
+ *   играет всю заставку и ещё 5 секунд после старта, потом затухает;
  * - короткий удар на итог раунда (свой для победы и поражения) и на итог матча.
  * Громкость регулируется ползунком «Музыка» в настройках звука.
  * Если файла трека нет, Minecraft просто ничего не играет.
@@ -26,7 +27,10 @@ import net.minecraftforge.fml.common.Mod;
 public final class MusicDirector {
     public static final ResourceLocation MENU = id("music.menu");
     public static final ResourceLocation LOBBY = id("music.lobby");
-    public static final ResourceLocation ROUND_START = id("music.round_start");
+    /** Несколько разных отрывков на начало раунда: каждый раунд случайный, без повтора подряд. */
+    public static final ResourceLocation[] ROUND_START = {
+            id("music.round_start_1"), id("music.round_start_2"), id("music.round_start_3"), id("music.round_start_4")
+    };
     public static final ResourceLocation ROUND_WON = id("music.round_won");
     public static final ResourceLocation ROUND_LOST = id("music.round_lost");
     public static final ResourceLocation MATCH_WON = id("music.match_won");
@@ -38,6 +42,8 @@ public final class MusicDirector {
     private static FadingMusic current;
     private static ResourceLocation currentId;
     private static long roundMusicStopAt;
+    private static int lastRoundStart = -1;
+    private static final java.util.Random RND = new java.util.Random();
     private static Kind lastKind;
     private static long lastBannerAt;
 
@@ -54,7 +60,10 @@ public final class MusicDirector {
         switch (kind) {
             case ROUND_START -> {
                 roundMusicStopAt = 0;
-                play(ROUND_START, 0.85f, false, 20, 30);
+                int i = RND.nextInt(ROUND_START.length);
+                if (i == lastRoundStart) i = (i + 1 + RND.nextInt(ROUND_START.length - 1)) % ROUND_START.length;
+                lastRoundStart = i;
+                play(ROUND_START[i], 0.85f, false, 20, 30);
             }
             case GO -> roundMusicStopAt = System.currentTimeMillis() + AFTER_GO_MS;
             case ROUND_WON -> play(ROUND_WON, 0.9f, false, 2, 20);
@@ -76,7 +85,7 @@ public final class MusicDirector {
         // Музыка начала раунда: через 5 секунд после старта плавно уходит.
         if (roundMusicStopAt > 0 && now >= roundMusicStopAt) {
             roundMusicStopAt = 0;
-            if (ROUND_START.equals(currentId)) fadeOutCurrent(50);
+            if (isRoundStart(currentId)) fadeOutCurrent(50);
         }
 
         ResourceLocation wanted = null;
@@ -97,6 +106,11 @@ public final class MusicDirector {
         } else if (loopPlaying) {
             fadeOutCurrent(40);
         }
+    }
+
+    private static boolean isRoundStart(ResourceLocation id) {
+        for (ResourceLocation r : ROUND_START) if (r.equals(id)) return true;
+        return false;
     }
 
     /** Лобби: в мире, матч не идёт (ещё не начинался или уже закончился). */
