@@ -1,5 +1,5 @@
 """Generates the VHS-style GUI assets: bitmap font, round banner plate, screen overlays,
-fear heart, flashlight battery, slots and the inventory screen.
+fear heart (anatomical), flashlight battery, slots and the inventory screen.
 
 Usage: python -I tools/assets/make_gui.py <repo root>
 Everything is drawn here from scratch, including the 5x7 pixel font, so no third-party fonts are used.
@@ -211,40 +211,230 @@ def noise_tex():
     return img
 
 
+# ---------------------------------------------------------------- fear heart (v0.5.5)
+# An anatomical heart, not a valentine: dried-blood muscle, grey severed vessels with black
+# lumens, a bruised vena cava, rot spots and a drip from the cut pulmonary trunk.
+# 4 frames of 48x48: rest, small beat, big beat, panic (vessels swell, dark halo).
+# Drawn with a tiny z-buffer of ellipsoids and tubes, lit, then cut down to fixed palettes.
+HS = 48  # heart frame size
+
+
+def _bez(p, n=64):
+    """Quadratic/cubic Bezier through control points p -> (n, 2) samples."""
+    p = np.asarray(p, float)
+    t = np.linspace(0, 1, n)[:, None]
+    if len(p) == 3:
+        return (1 - t) ** 2 * p[0] + 2 * (1 - t) * t * p[1] + t ** 2 * p[2]
+    return ((1 - t) ** 3 * p[0] + 3 * (1 - t) ** 2 * t * p[1]
+            + 3 * (1 - t) * t ** 2 * p[2] + t ** 3 * p[3])
+
+
+class _Scene:
+    """Tiny z-buffer: each primitive writes depth, normal, material and part id."""
+
+    def __init__(self):
+        py, px = np.mgrid[:HS, :HS] + 0.5
+        # design space is ~50 units tall; fit it into the 48 px frame with a margin
+        self.xx = (px - 2.6) / 0.88
+        self.yy = (py - 4.6) / 0.88
+        self.z = np.full((HS, HS), -1e9)
+        self.n = np.zeros((HS, HS, 3))
+        self.mat = np.full((HS, HS), -1)
+        self.part = np.full((HS, HS), -1)
+        self.t = np.zeros((HS, HS))       # position along a vessel (0 root .. 1 cut end)
+        self.pid = 0
+
+    def _put(self, inside, z, nx, ny, nz, mat, t=None):
+        win = inside & (z > self.z)
+        ln = np.sqrt(nx * nx + ny * ny + nz * nz) + 1e-9
+        self.z[win] = z[win]
+        self.n[win] = np.stack([nx / ln, ny / ln, nz / ln], -1)[win]
+        self.mat[win] = mat
+        self.part[win] = self.pid
+        if t is not None:
+            self.t[win] = t[win]
+        self.pid += 1
+
+    def blob(self, cx, cy, rx, ry, ang, z0, rz, mat):
+        c, s = np.cos(ang), np.sin(ang)
+        dx, dy = self.xx - cx, self.yy - cy
+        u, v = c * dx + s * dy, -s * dx + c * dy
+        d2 = (u / rx) ** 2 + (v / ry) ** 2
+        inside = d2 < 1
+        h = np.sqrt(np.clip(1 - d2, 0, 1))
+        gu, gv = u / rx ** 2, v / ry ** 2
+        nx, ny = c * gu - s * gv, s * gu + c * gv
+        self._put(inside, z0 + h * rz, nx, ny, h / rz, mat)
+
+    def tube(self, pts, r0, r1, z0, z1, mat):
+        cur = _bez(pts, 96)
+        tt = np.linspace(0, 1, len(cur))
+        P = np.stack([self.xx, self.yy], -1)[:, :, None, :]
+        d = np.linalg.norm(P - cur[None, None], axis=-1)
+        k = d.argmin(-1)
+        dist = np.take_along_axis(d, k[..., None], -1)[..., 0]
+        t = tt[k]
+        r = r0 + (r1 - r0) * t
+        inside = dist < r
+        h = np.sqrt(np.clip(1 - (dist / r) ** 2, 0, 1))
+        off = P[:, :, 0, :] - cur[k]
+        self._put(inside, z0 + (z1 - z0) * t + h * r, off[..., 0] / r, off[..., 1] / r, h, mat, t)
+        return cur[-1], cur[-1] - cur[-4], r1
+
+    def cut(self, end, direction, r, z, mat_rim=5, mat_hole=6):
+        """Severed vessel end seen at an angle: pale rim and a black lumen."""
+        dvec = direction / (np.linalg.norm(direction) + 1e-9)
+        ang = np.arctan2(dvec[1], dvec[0]) + np.pi / 2
+        c, s = np.cos(ang), np.sin(ang)
+        dx, dy = self.xx - end[0], self.yy - end[1]
+        u, v = c * dx + s * dy, -s * dx + c * dy
+        outer = (u / (r * 1.05)) ** 2 + (v / (r * 0.55)) ** 2 < 1
+        inner = (u / (r * 0.62)) ** 2 + ((v + r * 0.06) / (r * 0.32)) ** 2 < 1
+        one = np.ones((HS, HS))
+        self._put(outer, z + 3 * one, 0 * one, -0.6 * one, one, mat_rim)
+        self._put(inner, z + 4 * one, 0 * one, 0 * one, one, mat_hole)
+
+
+# Palettes, darkest -> lightest. Muscle stays in dried-blood tones; vessels are paler and
+# greyer, like old meat; veins go a bruised purple-grey.
+PAL = {
+    0: [(28, 7, 7), (52, 12, 11), (78, 19, 16), (104, 29, 24), (128, 42, 34), (150, 64, 52)],    # ventricles
+    1: [(26, 7, 8), (46, 12, 13), (68, 20, 20), (90, 30, 28), (112, 42, 38), (134, 60, 52)],    # atria (darker)
+    2: [(30, 10, 10), (56, 22, 21), (82, 38, 34), (106, 54, 47), (128, 74, 63), (150, 98, 83)],  # arteries
+    3: [(22, 14, 20), (38, 24, 32), (56, 36, 44), (74, 50, 58), (92, 66, 72), (112, 86, 90)],   # veins
+    4: [(40, 30, 20), (70, 56, 38), (98, 82, 58), (124, 108, 80), (150, 136, 104), (172, 160, 128)],  # fat
+    5: [(44, 20, 18), (68, 36, 32), (90, 54, 47), (108, 70, 61), (122, 84, 73), (136, 98, 86)],  # cut rim
+    6: [(6, 2, 2)] * 6,                                                                          # lumen
+}
+OUTLINE = (14, 4, 4)
+
+
+def heart_frame(squeeze, panic, seed):
+    rng_l = np.random.default_rng(seed)
+    sc = _Scene()
+    k = squeeze                                   # 0 relaxed .. 1 fully contracted
+    bs = 1.0 - 0.07 * k                           # ventricles shrink on a beat
+    vs = 1.0 + 0.10 * panic                       # vessels swell in panic
+
+    def B(x, y):                                  # squeeze the body toward its centre
+        return 25 + (x - 25) * bs, 31 + (y - 31) * bs
+
+    # --- back layer: superior vena cava, aortic arch and its branches, left auricle
+    end, d, r = sc.tube([(13, 22), (12, 13), (13, 4)], 3.6 * vs, 3.2 * vs, 2, 4, 3)
+    sc.cut(end, d, r, 6)
+    end, d, r = sc.tube([(23, 20), (21, 3), (35, 2), (38, 15)], 4.6 * vs, 4.0 * vs, 8, 3, 2)
+    for pts, rr, zz in (([(24.5, 6), (24, 3), (23, 0.5)], 1.8, 9),
+                        ([(29, 4.5), (29.5, 2), (30.5, 0.2)], 1.6, 8),
+                        ([(33.5, 5), (35, 2.5), (36.5, 0.8)], 1.7, 8)):
+        e2, d2, r2 = sc.tube(pts, rr * vs, rr * 0.9 * vs, zz, zz, 2)
+        sc.cut(e2, d2, r2, zz + 1)
+    sc.blob(*B(36, 21), 5.0, 3.4, 0.5, 6, 3, 1)          # left auricle
+    # --- body
+    sc.blob(*B(15, 25), 7.5, 6.5, 0.3, 4, 5, 1)          # right atrium
+    sc.blob(*B(27, 32), 13.0 * bs, 11.0 * bs, 0.75, 6, 9, 0)   # left ventricle
+    sc.blob(*B(20, 31), 10.5 * bs, 10.0 * bs, 0.35, 7, 9, 0)   # right ventricle
+    sc.blob(*B(31, 41), 5.5 * bs, 4.0 * bs, 0.9, 5, 6, 0)      # apex
+    # --- front: pulmonary trunk crossing over the aorta
+    end, d, r = sc.tube([(25, 22), (27, 12), (33, 10), (40, 11)], 4.0 * vs, 3.4 * vs, 15, 12, 2)
+    sc.cut(end, d, r, 15)
+    # --- fat along the atrioventricular groove
+    for (fx, fy, frx, fry, fa) in ((21, 22, 4.0, 1.6, -0.25), (28, 21.5, 3.0, 1.3, 0.1)):
+        c, s = np.cos(fa), np.sin(fa)
+        x, y = B(fx, fy)
+        dx, dy = sc.xx - x, sc.yy - y
+        m = ((c * dx + s * dy) / frx) ** 2 + ((-s * dx + c * dy) / fry) ** 2 < 1
+        m &= sc.mat <= 1
+        sc.mat[m] = 4
+
+    # --- shading
+    L = np.array([-0.45, -0.65, 0.62]); L /= np.linalg.norm(L)
+    n = sc.n
+    diff = np.clip((n * L).sum(-1), 0, 1)
+    rim = np.clip(n[..., 0] * 0.6 + n[..., 1] * 0.5, 0, 1) ** 2 * 0.35   # cold back light, lower right
+    lum = 0.12 + 0.78 * diff + rim
+    bayer = np.array([[0, 2], [3, 1]]) / 4.0 - 0.375
+    lum = lum + np.tile(bayer, (HS // 2, HS // 2)) * 0.16
+    # rot: dark bruises and pitting on the muscle
+    noise = rng_l.random((HS, HS))
+    bruise = np.zeros((HS, HS))
+    for _ in range(5):
+        bx, by = rng_l.uniform(14, 36), rng_l.uniform(22, 42)
+        br = rng_l.uniform(2.0, 3.8)
+        bruise += np.clip(1 - np.hypot(sc.xx - bx, sc.yy - by) / br, 0, 1)
+    lum -= np.where(sc.mat <= 1, bruise * 0.35 + (noise < 0.10) * 0.18, (noise < 0.06) * 0.12)
+    idx = np.clip((lum * 6).astype(int), 0, 5)
+
+    img = np.zeros((HS, HS, 4), np.uint8)
+    on = sc.mat >= 0
+    for m, pal in PAL.items():
+        sel = sc.mat == m
+        pal = np.array(pal, np.uint8)
+        img[sel, :3] = pal[idx[sel]]
+    img[on, 3] = 255
+
+    # wet glints
+    H = L + np.array([0, 0, 1.0]); H /= np.linalg.norm(H)
+    spec = (n * H).sum(-1)
+    glint = on & (spec > 0.985) & (sc.mat <= 2)
+    img[glint, :3] = (196, 168, 150)
+
+    # coronary vessels painted on the surface (only over muscle)
+    def paint(pts, col, w=0.55):
+        cur = _bez(pts, 80)
+        for x, y in cur:
+            xi, yi = int(x), int(y)
+            for ox, oy in ((0, 0),) if w < 0.8 else ((0, 0), (1, 0)):
+                X, Y = xi + ox, yi + oy
+                if 0 <= X < HS and 0 <= Y < HS and sc.mat[Y, X] in (0, 1, 4):
+                    img[Y, X, :3] = col
+    vein = (40, 16, 26)
+    art = (120, 62, 52) if not panic else (150, 70, 58)
+    paint([(26, 22), (25, 30), (29, 38), (31, 44)], vein)              # anterior interventricular
+    paint([(25.5, 27), (21, 31), (19, 37)], vein)
+    paint([(27, 33), (33, 33), (37, 37)], vein)
+    paint([(18, 24), (13, 30), (13, 36)], art)                          # right coronary
+    paint([(29, 24), (34, 27), (37, 31)], art)
+    paint([(22, 35), (24, 39), (23, 43)], vein)
+
+    # depth outlines: darken the pixel behind wherever two parts meet with a depth jump
+    z = sc.z
+    edge = np.zeros((HS, HS), bool)
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        zn = np.roll(np.roll(z, dy, 0), dx, 1)
+        pn = np.roll(np.roll(sc.part, dy, 0), dx, 1)
+        edge |= on & (pn >= 0) & (pn != sc.part) & (zn - z > 1.5)
+    img[edge, :3] = (img[edge, :3] * 0.45).astype(np.uint8)
+    # silhouette outline
+    grow = on.copy()
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        grow |= np.roll(np.roll(on, dy, 0), dx, 1)
+    ol = grow & ~on
+    img[ol, :3] = OUTLINE
+    img[ol, 3] = 255
+
+    # a drop of blood hanging from the severed aorta branch and one under the apex
+    # (the beat pushes it further down)
+    drips = ((40, 15, 3 + int(round(k * 3))), (31, 46, 0))
+    for (x, y, l) in drips[:1]:
+        X, Y = int(round(2.6 + x * 0.88)), int(round(4.6 + y * 0.88))
+        for i in range(l):
+            if Y + i < HS:
+                img[Y + i, X] = (92, 14, 12, 255) if i < l - 1 else (122, 22, 18, 255)
+        if Y + l < HS:
+            img[Y + l, X] = (60, 8, 8, 255)
+    if panic:
+        # dark halo, never bright: the frame just gets "heavier"
+        d = np.hypot((sc.xx - 25) / 22, (sc.yy - 27) / 22)
+        a = (np.clip(1 - d, 0, 1) ** 1.5 * 120).astype(np.uint8)
+        out = img[..., 3] == 0
+        img[out, 0], img[out, 1], img[out, 2] = 90, 10, 10
+        img[out, 3] = a[out]
+    return img
+
+
 def heart_frames():
-    frames = []
-    for i, (scale, glow) in enumerate([(0.76, 0.0), (0.84, 0.0), (0.93, 0.25), (0.97, 0.6)]):
-        f = np.zeros((32, 32, 4), float)
-        yy, xx = np.mgrid[:32, :32]
-        u = (xx - 15.5) / (13 * scale)
-        v = -(yy - 14.5) / (13 * scale)
-        # Classic implicit heart curve.
-        val = (u ** 2 + v ** 2 - 1) ** 3 - u ** 2 * v ** 3
-        inside = val <= 0
-        # Shading: darker toward the bottom-right, highlight top-left.
-        shade = np.clip(0.55 + 0.35 * (-u - v) / 2, 0.25, 1.0)
-        f[inside, 0] = 150 + 90 * shade[inside]
-        f[inside, 1] = 18 + 20 * shade[inside]
-        f[inside, 2] = 20 + 18 * shade[inside]
-        f[inside, 3] = 255
-        # Outline.
-        edge = inside & ~(np.roll(inside, 1, 0) & np.roll(inside, -1, 0) & np.roll(inside, 1, 1) & np.roll(inside, -1, 1))
-        f[edge, :3] = (40, 6, 8)
-        # Specular pixel cluster.
-        hl = inside & ((u + 0.45) ** 2 + (v - 0.35) ** 2 < 0.04)
-        f[hl, :3] = (255, 150, 140)
-        # Grit.
-        g = rng.random((32, 32)) < 0.08
-        f[inside & g, :3] *= 0.75
-        if glow:
-            d = np.sqrt(((xx - 15.5) / 15) ** 2 + ((yy - 15.5) / 15) ** 2)
-            ga = np.clip(1 - d, 0, 1) * glow * 160
-            out = ~inside
-            f[out, 0] = 200
-            f[out, 1] = 20
-            f[out, 2] = 20
-            f[out, 3] = ga[out]
-        frames.append(np.clip(f, 0, 255).astype(np.uint8))
+    rng.random((4, 32, 32))   # the old heart drew from the shared stream: keep later textures unchanged
+    frames = [heart_frame(0.0, 0, 11), heart_frame(0.5, 0, 11), heart_frame(1.0, 0, 11), heart_frame(1.0, 1, 11)]
     return np.concatenate(frames, axis=1)
 
 
