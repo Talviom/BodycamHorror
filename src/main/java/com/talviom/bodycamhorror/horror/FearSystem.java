@@ -122,6 +122,7 @@ public final class FearSystem {
                         Flashlight.charge(p),
                         Flashlight.hasFlashlight(p),
                         Flashlight.isOn(p),
+                        Flashlight.isLit(p),
                         inMatch,
                         inMatch && s != null && s.dark,
                         inMatch && s != null && tick - s.lastCombat < 40));

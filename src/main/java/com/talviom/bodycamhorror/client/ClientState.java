@@ -10,6 +10,7 @@ public final class ClientState {
     public static float battery = 1f;
     public static boolean hasFlashlight;
     public static boolean flashlightOn;
+    public static boolean flashlightLit;
     public static boolean inMatch;
     public static boolean dark;
     public static boolean combat;
@@ -29,6 +30,7 @@ public final class ClientState {
         battery = m.battery;
         hasFlashlight = m.hasFlashlight;
         flashlightOn = m.flashlightOn;
+        flashlightLit = m.flashlightLit;
         inMatch = m.inMatch;
         dark = m.dark;
         combat = m.combat;
