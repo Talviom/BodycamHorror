@@ -296,8 +296,8 @@ def inventory():
         img[y0:y1, x0:x1, :3] = 170
         img[y0:y1, x0:x1, 3] = 230
     inv = np.clip(img, 0, 255).astype(np.uint8)
+    # REC, slot numbers and the hint line are drawn by the screen code, so they are not baked in here.
     paste(inv, text_pixels("INVENTORY"), 8, 4)
-    paste(inv, text_pixels("● REC", (220, 50, 40)), PW - 44, 4)
     paste(inv, text_pixels("CAM-01  SP", (150, 150, 140)), 8, PH - 12)
     # Player model box.
     box = (8, 16, 60, 120)
@@ -310,8 +310,6 @@ def inventory():
             inv[y:y + 18, x:x + 18] = (8, 8, 10, 235)
             inv[y, x:x + 18] = inv[y + 17, x:x + 18] = (110, 110, 104, 255)
             inv[y:y + 18, x] = inv[y:y + 18, x + 17] = (110, 110, 104, 255)
-    paste(inv, text_pixels("SLOTS 1-10: HOTBAR", (150, 150, 140)), 70, 28)
-    paste(inv, text_pixels("DRAG TO SWAP / Q TO DROP", (120, 120, 112)), 70, 82)
     return chroma_bleed(inv, 1)
 
 
