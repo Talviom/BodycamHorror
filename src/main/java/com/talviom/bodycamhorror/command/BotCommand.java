@@ -80,7 +80,12 @@ public final class BotCommand {
                                             + (Flashlight.isOn(bot) ? "on" : "off")), false);
                                     return 1;
                                 }))))
-                .then(Commands.literal("debug").executes(BotCommand::debug)));
+                .then(Commands.literal("debug").executes(BotCommand::debug)
+                        .then(Commands.literal("forgetlights").executes(c -> {
+                            Flashlight.debugForget();
+                            c.getSource().sendSuccess(() -> Component.literal("Flashlights forgotten, light blocks left in the world"), false);
+                            return 1;
+                        }))));
     }
 
     private static int addBot(CommandContext<CommandSourceStack> c, BhTeam team, String name) {
@@ -112,7 +117,7 @@ public final class BotCommand {
         MatchManager m = MatchManager.INSTANCE;
         c.getSource().sendSuccess(() -> Component.literal("[bh] state=" + m.state() + " round=" + m.round()
                 + " left=" + m.secondsLeft() + "s score=" + m.score(BhTeam.ALPHA) + ":" + m.score(BhTeam.BRAVO)
-                + " radio=" + RadioState.alive().size()), false);
+                + " radio=" + RadioState.alive().size() + " lights=" + Flashlight.debugLights()), false);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             BhTeam t = m.teamOf(p);
             Entity cam = p.getCamera();

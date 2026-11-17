@@ -28,6 +28,11 @@ public final class ModBlocks {
     public static final RegistryObject<Block> GENERATOR = BLOCKS.register("generator", () -> new PowerSwitchBlock(
             BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f).sound(SoundType.METAL).noLootTable().noOcclusion(), true));
 
+    /** Невидимый свет фонарика (убирает себя сам, см. BeamLightBlock). */
+    public static final RegistryObject<Block> BEAM_LIGHT = BLOCKS.register("beam_light", () -> new com.talviom.bodycamhorror.flashlight.BeamLightBlock(
+            BlockBehaviour.Properties.of().replaceable().noCollission().noLootTable().noOcclusion()
+                    .strength(-1f, 3600000f).lightLevel(s -> s.getValue(com.talviom.bodycamhorror.flashlight.BeamLightBlock.LEVEL))));
+
     public static final RegistryObject<Item> LAMP_ITEM = ITEMS.register("lamp", () -> new BlockItem(LAMP.get(), new Item.Properties()));
     public static final RegistryObject<Item> BREAKER_ITEM = ITEMS.register("breaker", () -> new BlockItem(BREAKER.get(), new Item.Properties()));
     public static final RegistryObject<Item> GENERATOR_ITEM = ITEMS.register("generator", () -> new BlockItem(GENERATOR.get(), new Item.Properties()));

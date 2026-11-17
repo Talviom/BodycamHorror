@@ -1,0 +1,40 @@
+# Свет фонарика не должен оставаться в мире: ни после выключения, ни после «вылета» сервера.
+# Запуск: gradlew runClient -PbhTest=tools/tests/light_leftovers.txt
+# (шейдеры не нужны; с -PbhShaders заодно снимаются скриншоты)
+
+time set midnight
+bh stop
+clear @p
+give @p bodycamhorror:flashlight
+hud off
+fill 1000 119 1000 1040 123 1040 air replace minecraft:light
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+tp @p 1005 120 1005 -90 2
+
+# Включили: свет стоит в мире и держится, пока фонарик горит.
+bh bot light Dev
+expect flashlight: on
+wait 60
+bh debug
+reject lights=0/0
+expect lights=
+shot 22_light_on
+
+# Выключили: свет исчез.
+bh bot light Dev
+expect flashlight: off
+wait 5
+bh debug
+expect lights=0/0
+fill 1000 119 1000 1040 123 1040 air replace bodycamhorror:beam_light
+expect No blocks were filled
+
+# «Вылет»: сервер забыл про фонарики, а блоки света остались. Через полсекунды они убирают себя сами.
+bh bot light Dev
+wait 20
+bh debug forgetlights
+wait 30
+fill 1000 119 1000 1040 123 1040 air replace bodycamhorror:beam_light
+expect No blocks were filled
+shot 23_after_forget
+hud on
