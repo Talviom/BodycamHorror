@@ -126,26 +126,51 @@ public final class ClientHud {
     public static final class HudModEvents {
         @SubscribeEvent
         public static void registerHudOverlays(RegisterGuiOverlaysEvent e) {
-            e.registerAboveAll("bodycam_slots", (gui, g, partialTick, width, height) -> drawSlotStrip(g, width, height));
+            e.registerAboveAll("bodycam_slots", (gui, g, partialTick, width, height) ->
+                    aboveChat(g, () -> drawSlotStrip(g, width, height)));
             e.registerAboveAll("bodycam_fear", (gui, g, partialTick, width, height) -> {
-                if (!creativeOrSpectator()) FearHud.draw(g, width, height);
+                if (!creativeOrSpectator()) aboveChat(g, () -> FearHud.draw(g, width, height));
             });
             e.registerAboveAll("bodycam", (gui, g, partialTick, width, height) -> {
                 Minecraft mc = Minecraft.getInstance();
                 if (!BhConfig.BODYCAM_OVERLAY.get() || mc.player == null || mc.options.hideGui) return;
-                boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
-                String cam = "CAM-" + mc.player.getGameProfile().getName().toUpperCase();
-                String time = LocalDateTime.now().format(TIMECODE);
-                int x = width - 8;
-                int y = 8;
-                // Как на старой камере: выцветшая кость и пепел, красной остаётся только точка записи.
-                if (blink) Vhs.plain(g, "\u25CF", x - Vhs.width("\u25CF REC"), y, 0xFF000000 | Vhs.DRIED_BLOOD);
-                Vhs.ghost(g, Vhs.text("REC"), x - Vhs.width("REC"), y, 0xD0000000 | Vhs.BONE, 1f, 0f);
-                Vhs.plain(g, time, x - Vhs.width(time), y + 11, 0xA0000000 | Vhs.BONE);
-                Vhs.plain(g, cam, x - Vhs.width(cam), y + 22, 0xE0000000 | Vhs.ASH);
+                aboveChat(g, () -> drawCameraText(g, mc, width));
             });
-            // Заставки раунда поверх всего остального.
-            e.registerAboveAll("bodycam_banner", (gui, g, partialTick, width, height) -> Banners.draw(g, width, height));
+            // Заставки раунда поверх всего остального, в том числе поверх открытого чата.
+            e.registerAboveAll("bodycam_banner", (gui, g, partialTick, width, height) ->
+                    aboveChat(g, () -> Banners.draw(g, width, height)));
+        }
+    }
+
+    /** Надписи камеры в правом верхнем углу: REC, время, имя. */
+    private static void drawCameraText(GuiGraphics g, Minecraft mc, int width) {
+        boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
+        String cam = "CAM-" + mc.player.getGameProfile().getName().toUpperCase();
+        String time = LocalDateTime.now().format(TIMECODE);
+        int x = width - 8;
+        int y = 8;
+        // Как на старой камере: выцветшая кость и пепел, красной остаётся только точка записи.
+        if (blink) Vhs.plain(g, "\u25CF", x - Vhs.width("\u25CF REC"), y, 0xFF000000 | Vhs.DRIED_BLOOD);
+        Vhs.ghost(g, Vhs.text("REC"), x - Vhs.width("REC"), y, 0xD0000000 | Vhs.BONE, 1f, 0f);
+        Vhs.plain(g, time, x - Vhs.width(time), y + 11, 0xA0000000 | Vhs.BONE);
+        Vhs.plain(g, cam, x - Vhs.width(cam), y + 22, 0xE0000000 | Vhs.ASH);
+    }
+
+    /**
+     * Ванильный чат рисует свои строки со сдвигом по глубине (z = 50..100), поэтому всё, что
+     * нарисовано на z = 0, оказывалось под ним: открытый чат светлым пятном проступал сквозь
+     * чёрную заставку раунда, сердце и полоску слотов. Наш HUD рисуем выше чата.
+     * Строка ввода чата (сам экран чата) всё равно остаётся сверху: экраны рисуются после HUD.
+     */
+    private static final float ABOVE_CHAT_Z = 200f;
+
+    private static void aboveChat(GuiGraphics g, Runnable draw) {
+        g.pose().pushPose();
+        g.pose().translate(0f, 0f, ABOVE_CHAT_Z);
+        try {
+            draw.run();
+        } finally {
+            g.pose().popPose();
         }
     }
 }
