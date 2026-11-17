@@ -7,7 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
- * Клиент: сердце страха и батарейка фонарика в левом нижнем углу, реплики персонажа.
+ * Клиент: сердце страха и батарейка фонарика в левом верхнем углу, под ними реплики персонажа.
  * Сердце бьётся тем чаще и сильнее, чем выше страх (от 60 до 180 ударов в минуту).
  */
 public final class FearHud {
@@ -20,12 +20,13 @@ public final class FearHud {
     static void draw(GuiGraphics g, int w, int h) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui) return;
+        // Левый верхний угол: внизу слева сердце и реплики закрывал чат.
         int x = 10;
-        int bottom = h - 10;
+        int bottom = 10 + 36;
 
         if (ClientState.inMatch) {
             int size = drawHeart(g, x, bottom);
-            drawComment(g, x, bottom - size - 6);
+            drawComment(g, x, bottom + 6 + 9);
             x += size + 6;
         }
         if (ClientState.hasFlashlight) drawBattery(g, x, bottom - 16);
