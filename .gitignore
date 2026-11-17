@@ -7,3 +7,6 @@ run/
 out/
 .idea/
 *.iml
+
+# Python cache from tools/assets
+__pycache__/
