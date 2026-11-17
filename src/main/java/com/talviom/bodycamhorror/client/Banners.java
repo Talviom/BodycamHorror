@@ -29,6 +29,13 @@ public final class Banners {
             "DON'T LOOK BACK", "IT HEARS YOU", "STAY IN THE LIGHT", "YOU ARE NOT ALONE", "COUNT YOUR TEAM"
     };
 
+    /** Строка запёкшейся кровью под счётом, своя на каждый раунд. */
+    private static final String[] OMENS = {
+            "STAY TOGETHER.", "DON'T LOOK BACK.", "COUNT YOUR FRIENDS.", "IT HEARD THAT.",
+            "KEEP THE LIGHTS ON.", "SOMETHING CAME WITH YOU.", "DON'T WANDER OFF."
+    };
+    private static final String[] MONTHS = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+
     private static BannerPacket current;
     private static long shownAt;
     private static long durationMs;
@@ -96,10 +103,7 @@ public final class Banners {
         int ash = alpha | Vhs.ASH;
         int blood = alpha | Vhs.DRIED_BLOOD;
 
-        // Скромная плашка камеры в углу: точка записи цвета запёкшейся крови.
-        boolean blink = (now / 700) % 2 == 0;
-        if (blink) Vhs.plain(g, "●", 12, 12, (Mth.clamp((int) (200 * fx), 4, 200) << 24) | Vhs.DRIED_BLOOD);
-        Vhs.plain(g, m.kind == Kind.ROUND_START ? "TAPE " + String.format("%02d", m.round) : "END OF TAPE", 24, 12, ash);
+        drawOsd(g, w, h, now, fx);
 
         int cx = w / 2;
         int py = h / 2 - PLATE_H / 2 - 12;
@@ -130,14 +134,35 @@ public final class Banners {
         }
 
         if (m.kind == Kind.ROUND_START) {
-            int below = py + PLATE_H + 12;
+            String omen = OMENS[Math.floorMod(m.round * 7 + 3, OMENS.length)];
+            Vhs.ghostCentered(g, Vhs.title(omen), cx, py + 60, blood, 1f, 0.3f);
+            int below = py + PLATE_H + 16;
             if (!m.team.isEmpty()) Vhs.ghostCentered(g, Vhs.title("YOU ARE " + m.team), cx, below, ash, 1f, 0f);
             if (m.swapped) Vhs.ghostCentered(g, Vhs.title("SIDES SWAPPED"), cx, below + 12, blood, 1f, 0f);
             long leftMs = Math.max(0, durationMs - t);
             int secs = (int) Math.ceil(leftMs / 1000.0);
-            Vhs.ghostCentered(g, Vhs.title(String.valueOf(secs)), cx, h - 48, bone, 2f, 0.3f);
+            Vhs.ghostCentered(g, Vhs.title(String.valueOf(secs)), cx, h - 48, ash, 2f, 0.3f);
             drawWhisper(g, w, h, now, fx);
         }
+    }
+
+    /** Тусклая разметка камеры по углам: CAM 01, запись и дата, как на старой кассете. */
+    private static void drawOsd(GuiGraphics g, int w, int h, long now, float fx) {
+        int a = Mth.clamp((int) (170 * fx), 4, 170) << 24;
+        int dim = a | Vhs.ASH;
+        Vhs.plain(g, "CAM 01", 12, 12, dim);
+        boolean blink = (now / 700) % 2 == 0;
+        String rec = "REC";
+        int rx = w - 12 - Vhs.width(rec);
+        Vhs.plain(g, rec, rx, 12, dim);
+        if (blink) Vhs.plain(g, "\u25CF", rx - Vhs.width("\u25CF "), 12, a | Vhs.DRIED_BLOOD);
+        // Дата из прошлого и живые часы: запись будто сделана на старую камеру.
+        java.time.LocalDateTime t = java.time.LocalDateTime.now();
+        int hour = t.getHour() % 12 == 0 ? 12 : t.getHour() % 12;
+        String date = MONTHS[t.getMonthValue() - 1] + " " + String.format("%02d", t.getDayOfMonth()) + " 1998";
+        String time = String.format("%d:%02d:%02d %s", hour, t.getMinute(), t.getSecond(), t.getHour() < 12 ? "AM" : "PM");
+        Vhs.plain(g, date, 12, h - 22, dim);
+        Vhs.plain(g, time, w - 12 - Vhs.width(time), h - 22, dim);
     }
 
     /** Едва заметная фраза на долю секунды в случайном месте кадра. */

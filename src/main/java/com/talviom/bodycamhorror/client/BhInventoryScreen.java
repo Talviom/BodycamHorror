@@ -78,7 +78,15 @@ public class BhInventoryScreen extends AbstractContainerScreen<BhInventoryMenu> 
     @Override
     protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
         // В текстуре надписей нет, все подписи рисует код.
-        Vhs.ghost(g, Vhs.title("INVENTORY"), 8, 5, 0xFF000000 | Vhs.BONE, 1f, 0f);
+        Vhs.ghost(g, Vhs.title("PERSONAL EFFECTS"), 8, 5, 0xFF000000 | Vhs.BONE, 1f, 0f);
+        Vhs.plain(g, "ITEMS ON THE BODY", BhInventoryMenu.GRID_X, 18, 0xFF000000 | Vhs.SOOT);
+        // Подпись под «фотографией» персонажа.
+        String subject = "SUBJECT";
+        Vhs.plain(g, subject, (MODEL_X0 + MODEL_X1) / 2 - Vhs.width(subject) / 2, MODEL_Y1 + 4, 0xFF000000 | Vhs.ASH);
+        // Строка запёкшейся кровью внизу.
+        String omen = "THEY WILL FIND WHAT YOU LEAVE.";
+        Vhs.ghost(g, Vhs.title(omen), imageWidth - 8 - Vhs.width(Vhs.title(omen)), imageHeight - 14,
+                0xFF000000 | Vhs.DRIED_BLOOD, 1f, 0f);
 
         boolean blink = (System.currentTimeMillis() / 700) % 2 == 0;
         String rec = "REC";
@@ -93,7 +101,7 @@ public class BhInventoryScreen extends AbstractContainerScreen<BhInventoryMenu> 
             Vhs.plain(g, n, sx, BhInventoryMenu.GRID_Y - 10, 0xFF000000 | Vhs.ASH);
         }
         Vhs.plain(g, "SHIFT+CLICK: MOVE   Q: DROP", BhInventoryMenu.GRID_X,
-                BhInventoryMenu.GRID_Y + 2 * BhInventoryMenu.PITCH + 8, 0xFF4E4A44);
+                BhInventoryMenu.GRID_Y + 2 * BhInventoryMenu.PITCH + 8, 0xFF000000 | Vhs.SOOT);
     }
 
     @Override

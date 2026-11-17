@@ -25,9 +25,10 @@ public final class Vhs {
     public static final ResourceLocation VIGNETTE = rl("textures/gui/vignette.png");
 
     /** Палитра хоррора: выцветшая кость, пепел, запёкшаяся кровь. */
-    public static final int BONE = 0xC9C2B2;
-    public static final int ASH = 0x7D786E;
-    public static final int DRIED_BLOOD = 0x7E1A16;
+    public static final int BONE = 0xC4BCAA;
+    public static final int ASH = 0x787266;
+    public static final int SOOT = 0x4E4A42;
+    public static final int DRIED_BLOOD = 0x7A1612;
 
     private static final Map<ResourceLocation, Boolean> PRESENT = new HashMap<>();
     private static final Random RND = new Random();
