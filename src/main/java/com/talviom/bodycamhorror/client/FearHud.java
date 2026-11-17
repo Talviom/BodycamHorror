@@ -78,7 +78,9 @@ public final class FearHud {
         if (ClientState.comment.isEmpty() || age > COMMENT_MS) return;
         float a = age < 300 ? age / 300f : age > COMMENT_MS - 600 ? (COMMENT_MS - age) / 600f : 1f;
         int alpha = Mth.clamp((int) (a * 230), 8, 230) << 24;
-        Vhs.chroma(g, ClientState.comment, x, y - 9, alpha | 0xDDDDDD, 1f);
+        // Чем сильнее страх, тем заметнее дрожит реплика.
+        float shake = ClientState.fear >= 85f ? 1.0f : ClientState.fear >= 60f ? 0.5f : 0f;
+        Vhs.ghost(g, Vhs.title(ClientState.comment), x, y - 9, alpha | Vhs.BONE, 1f, shake);
     }
 
     private static void drawBattery(GuiGraphics g, int x, int y) {

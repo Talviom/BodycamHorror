@@ -13,13 +13,21 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Клиент: общий стиль VHS. Шрифт bodycamhorror:vhs, полосы развёртки, шум, смещение цветов.
+ * Клиент: общий стиль «найденной плёнки». Шрифт камеры bodycamhorror:vhs для REC и таймкода,
+ * шрифт печатной машинки bodycamhorror:horror для заголовков, плёночное зерно, тёмные края, мерцание.
  * Если какой-то текстуры или шрифта нет, рисуется простой запасной вариант, а игра не падает.
  */
 public final class Vhs {
     public static final ResourceLocation FONT = rl("vhs");
-    public static final ResourceLocation SCANLINES = rl("textures/gui/scanlines.png");
     public static final ResourceLocation NOISE = rl("textures/gui/noise.png");
+    /** Шрифт заголовков: потёртая печатная машинка (bodycamhorror:horror). */
+    public static final ResourceLocation TITLE_FONT = rl("horror");
+    public static final ResourceLocation VIGNETTE = rl("textures/gui/vignette.png");
+
+    /** Палитра хоррора: выцветшая кость, пепел, запёкшаяся кровь. */
+    public static final int BONE = 0xC9C2B2;
+    public static final int ASH = 0x7D786E;
+    public static final int DRIED_BLOOD = 0x7E1A16;
 
     private static final Map<ResourceLocation, Boolean> PRESENT = new HashMap<>();
     private static final Random RND = new Random();
@@ -45,54 +53,89 @@ public final class Vhs {
         return hasFont() ? c.copy().withStyle(st -> st.withFont(FONT)) : c;
     }
 
+    /** Заголовок шрифтом печатной машинки (или VHS, если его нет). */
+    public static Component title(String s) {
+        if (has(rl("font/horror.json"))) return Component.literal(s).withStyle(st -> st.withFont(TITLE_FONT));
+        return text(s);
+    }
+
+    public static int width(Component c) {
+        return Minecraft.getInstance().font.width(c);
+    }
+
+    /**
+     * Текст с бледным «двойником»: та же надпись того же цвета, прозрачная и чуть сдвинутая,
+     * медленно плавает. Без цветных каналов: так выглядит старая затёртая плёнка, а не киберпанк.
+     * @param shake сила дрожи в пикселях (0 = без дрожи)
+     */
+    public static void ghost(GuiGraphics g, Component c, int x, int y, int color, float scale, float shake) {
+        Font font = Minecraft.getInstance().font;
+        int a = color >>> 24;
+        if (a == 0) a = 255;
+        int rgb = color & 0xFFFFFF;
+        long now = System.currentTimeMillis();
+        float gx = (float) Math.sin(now / 900.0) * 1.2f + 1.0f;
+        float gy = (float) Math.cos(now / 1300.0) * 0.6f;
+        float sx = shake > 0 ? (RND.nextFloat() - 0.5f) * shake : 0f;
+        float sy = shake > 0 ? (RND.nextFloat() - 0.5f) * shake : 0f;
+        g.pose().pushPose();
+        g.pose().translate(x + sx, y + sy, 0);
+        g.pose().scale(scale, scale, 1f);
+        g.drawString(font, c, Math.round(gx), Math.round(gy), (Math.max(4, (int) (a * 0.22f)) << 24) | rgb, false);
+        g.drawString(font, c, 0, 0, (Math.max(4, a) << 24) | rgb, false);
+        g.pose().popPose();
+    }
+
+    public static void ghostCentered(GuiGraphics g, Component c, int cx, int y, int color, float scale, float shake) {
+        int w = Math.round(width(c) * scale);
+        ghost(g, c, cx - w / 2, y, color, scale, shake);
+    }
+
+    /** Тёмные края кадра: свет есть только в центре. */
+    public static void vignette(GuiGraphics g, int w, int h, float strength) {
+        if (strength <= 0f) return;
+        if (has(VIGNETTE)) {
+            blitAlpha(g, VIGNETTE, 0, 0, w, h, 0, 0, 256, 256, 256, 256, Math.min(1f, strength));
+            return;
+        }
+        int a = Math.min(255, (int) (strength * 220));
+        int steps = 12;
+        for (int i = 0; i < steps; i++) {
+            float k = 1f - i / (float) steps;
+            int ai = (int) (a * k * k);
+            if (ai <= 0) continue;
+            int color = ai << 24;
+            int bx = i * (w / 5) / steps;
+            int by = i * (h / 4) / steps;
+            int bx2 = (i + 1) * (w / 5) / steps;
+            int by2 = (i + 1) * (h / 4) / steps;
+            g.fill(bx, 0, bx2, h, color);
+            g.fill(w - bx2, 0, w - bx, h, color);
+            g.fill(bx2, by, w - bx2, by2, color);
+            g.fill(bx2, h - by2, w - bx2, h - by, color);
+        }
+    }
+
+    private static long flickerUntil;
+    private static int flickerAlpha;
+
+    /** Неровное дыхание яркости, как у старой лампы: мелкие провалы и редкие глубокие. */
+    public static void flicker(GuiGraphics g, int w, int h) {
+        long now = System.currentTimeMillis();
+        if (now > flickerUntil) {
+            boolean deep = RND.nextInt(40) == 0;
+            flickerAlpha = deep ? 90 + RND.nextInt(60) : RND.nextInt(22);
+            flickerUntil = now + (deep ? 60 + RND.nextInt(60) : 70 + RND.nextInt(120));
+        }
+        if (flickerAlpha > 0) g.fill(0, 0, w, h, flickerAlpha << 24);
+    }
+
     public static int width(String s) {
         return Minecraft.getInstance().font.width(text(s));
     }
 
-    /** Текст с разъехавшимися красным и голубым каналами, как на старой плёнке. */
-    public static void chroma(GuiGraphics g, String s, int x, int y, int color, float scale) {
-        Font font = Minecraft.getInstance().font;
-        Component c = text(s);
-        g.pose().pushPose();
-        g.pose().translate(x, y, 0);
-        g.pose().scale(scale, scale, 1f);
-        int alpha = color & 0xFF000000;
-        g.drawString(font, c, -1, 0, (alpha == 0 ? 0x90000000 : (int) ((alpha >>> 24) * 0.55f) << 24) | 0xFF2040, false);
-        g.drawString(font, c, 1, 0, (alpha == 0 ? 0x90000000 : (int) ((alpha >>> 24) * 0.55f) << 24) | 0x20E0FF, false);
-        g.drawString(font, c, 0, 0, color, false);
-        g.pose().popPose();
-    }
-
-    /** То же, но по центру относительно cx. */
-    public static void chromaCentered(GuiGraphics g, String s, int cx, int y, int color, float scale) {
-        int w = Math.round(width(s) * scale);
-        chroma(g, s, cx - w / 2, y, color, scale);
-    }
-
     public static void plain(GuiGraphics g, String s, int x, int y, int color) {
         g.drawString(Minecraft.getInstance().font, text(s), x, y, color, false);
-    }
-
-    /** Полосы развёртки поверх области. */
-    public static void scanlines(GuiGraphics g, int x, int y, int w, int h, float alpha) {
-        if (alpha <= 0f) return;
-        if (has(SCANLINES)) {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
-            for (int yy = y; yy < y + h; yy += 4) {
-                for (int xx = x; xx < x + w; xx += 256) {
-                    int bw = Math.min(256, x + w - xx);
-                    int bh = Math.min(4, y + h - yy);
-                    g.blit(SCANLINES, xx, yy, 0f, 0f, bw, bh, 256, 4);
-                }
-            }
-            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-            RenderSystem.disableBlend();
-        } else {
-            int a = (int) (alpha * 70) << 24;
-            for (int yy = y; yy < y + h; yy += 3) g.fill(x, yy, x + w, yy + 1, a);
-        }
     }
 
     /** Шум плёнки: текстура со случайным сдвигом каждый кадр. */
@@ -125,14 +168,6 @@ public final class Vhs {
                 g.fill(px, py, px + 1, py + 1, c);
             }
         }
-    }
-
-    /** Бегущая светлая полоса, как при плохом трекинге. */
-    public static void trackingBar(GuiGraphics g, int w, int h) {
-        long now = System.currentTimeMillis();
-        int y = (int) ((now / 9) % (h + 80)) - 40;
-        g.fill(0, y, w, y + 3, 0x16FFFFFF);
-        g.fill(0, y + 3, w, y + 14, 0x0CFFFFFF);
     }
 
     /** Нарисовать кусок текстуры с прозрачностью. */
