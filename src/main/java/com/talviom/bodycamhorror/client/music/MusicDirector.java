@@ -41,6 +41,9 @@ public final class MusicDirector {
 
     private static FadingMusic current;
     private static ResourceLocation currentId;
+    private static long currentStartedAt;
+    /** Streamed sounds start asynchronously; give a new track this long before treating "not active" as finished. */
+    private static final long START_GRACE_MS = 1500;
     private static long roundMusicStopAt;
     private static int lastRoundStart = -1;
     private static final java.util.Random RND = new java.util.Random();
@@ -77,7 +80,11 @@ public final class MusicDirector {
     private static void tick() {
         Minecraft mc = Minecraft.getInstance();
         long now = System.currentTimeMillis();
-        if (current != null && current.isStopped()) {
+        // A one-shot track that simply plays to its end is never marked stopped on the instance;
+        // ask the sound manager whether it is still playing (after a short grace period at start).
+        // Without this, menu and lobby music never came back after a match result or after leaving the world.
+        if (current != null && (current.isStopped()
+                || (now - currentStartedAt > START_GRACE_MS && !mc.getSoundManager().isActive(current)))) {
             current = null;
             currentId = null;
         }
@@ -127,6 +134,7 @@ public final class MusicDirector {
         Minecraft.getInstance().getSoundManager().play(music);
         current = music;
         currentId = id;
+        currentStartedAt = System.currentTimeMillis();
     }
 
     private static void fadeOutCurrent(int ticks) {
