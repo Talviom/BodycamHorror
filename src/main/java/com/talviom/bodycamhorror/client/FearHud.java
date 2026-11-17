@@ -12,6 +12,8 @@ import net.minecraft.util.Mth;
  */
 public final class FearHud {
     private static final ResourceLocation HEART = Vhs.rl("textures/gui/heart.png");
+    /** Анатомическое сердце: 4 кадра 48x48 в одну строку (tools/assets/make_gui.py). */
+    private static final int HEART_FRAME = 48;
     private static final ResourceLocation BATTERY = Vhs.rl("textures/gui/battery.png");
     private static final long COMMENT_MS = 3500;
 
@@ -53,14 +55,14 @@ public final class FearHud {
             bump = 0f;
         }
         float k = fear / 100f;
-        int base = 22 + Math.round(k * 8);
+        int base = 26 + Math.round(k * 8);
         int size = base + Math.round(bump * (2 + k * 4));
         float alpha = 0.45f + 0.55f * Mth.clamp(k * 2f, 0f, 1f);
         int y = bottom - size;
         int dx = x + (base + 6 - size) / 2;
 
         if (Vhs.has(HEART)) {
-            Vhs.blitAlpha(g, HEART, dx, y, size, size, frame * 32, 0, 32, 32, 128, 32, alpha);
+            Vhs.blitAlpha(g, HEART, dx, y, size, size, frame * HEART_FRAME, 0, HEART_FRAME, HEART_FRAME, HEART_FRAME * 4, HEART_FRAME, alpha);
         } else {
             float scale = size / 9f;
             int a = (int) (alpha * 255) << 24;
