@@ -67,11 +67,14 @@ public final class BotCommand {
                         .then(Commands.literal("light")
                                 .then(Commands.argument("name", StringArgumentType.word()).suggests(BOT_NAMES).executes(c -> {
                                     String name = StringArgumentType.getString(c, "name");
-                                    ServerPlayer bot = BotPlayers.get(name);
-                                    if (bot == null) {
-                                        c.getSource().sendFailure(Component.literal("No bot named " + name));
+                                    ServerPlayer found = BotPlayers.get(name);
+                                    // Годится и обычный игрок: так сценарий щёлкает фонариком за хозяина мира.
+                                    if (found == null) found = c.getSource().getServer().getPlayerList().getPlayerByName(name);
+                                    if (found == null) {
+                                        c.getSource().sendFailure(Component.literal("No player named " + name));
                                         return 0;
                                     }
+                                    ServerPlayer bot = found;
                                     Flashlight.toggle(bot);
                                     c.getSource().sendSuccess(() -> Component.literal(name + " flashlight: "
                                             + (Flashlight.isOn(bot) ? "on" : "off")), false);

@@ -8,9 +8,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.io.IOException;
@@ -29,6 +31,8 @@ import java.util.List;
  *   wait 40            подождать 40 тиков
  *   expect текст       в ответе на прошлую команду должен быть этот текст, иначе FAIL
  *   reject текст       в ответе на прошлую команду этого текста быть не должно
+ *   shot имя           скриншот клиента в run/screenshots/имя.png (с шейдерами, как по F2)
+ *   hud on|off         показать или спрятать интерфейс (как F1)
  *   любая другая строка выполняется как команда сервера (без косой черты)
  * В конце пишет [bh-test] DONE и число ошибок.
  */
@@ -104,6 +108,13 @@ public final class TestScript {
                 check(line.substring(7).trim(), true);
             } else if (line.startsWith("reject ")) {
                 check(line.substring(7).trim(), false);
+            } else if (line.startsWith("shot ")) {
+                String name = line.substring(5).trim();
+                BodycamHorror.LOGGER.info(PREFIX + "> " + line);
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.shot(name));
+            } else if (line.startsWith("hud ")) {
+                boolean visible = line.substring(4).trim().equals("on");
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.hud(visible));
             } else {
                 run(server, line);
             }

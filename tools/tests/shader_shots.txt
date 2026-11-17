@@ -1,0 +1,41 @@
+# Скриншоты картинки с шейдером: светлая комната, темнота, фонарик.
+# Запуск: gradlew runClient -PbhShaders -PbhTest=tools/tests/shader_shots.txt
+# Результат: run/screenshots/*.png
+
+bh stop
+bh bot remove all
+execute positioned 1000 120 1000 run bh arena build
+time set midnight
+weather clear
+gamemode adventure @p
+clear @p
+give @p bodycamhorror:flashlight
+tp @p 1003.5 120 1003.5 -45 8
+hud off
+wait 200
+shot 01_lit_room
+
+# Свет выключен: убираем лампы.
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+wait 100
+shot 02_dark_room
+
+bh bot light Dev
+wait 60
+shot 03_flashlight_room
+
+# Взгляд вдоль коридора дверей, фонарик включён.
+tp @p 1005 120 1005 -90 0
+wait 60
+shot 04_flashlight_doors
+
+# Союзник с фонариком в соседней комнате, свой выключен.
+bh bot light Dev
+execute positioned 1012 120 1005 run bh bot add alpha A1
+give A1 bodycamhorror:flashlight
+tp A1 1012 120 1005 90 0
+bh bot light A1
+wait 60
+shot 05_teammate_light
+bh bot remove all
+hud on
