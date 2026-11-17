@@ -72,10 +72,10 @@ public final class ClientHud {
             if (Vhs.has(tex)) {
                 g.blit(tex, x, y, CELL, CELL, 0f, 0f, 24, 24, 24, 24);
             } else {
-                g.fill(x, y, x + CELL, y + CELL, selected ? 0x70FFFFFF : 0x50000000);
+                g.fill(x, y, x + CELL, y + CELL, selected ? 0x40000000 | Vhs.BONE : 0x50000000);
                 if (selected) {
-                    g.fill(x, y, x + CELL, y + 1, 0xFFFFFFFF);
-                    g.fill(x, y + CELL - 1, x + CELL, y + CELL, 0xFFFFFFFF);
+                    g.fill(x, y, x + CELL, y + 1, 0xC0000000 | Vhs.BONE);
+                    g.fill(x, y + CELL - 1, x + CELL, y + CELL, 0xC0000000 | Vhs.BONE);
                 }
             }
             if (!s.isEmpty()) {
@@ -86,13 +86,13 @@ public final class ClientHud {
                 g.renderItemDecorations(font, s, 0, 0);
                 g.pose().popPose();
             }
-            Vhs.plain(g, String.valueOf(i + 1), x + 1, y - 10, selected ? 0xFFFFFFFF : 0xFF9E9E9E);
+            Vhs.plain(g, String.valueOf(i + 1), x + 1, y - 10, selected ? 0xE0000000 | Vhs.BONE : 0xE0000000 | Vhs.ASH);
             x += CELL + 2;
         }
         ItemStack held = inv.getItem(inv.selected);
         if (!held.isEmpty()) {
             String name = held.getHoverName().getString();
-            Vhs.plain(g, name, width - 8 - Vhs.width(name), y - 24, 0xFFE0E0E0);
+            Vhs.plain(g, name, width - 8 - Vhs.width(name), y - 24, 0xC8000000 | Vhs.BONE);
         }
     }
 
@@ -138,10 +138,11 @@ public final class ClientHud {
                 String time = LocalDateTime.now().format(TIMECODE);
                 int x = width - 8;
                 int y = 8;
-                if (blink) Vhs.plain(g, "\u25CF", x - Vhs.width("\u25CF REC"), y, 0xFFE53935);
-                Vhs.plain(g, "REC", x - Vhs.width("REC"), y, 0xFFFFFFFF);
-                Vhs.plain(g, time, x - Vhs.width(time), y + 11, 0xFFE0E0E0);
-                Vhs.plain(g, cam, x - Vhs.width(cam), y + 22, 0xFFBDBDBD);
+                // Как на старой камере: выцветшая кость и пепел, красной остаётся только точка записи.
+                if (blink) Vhs.plain(g, "\u25CF", x - Vhs.width("\u25CF REC"), y, 0xFF000000 | Vhs.DRIED_BLOOD);
+                Vhs.ghost(g, Vhs.text("REC"), x - Vhs.width("REC"), y, 0xD0000000 | Vhs.BONE, 1f, 0f);
+                Vhs.plain(g, time, x - Vhs.width(time), y + 11, 0xA0000000 | Vhs.BONE);
+                Vhs.plain(g, cam, x - Vhs.width(cam), y + 22, 0xE0000000 | Vhs.ASH);
             });
             // Заставки раунда поверх всего остального.
             e.registerAboveAll("bodycam_banner", (gui, g, partialTick, width, height) -> Banners.draw(g, width, height));

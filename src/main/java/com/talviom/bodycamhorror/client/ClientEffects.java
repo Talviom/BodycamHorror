@@ -96,11 +96,11 @@ public final class ClientEffects {
             int x = r.nextInt(Math.max(1, w));
             int bw = 20 + r.nextInt(Math.max(1, w / 2));
             int alpha = 30 + r.nextInt(90);
-            int rgb = r.nextBoolean() ? 0xFFFFFF : 0x000000;
+            int rgb = r.nextBoolean() ? Vhs.BONE : 0x000000;
             g.fill(x, y, Math.min(w, x + bw), y + bh, (alpha << 24) | rgb);
         }
         int rolling = (int) ((now / 6) % (h + 60)) - 60;
-        g.fill(0, rolling, w, rolling + 40, 0x22FFFFFF);
-        if (r.nextInt(6) == 0) g.fill(0, 0, w, h, 0x18FFFFFF);
+        g.fill(0, rolling, w, rolling + 40, 0x1E000000 | Vhs.BONE);
+        if (r.nextInt(6) == 0) g.fill(0, 0, w, h, 0x14000000 | Vhs.BONE);
     }
 }
