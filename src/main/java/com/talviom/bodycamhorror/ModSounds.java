@@ -19,6 +19,9 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> HEARTBEAT = register("heartbeat");
     public static final RegistryObject<SoundEvent> KNOCK = register("knock");
     public static final RegistryObject<SoundEvent> LAMP_BUZZ = register("lamp_buzz");
+    public static final RegistryObject<SoundEvent> TAPE_HISS = register("tape_hiss");
+    public static final RegistryObject<SoundEvent> TAPE_PICKUP = register("tape_pickup");
+    public static final RegistryObject<SoundEvent> TAPE_OUT = register("tape_out");
 
     private ModSounds() {}
 

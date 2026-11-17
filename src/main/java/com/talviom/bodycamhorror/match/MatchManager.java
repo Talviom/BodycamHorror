@@ -3,6 +3,8 @@ package com.talviom.bodycamhorror.match;
 import com.talviom.bodycamhorror.BhConfig;
 import com.talviom.bodycamhorror.flashlight.Flashlight;
 import com.talviom.bodycamhorror.horror.FearSystem;
+import com.talviom.bodycamhorror.lobby.LobbyManager;
+import com.talviom.bodycamhorror.objective.TapeObjective;
 import com.talviom.bodycamhorror.loot.LootSpawner;
 import com.talviom.bodycamhorror.net.BannerPacket;
 import com.talviom.bodycamhorror.net.BhNetwork;
@@ -75,6 +77,11 @@ public final class MatchManager {
         return Math.max(0, ticksLeft / 20);
     }
 
+    /** Сторона карты, на которой команда сейчас спавнится и куда выносит кассету (стороны меняются). */
+    public BhTeam sideOf(BhTeam team) {
+        return swapped ? team.other() : team;
+    }
+
     // ---------- команды ----------
 
     public void setTeam(MinecraftServer server, ServerPlayer p, BhTeam team) {
@@ -136,8 +143,10 @@ public final class MatchManager {
         state = MatchState.LOBBY;
         alive.clear();
         frozenAt.clear();
+        TapeObjective.INSTANCE.onMatchEnd(server);
         releaseAll(server);
         broadcastBanner(server, BannerPacket.Kind.STOPPED, 60);
+        LobbyManager.INSTANCE.scheduleReturn(60);
     }
 
     private void startRound(MinecraftServer server) {
@@ -170,6 +179,9 @@ public final class MatchManager {
             }
         }
 
+        // Кассета появляется в случайной точке (если на карте есть выходы и точки кассеты).
+        TapeObjective.INSTANCE.onRoundStart(server);
+
         state = MatchState.PREP;
         ticksLeft = BhConfig.PREP_SECONDS.get() * 20;
         // Экран затемнён, пока игроки заморожены: заставка VHS с номером раунда и счётом.
@@ -184,12 +196,19 @@ public final class MatchManager {
         frozenAt.clear();
         ticksLeft = BhConfig.ROUND_SECONDS.get() * 20;
         broadcastBanner(server, BannerPacket.Kind.GO, 30);
+        TapeObjective.INSTANCE.announce(server, round == 1);
         // За время заморозки команда могла остаться без игроков (все вышли).
         if (!testMode) checkRoundOver(server);
     }
 
     private void endRound(MinecraftServer server, BhTeam winner) {
+        endRound(server, winner, null);
+    }
+
+    /** @param reason строка в чат всем игрокам, чем кончился раунд (null = без пояснения) */
+    private void endRound(MinecraftServer server, BhTeam winner, String reason) {
         state = MatchState.ROUND_END;
+        TapeObjective.INSTANCE.onRoundEnd();
         ticksLeft = BhConfig.ROUND_END_SECONDS.get() * 20;
         if (winner != null) score.merge(winner, 1, Integer::sum);
 
@@ -209,9 +228,18 @@ public final class MatchManager {
             BhNetwork.sendBanner(p, banner(kind, t, false, showTicks));
         }
 
+        if (reason != null) {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+                p.sendSystemMessage(TapeObjective.text(reason, TapeObjective.BONE));
+            }
+        }
+
         if (matchOver) {
             state = MatchState.LOBBY;
+            TapeObjective.INSTANCE.onMatchEnd(server);
             releaseAll(server);
+            // Итоги матча видны несколько секунд, потом все возвращаются в лобби.
+            LobbyManager.INSTANCE.scheduleReturn(BhConfig.LOBBY_RETURN_SECONDS.get() * 20);
         }
     }
 
@@ -228,7 +256,9 @@ public final class MatchManager {
                 if (ticksLeft <= 0) goLive(server);
             }
             case LIVE -> {
-                if (ticksLeft <= 0) endRound(server, timeoutWinner());
+                BhTeam out = TapeObjective.INSTANCE.tick(server);
+                if (out != null) endRound(server, out, out.displayName + " got the tape out.");
+                else if (ticksLeft <= 0) endRound(server, timeoutWinner(), TapeObjective.INSTANCE.active() ? "No one got the tape out." : null);
             }
             case ROUND_END -> {
                 if (ticksLeft <= 0) startRound(server);
@@ -257,6 +287,7 @@ public final class MatchManager {
     }
 
     public void onPlayerLeft(MinecraftServer server, ServerPlayer p) {
+        TapeObjective.INSTANCE.onPlayerLeft(p);
         frozenAt.remove(p.getUUID());
         if (alive.remove(p.getUUID()) && state == MatchState.LIVE) checkRoundOver(server);
     }
@@ -270,6 +301,7 @@ public final class MatchManager {
     public void onPlayerJoined(MinecraftServer server, ServerPlayer p) {
         if (!running()) {
             if (p.getPersistentData().getBoolean(TAG_SPECTATOR)) release(p);
+            LobbyManager.INSTANCE.onPlayerJoined(p);
             return;
         }
         BhTeam team = teams.get(p.getUUID());

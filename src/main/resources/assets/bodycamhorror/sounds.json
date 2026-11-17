@@ -17,5 +17,8 @@
   "music.round_won": { "sounds": [{ "name": "bodycamhorror:music/round_won", "stream": true }] },
   "music.round_lost": { "sounds": [{ "name": "bodycamhorror:music/round_lost", "stream": true }] },
   "music.match_won": { "sounds": [{ "name": "bodycamhorror:music/match_won", "stream": true }] },
-  "music.match_lost": { "sounds": [{ "name": "bodycamhorror:music/match_lost", "stream": true }] }
+  "music.match_lost": { "sounds": [{ "name": "bodycamhorror:music/match_lost", "stream": true }] },
+  "tape_hiss": { "sounds": ["bodycamhorror:tape_hiss"] },
+  "tape_pickup": { "sounds": ["bodycamhorror:tape_pickup"] },
+  "tape_out": { "sounds": ["bodycamhorror:tape_out"] }
 }

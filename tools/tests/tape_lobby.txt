@@ -1,0 +1,176 @@
+# 0.6.0: кассета, лобби, скины команд, интерфейс. Боты 2 на 2, игрок Dev в команде Alpha (для скриншотов).
+# Запуск: gradlew runClient -PbhTest=tools/tests/tape_lobby.txt
+# Перед запуском в run/config/bodycamhorror-common.toml поставить roundsToWin = 2 (матч доходит до конца за 2 доставки).
+# «bh arena build» в 1000 120 1000 ставит угол арены в 1002 120 1002:
+#   выход Alpha 1004 120 1004 (спавны Alpha 1005..1009, 1005), выход Bravo 1040 120 1040.
+# Лобби на 21 блок западнее: x 981..995, z 1002..1012; вход 988 120 1004; площадки Alpha 985 120 1009, Bravo 991 120 1009.
+# Важно: @p у команд сценария ищется от точки спавна мира (это лобби), поэтому игрока зовём по имени Dev.
+# Результат: строки [bh-test] в run/logs/latest.log, в конце DONE failures=0; скриншоты в run/screenshots/060_*.png.
+
+bh stop
+bh bot remove all
+execute positioned 1000 120 1000 run bh arena build
+expect tape points
+expect Lobby built at 988, 120, 1004
+
+# --- лобби: боты на площадках команд, скины видны ---
+execute positioned 985 120 1009 run bh bot add alpha A1
+execute positioned 986 120 1008 run bh bot add alpha A2
+execute positioned 991 120 1009 run bh bot add bravo B1
+execute positioned 992 120 1008 run bh bot add bravo B2
+tp A1 985.5 120 1009.5 180 0
+tp A2 986.5 120 1008.2 180 0
+tp B1 991.5 120 1009.5 180 0
+tp B2 992.5 120 1008.2 180 0
+tp Dev 988.5 120 1003.6 0 10
+wait 40
+bh debug
+expect A1(bot) team=alpha
+expect B1(bot) team=bravo
+hud off
+wait 3
+shot 060_lobby
+wait 3
+hud on
+# подсказка в лобби над панелью (actionbar), интерфейс включён
+wait 30
+shot 060_ui_lobby_hud
+
+# --- старт: игрок Dev тоже в Alpha ---
+bh team alpha Dev
+say Radio check. Everyone on the tape?
+bh start
+expect Match started
+wait 20
+# интерфейс: заставка раунда (во время заморозки)
+shot 060_banner
+# открытый чат поверх заставки: чат не должен прорезать заставку
+screen chat
+wait 10
+shot 060_ui_chat_banner
+screen close
+bh status
+expect Tape points: 4
+reject Lobby: none
+bh skip
+expect PREP -> LIVE
+wait 40
+
+# --- скины команд на арене ---
+tp Dev 1007 120 1012 180 4
+wait 20
+hud off
+wait 3
+shot 060_arena_skins
+wait 3
+hud on
+
+# --- интерфейс в игре: сердце страха на разных уровнях ---
+execute as Dev run bh horror fear 30
+wait 30
+shot 060_ui_heart_30
+execute as Dev run bh horror fear 60
+wait 30
+shot 060_ui_heart_60
+execute as Dev run bh horror fear 90
+wait 30
+shot 060_ui_heart_90
+# открытый чат во время раунда: сердце и полоска слотов остаются поверх
+say Contact. Bravo near the generator.
+screen chat
+wait 10
+shot 060_ui_chat_round
+screen close
+# инвентарь на Tab
+screen inventory
+wait 15
+shot 060_ui_inventory
+screen close
+execute as Dev run bh horror fear 0
+
+# --- кассета: /bh tape test кладёт её в случайную точку ---
+bh tape test
+expect Tape dropped at
+
+# --- плита выхода Alpha ---
+tp Dev 1004.5 121.4 1006.5 180 62
+wait 10
+hud off
+wait 3
+shot 060_exit_marker
+wait 3
+hud on
+
+# --- кассета на полу ---
+summon item 1010.5 120.1 1008.5 {Item:{id:"bodycamhorror:tape",Count:1b},PickupDelay:32767s}
+tp Dev 1010.5 121.4 1010.6 180 58
+wait 15
+hud off
+wait 3
+shot 060_tape_floor
+wait 3
+hud on
+kill @e[type=item,x=1010.5,y=120,z=1008.5,distance=..2]
+
+# --- Dev несёт кассету: подсказка над панелью ---
+give Dev bodycamhorror:tape
+wait 30
+shot 060_carrying
+clear Dev bodycamhorror:tape
+
+# --- доставка: A1 с кассетой на выходе Alpha, через ~3 с раунд за Alpha ---
+give A1 bodycamhorror:tape
+tp A1 1004.5 120 1004.5
+wait 100
+bh debug
+expect state=ROUND_END
+expect score=1:0
+
+# --- раунд 2: носитель погибает, кассета падает и остаётся ---
+bh skip
+wait 20
+bh debug
+expect state=PREP round=2
+bh skip
+expect PREP -> LIVE
+wait 20
+give B1 bodycamhorror:tape
+wait 20
+execute at B1 run summon marker ~ ~ ~ {Tags:["bh_b1_death"]}
+kill B1
+wait 20
+execute at @e[type=marker,tag=bh_b1_death] if entity @e[type=item,distance=..3,nbt={Item:{id:"bodycamhorror:tape"}}]
+expect Test passed
+wait 60
+execute at @e[type=marker,tag=bh_b1_death] if entity @e[type=item,distance=..3,nbt={Item:{id:"bodycamhorror:tape"}}]
+expect Test passed
+kill @e[type=marker,tag=bh_b1_death]
+kill @e[type=item,nbt={Item:{id:"bodycamhorror:tape"}}]
+
+# --- вторая доставка: конец матча (roundsToWin = 2), через ~8 с все в лобби ---
+give A2 bodycamhorror:tape
+tp A2 1004.5 120 1004.5
+wait 100
+bh debug
+expect state=LOBBY
+expect score=2:0
+wait 220
+execute as A1 if entity @s[x=981,y=118,z=1002,dx=14,dy=6,dz=10]
+expect Test passed
+execute as B2 if entity @s[x=981,y=118,z=1002,dx=14,dy=6,dz=10]
+expect Test passed
+execute as Dev if entity @s[x=981,y=118,z=1002,dx=14,dy=6,dz=10]
+expect Test passed
+hud off
+wait 3
+shot 060_back_in_lobby
+wait 3
+hud on
+
+# --- площадка Bravo в лобби меняет команду ---
+tp A2 991.5 120 1009.5
+wait 30
+bh debug
+expect A2(bot) team=bravo
+
+bh bot remove all

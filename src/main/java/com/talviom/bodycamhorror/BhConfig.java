@@ -22,6 +22,12 @@ public final class BhConfig {
     public static final ForgeConfigSpec.BooleanValue LIMIT_INVENTORY;
     public static final ForgeConfigSpec.BooleanValue SLOT_STRIP;
 
+    public static final ForgeConfigSpec.IntValue TAPE_DELIVER_SECONDS;
+    public static final ForgeConfigSpec.DoubleValue TAPE_EXIT_RADIUS;
+    public static final ForgeConfigSpec.DoubleValue TAPE_CARRIER_FEAR;
+    public static final ForgeConfigSpec.IntValue LOBBY_RETURN_SECONDS;
+    public static final ForgeConfigSpec.BooleanValue FORCE_SKINS;
+
     public static final ForgeConfigSpec.BooleanValue HIDE_VANILLA_HUD;
     public static final ForgeConfigSpec.BooleanValue BLOCK_INVENTORY;
     public static final ForgeConfigSpec.BooleanValue BODYCAM_OVERLAY;
@@ -63,6 +69,18 @@ public final class BhConfig {
                         "8;minecraft:golden_apple;1"
                 ), o -> o instanceof String);
         b.pop();
+
+        b.push("tape");
+        TAPE_DELIVER_SECONDS = b.comment("Seconds the tape carrier must stay at their side's exit to win the round")
+                .defineInRange("deliverSeconds", 3, 0, 30);
+        TAPE_EXIT_RADIUS = b.comment("How close (blocks) to the exit point the carrier must stand").defineInRange("exitRadius", 2.5, 1.0, 10.0);
+        TAPE_CARRIER_FEAR = b.comment("Fear the tape carrier gains every second").defineInRange("carrierFearPerSecond", 0.6, 0.0, 10.0);
+        b.pop();
+
+        b.push("lobby");
+        LOBBY_RETURN_SECONDS = b.comment("Seconds after the match result before everyone is sent back to the lobby")
+                .defineInRange("returnSeconds", 8, 0, 60);
+        b.pop();
         COMMON_SPEC = b.build();
 
         ForgeConfigSpec.Builder c = new ForgeConfigSpec.Builder();
@@ -71,6 +89,8 @@ public final class BhConfig {
         BLOCK_INVENTORY = c.comment("Replace the vanilla inventory screen with the bodycam inventory (not in creative)").define("blockInventory", true);
         BODYCAM_OVERLAY = c.comment("Draw the REC / timecode bodycam overlay").define("bodycamOverlay", true);
         SLOT_STRIP = c.comment("Show carried items as a strip in the bottom right corner").define("slotStrip", true);
+        FORCE_SKINS = c.comment("Draw every player with the mod's military skin of their team instead of their own skin")
+                .define("forceSkins", true);
         c.pop();
         CLIENT_SPEC = c.build();
     }

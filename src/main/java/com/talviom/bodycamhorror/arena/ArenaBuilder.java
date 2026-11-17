@@ -13,12 +13,15 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * Тестовая арена: закрытое здание 41x41 из 16 комнат с лампами, двумя щитками и генератором.
  * Нужна, чтобы проверить матч целиком, пока настоящая карта не построена.
- * Сразу расставляет спавны команд и точки лута.
+ * Сразу расставляет спавны команд, точки лута, выходы сторон в углах у спавнов,
+ * точки кассеты на диагонали (одинаково далеко от обеих сторон) и строит рядом лобби.
  */
 public final class ArenaBuilder {
     private static final int SIZE = 40;
     private static final int HEIGHT = 4;
     private static final int ROOM = 10;
+    /** Расстояние от лобби до арены по X. */
+    private static final int LOBBY_GAP = 6;
 
     private ArenaBuilder() {}
 
@@ -63,6 +66,7 @@ public final class ArenaBuilder {
         map.spawns(BhTeam.ALPHA).clear();
         map.spawns(BhTeam.BRAVO).clear();
         map.lootPoints().clear();
+        map.tapePoints().clear();
         for (int i = 0; i < 3; i++) {
             map.spawns(BhTeam.ALPHA).add(base.offset(3 + i * 2, 0, 3));
             map.spawns(BhTeam.BRAVO).add(base.offset(SIZE - 3 - i * 2, 0, SIZE - 3));
@@ -72,10 +76,24 @@ public final class ArenaBuilder {
                 map.lootPoints().add(base.offset(ROOM / 2 + ROOM * i, 0, ROOM / 2 + ROOM * j));
             }
         }
+
+        // Выходы: в углу у спавна каждой стороны. Знак выхода лежит на полу.
+        BlockPos alphaExit = base.offset(2, 0, 2);
+        BlockPos bravoExit = base.offset(SIZE - 2, 0, SIZE - 2);
+        BlockState marker = ModBlocks.EXIT_MARKER.get().defaultBlockState();
+        level.setBlock(alphaExit, marker, 3);
+        level.setBlock(bravoExit, marker, 3);
+        map.setExit(BhTeam.ALPHA, alphaExit);
+        map.setExit(BhTeam.BRAVO, bravoExit);
+
+        // Кассета появляется в одной из точек на диагонали x + z = SIZE: до обоих выходов одинаково далеко.
+        for (int x : new int[]{7, 17, 23, 33}) map.tapePoints().add(base.offset(x, 0, SIZE - x));
         map.setDirty();
 
+        String lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 15), 0, 0));
+
         return "Arena built: " + lamps + " lamps, 2 breakers, 1 generator, 3 spawns per team, "
-                + map.lootPoints().size() + " loot points";
+                + map.lootPoints().size() + " loot points, 2 exits, " + map.tapePoints().size() + " tape points. " + lobby;
     }
 
     /** Проёмы шириной 3 блока посередине каждой внутренней стены. */

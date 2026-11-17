@@ -48,5 +48,9 @@ public class BodycamHorror {
         MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.bots.BotPlayers.BotTickEvents());
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent e) -> com.talviom.bodycamhorror.command.BotCommand.register(e.getDispatcher()));
         MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.bots.TestScript());
+
+        // Цель раунда «Вынести кассету» и лобби.
+        MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.objective.TapeEvents());
+        MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.lobby.LobbyEvents());
     }
 }
