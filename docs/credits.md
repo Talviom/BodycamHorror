@@ -9,7 +9,7 @@
 
 | Где играет | Трек | Автор | Лицензия | Источник |
 |---|---|---|---|---|
-| Меню | Dark Ambience Loop | Iwan Gabovitch (qubodup.net) | CC0 | https://opengameart.org/content/dark-ambience-loop |
+| Меню | Dark Ambience Loop | Iwan Gabovitch (qubodup.net) | CC-BY 3.0 (указать автора) | https://opengameart.org/content/dark-ambience-loop |
 | Лобби | Abandoned passages (horror ambience loop) | congusbongus | CC0 | https://opengameart.org/content/abandoned-passages-horror-ambience-loop |
 | Начало раунда | Searching | yd | CC0 | https://opengameart.org/content/searching |
 | Итоги раунда и матча | Free Horror Stinger SFX | DHSFX | бесплатно, с указанием автора | https://dhsfx.itch.io/horror-stinger-sound-effects |
@@ -19,7 +19,7 @@
 Строка для описания видео:
 
 ```
-Music: "Dark Ambience Loop" by Iwan Gabovitch (CC0), "Abandoned passages" by congusbongus (CC0),
+Music: "Dark Ambience Loop" by Iwan Gabovitch qubodup.net (CC-BY 3.0), "Abandoned passages" by congusbongus (CC0),
 "Searching" by yd (CC0), horror stingers by DHSFX. All via OpenGameArt.org / itch.io.
 ```
 
