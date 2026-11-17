@@ -15,6 +15,11 @@ public class FlashlightEvents {
     }
 
     @SubscribeEvent
+    public void onFlashlightServerStarted(net.minecraftforge.event.server.ServerStartedEvent e) {
+        Flashlight.sweepLeftovers(e.getServer());
+    }
+
+    @SubscribeEvent
     public void onFlashlightServerStopping(ServerStoppingEvent e) {
         Flashlight.clearAll();
     }

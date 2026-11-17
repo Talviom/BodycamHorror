@@ -109,17 +109,17 @@ public final class BotCommand {
         MatchManager m = MatchManager.INSTANCE;
         c.getSource().sendSuccess(() -> Component.literal("[bh] state=" + m.state() + " round=" + m.round()
                 + " left=" + m.secondsLeft() + "s score=" + m.score(BhTeam.ALPHA) + ":" + m.score(BhTeam.BRAVO)
-                + " jam=" + (RadioState.isJammed(BhTeam.ALPHA) ? "A" : "-") + (RadioState.isJammed(BhTeam.BRAVO) ? "B" : "-")
                 + " radio=" + RadioState.alive().size()), false);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             BhTeam t = m.teamOf(p);
             Entity cam = p.getCamera();
             String line = String.format(Locale.ROOT,
-                    "[bh] %s%s team=%s alive=%s mode=%s hp=%.0f fear=%.0f light=%s/%s bat=%.0f%% cam=%s pos=%s",
+                    "[bh] %s%s team=%s alive=%s mode=%s hp=%.0f fear=%.0f light=%s/%s bat=%.0f%% cam=%s radio=%s pos=%s",
                     p.getGameProfile().getName(), BotPlayers.isBot(p) ? "(bot)" : "",
                     t == null ? "-" : t.id, m.isAlive(p), p.gameMode.getGameModeForPlayer().getName(), p.getHealth(),
                     FearSystem.INSTANCE.fear(p), Flashlight.isOn(p) ? "on" : "off", Flashlight.isLit(p) ? "lit" : "dark",
                     Flashlight.charge(p) * 100f, cam == p ? "self" : cam.getName().getString(),
+                    RadioState.isJammed(p.getUUID()) ? "jammed" : "ok",
                     p.blockPosition().toShortString());
             c.getSource().sendSuccess(() -> Component.literal(line), false);
         }

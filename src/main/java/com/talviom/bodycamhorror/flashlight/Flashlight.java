@@ -233,7 +233,36 @@ public final class Flashlight {
         return state.is(Blocks.LIGHT) && PLACED.containsKey(s);
     }
 
+    /** Запуск сервера: убрать свет фонариков, оставшийся после вылета. */
+    public static void sweepLeftovers(MinecraftServer server) {
+        PLACED.clear();
+        for (ServerLevel level : server.getAllLevels()) {
+            int n = LightLedger.get(level).sweep(level);
+            if (n > 0) com.talviom.bodycamhorror.BodycamHorror.LOGGER.info("Removed {} leftover flashlight light blocks in {}",
+                    n, level.dimension().location());
+        }
+    }
+
+    /** Список стоящих блоков света сохраняется с миром, по одному списку на измерение. */
+    private static void syncLedger(Set<ServerLevel> touched) {
+        for (ServerLevel level : touched) {
+            Set<Long> now = new HashSet<>();
+            for (Spot s : PLACED.keySet()) {
+                if (s.level() == level) now.add(s.pos().asLong());
+            }
+            LightLedger.get(level).replace(now);
+        }
+    }
+
     private static void apply(Map<Spot, Integer> wanted) {
+        Set<ServerLevel> touched = new HashSet<>();
+        for (Spot s : PLACED.keySet()) touched.add(s.level());
+        for (Spot s : wanted.keySet()) touched.add(s.level());
+        applyBlocks(wanted);
+        if (!touched.isEmpty()) syncLedger(touched);
+    }
+
+    private static void applyBlocks(Map<Spot, Integer> wanted) {
         for (Iterator<Map.Entry<Spot, Integer>> it = PLACED.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<Spot, Integer> e = it.next();
             if (wanted.containsKey(e.getKey())) continue;

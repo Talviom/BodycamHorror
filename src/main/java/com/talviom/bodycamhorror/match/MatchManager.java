@@ -33,6 +33,9 @@ public final class MatchManager {
     private final Map<UUID, Vec3> frozenAt = new HashMap<>();
     private final EnumMap<BhTeam, Integer> score = new EnumMap<>(BhTeam.class);
 
+    /** Метка в данных игрока: наблюдателем его сделал матч, а не администратор. */
+    private static final String TAG_SPECTATOR = "bh_match_spectator";
+
     private MatchState state = MatchState.LOBBY;
     private boolean testMode;
     private int ticksLeft;
@@ -133,10 +136,7 @@ public final class MatchManager {
         state = MatchState.LOBBY;
         alive.clear();
         frozenAt.clear();
-        for (ServerPlayer p : participants(server)) {
-            p.setGameMode(GameType.ADVENTURE);
-            p.setCamera(p);
-        }
+        releaseAll(server);
         broadcastBanner(server, BannerPacket.Kind.STOPPED, 60);
     }
 
@@ -184,6 +184,8 @@ public final class MatchManager {
         frozenAt.clear();
         ticksLeft = BhConfig.ROUND_SECONDS.get() * 20;
         broadcastBanner(server, BannerPacket.Kind.GO, 30);
+        // За время заморозки команда могла остаться без игроков (все вышли).
+        if (!testMode) checkRoundOver(server);
     }
 
     private void endRound(MinecraftServer server, BhTeam winner) {
@@ -209,10 +211,7 @@ public final class MatchManager {
 
         if (matchOver) {
             state = MatchState.LOBBY;
-            for (ServerPlayer p : participants(server)) {
-                p.setGameMode(GameType.ADVENTURE);
-                p.setCamera(p);
-            }
+            releaseAll(server);
         }
     }
 
@@ -221,6 +220,7 @@ public final class MatchManager {
     public void tick(MinecraftServer server) {
         if (!running()) return;
         ticksLeft--;
+        if (ticksLeft % 10 == 0) holdSpectators(server);
 
         switch (state) {
             case PREP -> {
@@ -249,7 +249,7 @@ public final class MatchManager {
         // Снаряжение падает на землю: его можно подобрать.
         victim.getInventory().dropAll();
         victim.setHealth(victim.getMaxHealth());
-        victim.setGameMode(GameType.SPECTATOR);
+        makeSpectator(victim);
         spectateTeammate(server, victim);
 
         if (state == MatchState.LIVE) checkRoundOver(server);
@@ -257,11 +257,38 @@ public final class MatchManager {
     }
 
     public void onPlayerLeft(MinecraftServer server, ServerPlayer p) {
+        frozenAt.remove(p.getUUID());
         if (alive.remove(p.getUUID()) && state == MatchState.LIVE) checkRoundOver(server);
     }
 
-    public void onPlayerJoined(ServerPlayer p) {
-        if (running()) p.setGameMode(GameType.SPECTATOR);
+    /**
+     * Игрок зашёл на сервер.
+     * Матча нет: если прошлый матч оставил его наблюдателем, возвращаем обычный режим.
+     * Идёт заморозка и игрок в команде: он успел, ставим его в раунд.
+     * Иначе до следующего раунда он наблюдатель (в команде смотрит глазами союзника).
+     */
+    public void onPlayerJoined(MinecraftServer server, ServerPlayer p) {
+        if (!running()) {
+            if (p.getPersistentData().getBoolean(TAG_SPECTATOR)) release(p);
+            return;
+        }
+        BhTeam team = teams.get(p.getUUID());
+        if (team != null && state == MatchState.PREP) {
+            ServerLevel level = server.overworld();
+            List<BlockPos> spawns = MapData.get(level).spawns(swapped ? team.other() : team);
+            if (!spawns.isEmpty()) {
+                BlockPos s = spawns.get(new Random().nextInt(spawns.size()));
+                resetPlayer(p);
+                p.getPersistentData().remove(TAG_SPECTATOR);
+                p.teleportTo(level, s.getX() + 0.5, s.getY(), s.getZ() + 0.5, p.getYRot(), p.getXRot());
+                alive.add(p.getUUID());
+                frozenAt.put(p.getUUID(), p.position());
+                BhNetwork.sendBanner(p, banner(BannerPacket.Kind.ROUND_START, team, false, Math.max(1, ticksLeft)));
+                return;
+            }
+        }
+        makeSpectator(p);
+        if (team != null) spectateTeammate(server, p);
     }
 
     /** Перемотать текущую фазу: заморозка → раунд → пауза → следующий раунд. Для проверки. */
@@ -316,6 +343,40 @@ public final class MatchManager {
                 dead.setCamera(mate);
                 return;
             }
+        }
+    }
+
+    /** Матч делает игрока наблюдателем и помечает его, чтобы потом вернуть обычный режим даже после перезахода. */
+    private void makeSpectator(ServerPlayer p) {
+        p.setGameMode(GameType.SPECTATOR);
+        p.getPersistentData().putBoolean(TAG_SPECTATOR, true);
+    }
+
+    private void release(ServerPlayer p) {
+        p.setGameMode(GameType.ADVENTURE);
+        p.setCamera(p);
+        p.getPersistentData().remove(TAG_SPECTATOR);
+    }
+
+    /** Конец матча: участники и все, кого матч сделал наблюдателем, снова обычные игроки. */
+    private void releaseAll(MinecraftServer server) {
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            if (teams.containsKey(p.getUUID()) || p.getPersistentData().getBoolean(TAG_SPECTATOR)) release(p);
+        }
+    }
+
+    /**
+     * Погибший смотрит только глазами живого союзника: свободно летать по карте и подсказывать нельзя.
+     * Если союзник, за которым он смотрел, тоже погиб или вышел, камера переходит к следующему.
+     */
+    private void holdSpectators(MinecraftServer server) {
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            BhTeam team = teams.get(p.getUUID());
+            if (team == null || alive.contains(p.getUUID()) || !p.isSpectator()) continue;
+            if (p.getCamera() instanceof ServerPlayer mate && mate != p && alive.contains(mate.getUUID())
+                    && teams.get(mate.getUUID()) == team && !mate.hasDisconnected()) continue;
+            p.setCamera(p);
+            spectateTeammate(server, p);
         }
     }
 

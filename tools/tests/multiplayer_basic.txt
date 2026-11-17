@@ -11,6 +11,7 @@ tp @p 1005 120 1005
 execute positioned 1005 120 1005 run bh bot add alpha A1
 expect joined Alpha
 execute positioned 1007 120 1005 run bh bot add alpha A2
+execute positioned 1009 120 1005 run bh bot add alpha A3
 execute positioned 1035 120 1035 run bh bot add bravo B1
 execute positioned 1037 120 1035 run bh bot add bravo B2
 bh debug
@@ -26,24 +27,34 @@ expect state=PREP round=1
 expect A1(bot) team=alpha alive=true mode=adventure
 expect B1(bot) team=bravo alive=true mode=adventure
 
+# --- вышел и вернулся во время заморозки: снова в раунде ---
+bh bot remove B2
+wait 5
+execute positioned 1020 120 1020 run bh bot add bravo B2
+wait 5
+bh debug
+expect B2(bot) team=bravo alive=true mode=adventure
+
 # --- раунд идёт ---
 bh skip
 expect PREP -> LIVE
 wait 20
 bh debug
 expect state=LIVE
-expect radio=4
+expect radio=5
 
-# Страх одного игрока не должен менять страх остальных.
+# Страх одного игрока не меняет страх остальных.
 execute as A1 run bh horror fear 80
 bh debug
 expect A1(bot) team=alpha alive=true mode=adventure hp=20 fear=80
 expect B1(bot) team=bravo alive=true mode=adventure hp=20 fear=0
 
-# Помехи рации от страха A1: глушится только Alpha.
+# Помехи рации от страха A1: только у него самого, союзники говорят как обычно.
 execute as A1 run bh horror test radio
 bh debug
-expect jam=A-
+expect cam=self radio=jammed pos=1
+expect A2(bot) team=alpha alive=true mode=adventure hp=20 fear=0 light=off/dark bat=100% cam=self radio=ok
+expect B1(bot) team=bravo alive=true mode=adventure hp=20 fear=0 light=off/dark bat=100% cam=self radio=ok
 
 # Фонарик бота.
 bh bot light B1
@@ -52,46 +63,73 @@ wait 10
 bh debug
 expect B1(bot) team=bravo alive=true mode=adventure hp=20 fear=0 light=on/lit
 
-# --- смерть: A1 погибает, становится наблюдателем и смотрит глазами A2 ---
-kill A1
-wait 5
+# --- смерть: A2 погибает и смотрит глазами живого союзника ---
+kill A2
+wait 15
 bh debug
 expect state=LIVE
-expect A1(bot) team=alpha alive=false mode=spectator
-expect cam=A2
+expect A2(bot) team=alpha alive=false mode=spectator
+reject A2(bot) team=alpha alive=false mode=spectator hp=20 fear=0 light=off/dark bat=100% cam=self
 
-# --- выход и возврат посреди раунда: B2 выходит, раунд продолжается (B1 жив) ---
+# --- тот, за кем смотрели, тоже погиб: камеры погибших переходят к последнему живому (A3) ---
+kill A1
+wait 15
+bh debug
+expect A1(bot) team=alpha alive=false mode=spectator hp=20 fear=0 light=off/dark bat=100% cam=A3
+expect A2(bot) team=alpha alive=false mode=spectator hp=20 fear=0 light=off/dark bat=100% cam=A3
+
+# --- выход посреди раунда: B2 выходит, раунд продолжается (B1 жив) ---
 bh bot remove B2
 wait 5
 bh debug
 expect state=LIVE
 reject B2
 
+# --- вернулся посреди раунда: до следующего раунда наблюдает за союзником ---
+execute positioned 1020 120 1020 run bh bot add bravo B2
+wait 15
+bh debug
+expect state=LIVE
+expect B2(bot) team=bravo alive=false mode=spectator hp=20 fear=0 light=off/dark bat=100% cam=B1
+
+# --- посторонний (без команды) зашёл посреди матча: наблюдатель ---
+execute positioned 1020 120 1020 run bh bot add alpha Guest
+bh team leave Guest
+bh debug
+expect Guest(bot) team=- alive=false mode=spectator
+
 # --- последний из Alpha погибает: раунд за Bravo ---
-kill A2
+kill A3
 wait 5
 bh debug
 expect state=ROUND_END
 expect score=0:1
 
-# --- следующий раунд: все снова живы ---
+# --- следующий раунд: все участники снова живы ---
 bh skip
 wait 20
 bh debug
 expect state=PREP round=2
 expect A1(bot) team=alpha alive=true mode=adventure
 expect A2(bot) team=alpha alive=true mode=adventure
+expect B2(bot) team=bravo alive=true mode=adventure
 
-# --- зашедший посреди матча (без команды) после матча не должен остаться наблюдателем ---
-execute positioned 1020 120 1020 run bh bot add bravo B2
+# --- вся команда вышла во время заморозки: раунд сразу достаётся другой ---
+bh bot remove B1
+bh bot remove B2
+bh skip
+wait 5
 bh debug
-expect B2(bot) team=bravo
+expect state=ROUND_END
+expect score=1:1
+
+# --- конец матча: никто не остаётся наблюдателем, включая постороннего ---
 bh stop
 wait 10
 bh debug
 expect state=LOBBY
-expect B2(bot) team=bravo alive=false mode=adventure
 expect A1(bot) team=alpha alive=false mode=adventure
+expect Guest(bot) team=- alive=false mode=adventure
 
 bh bot remove all
 expect Bots removed: 4

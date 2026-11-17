@@ -2,7 +2,6 @@ package com.talviom.bodycamhorror.horror;
 
 import com.talviom.bodycamhorror.HorrorConfig;
 import com.talviom.bodycamhorror.flashlight.Flashlight;
-import com.talviom.bodycamhorror.match.BhTeam;
 import com.talviom.bodycamhorror.match.MatchManager;
 import com.talviom.bodycamhorror.match.MatchState;
 import com.talviom.bodycamhorror.net.BhNetwork;
@@ -92,8 +91,7 @@ public final class HorrorDirector {
                 playTo(target, "bodycamhorror:radio_static", target.position(), 0.7f, 0.9f + rnd.nextFloat() * 0.2f);
             }
             case RADIO -> {
-                BhTeam team = MatchManager.INSTANCE.teamOf(target);
-                if (team != null) RadioState.jam(team, 120 + rnd.nextInt(100));
+                RadioState.jam(target.getUUID(), 120 + rnd.nextInt(100));
                 BhNetwork.sendGlitch(target, 20, 0.3f);
                 playTo(target, "bodycamhorror:radio_static", target.position(), 0.5f, 0.8f);
             }
