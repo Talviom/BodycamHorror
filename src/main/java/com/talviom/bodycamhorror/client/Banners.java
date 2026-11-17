@@ -1,5 +1,6 @@
 package com.talviom.bodycamhorror.client;
 
+import com.talviom.bodycamhorror.client.music.MusicDirector;
 import com.talviom.bodycamhorror.net.BannerPacket;
 import com.talviom.bodycamhorror.net.BannerPacket.Kind;
 import net.minecraft.client.gui.GuiGraphics;
@@ -54,6 +55,7 @@ public final class Banners {
         durationMs = Math.max(500, m.ticks * 50L);
         whisperAt = shownAt + 2500 + RND.nextInt(3000);
         whisperUntil = 0;
+        MusicDirector.onBanner(m.kind);
     }
 
     /** Идёт ли сейчас тёмная заставка перед раундом (HUD под ней можно не рисовать). */

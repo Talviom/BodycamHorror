@@ -7,5 +7,12 @@
   "generator_up": { "sounds": ["bodycamhorror:generator_up"] },
   "heartbeat": { "sounds": ["bodycamhorror:heartbeat"] },
   "knock": { "sounds": ["bodycamhorror:knock1", "bodycamhorror:knock2"] },
-  "lamp_buzz": { "sounds": ["bodycamhorror:lamp_buzz1", "bodycamhorror:lamp_buzz2"] }
+  "lamp_buzz": { "sounds": ["bodycamhorror:lamp_buzz1", "bodycamhorror:lamp_buzz2"] },
+  "music.menu": { "sounds": [{ "name": "bodycamhorror:music/menu", "stream": true }] },
+  "music.lobby": { "sounds": [{ "name": "bodycamhorror:music/lobby", "stream": true }] },
+  "music.round_start": { "sounds": [{ "name": "bodycamhorror:music/round_start", "stream": true }] },
+  "music.round_won": { "sounds": [{ "name": "bodycamhorror:music/round_won", "stream": true }] },
+  "music.round_lost": { "sounds": [{ "name": "bodycamhorror:music/round_lost", "stream": true }] },
+  "music.match_won": { "sounds": [{ "name": "bodycamhorror:music/match_won", "stream": true }] },
+  "music.match_lost": { "sounds": [{ "name": "bodycamhorror:music/match_lost", "stream": true }] }
 }
