@@ -33,6 +33,7 @@ import java.util.List;
  *   reject текст       в ответе на прошлую команду этого текста быть не должно
  *   shot имя           скриншот клиента в run/screenshots/имя.png (с шейдерами, как по F2)
  *   hud on|off         показать или спрятать интерфейс (как F1)
+ *   screen chat|inventory|close   открыть чат (как T), инвентарь мода (как Tab) у хозяина мира или закрыть экран
  *   любая другая строка выполняется как команда сервера (без косой черты)
  * В конце пишет [bh-test] DONE и число ошибок.
  */
@@ -115,6 +116,8 @@ public final class TestScript {
             } else if (line.startsWith("hud ")) {
                 boolean visible = line.substring(4).trim().equals("on");
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.hud(visible));
+            } else if (line.startsWith("screen ")) {
+                screen(server, line.substring(7).trim());
             } else {
                 run(server, line);
             }
@@ -122,6 +125,21 @@ public final class TestScript {
         if (next >= lines.size() && waitTicks == 0) {
             done = true;
             BodycamHorror.LOGGER.info(PREFIX + "DONE failures=" + failures);
+        }
+    }
+
+    /** Экран у хозяина мира (первый вошедший игрок): чат, инвентарь мода или закрыть. */
+    private void screen(MinecraftServer server, String what) {
+        BodycamHorror.LOGGER.info(PREFIX + "> screen " + what);
+        if (server.getPlayerList().getPlayers().isEmpty()) return;
+        net.minecraft.server.level.ServerPlayer host = server.getPlayerList().getPlayers().get(0);
+        switch (what) {
+            case "inventory" -> com.talviom.bodycamhorror.inventory.BhInventoryMenu.open(host);
+            case "chat" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openChat);
+            default -> {
+                host.closeContainer();
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::closeScreen);
+            }
         }
     }
 

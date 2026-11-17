@@ -20,4 +20,16 @@ final class ClientShots {
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> mc.options.hideGui = !visible);
     }
+
+    /** Открыть чат (как T). */
+    static void openChat() {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("")));
+    }
+
+    /** Закрыть открытый экран. */
+    static void closeScreen() {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> mc.setScreen(null));
+    }
 }
