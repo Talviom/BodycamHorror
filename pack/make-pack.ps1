@@ -42,8 +42,23 @@ if (Test-Path $hostOptions) {
     $staged += "options.txt"
 }
 
+# Личные файлы хоста в config, которые друзьям не нужны: моды создадут их заново с настройками по умолчанию.
+#  - voicechat: кэш имён и UUID игроков, громкости отдельных игроков и категорий, свои настройки микрофона;
+#  - sounds/chat.json: слова-упоминания с ником хоста.
+$exclude = @(
+    "config/voicechat/username-cache.json",
+    "config/voicechat/player-volumes.properties",
+    "config/voicechat/category-volumes.properties",
+    "config/voicechat/voicechat-client.properties",
+    "config/sounds/chat.json",
+    # Резервные копии конфигов, сделанные при настройке сборки (*.bak, *.bak_0.3 и т. п.).
+    "*.bak",
+    "*.bak_*"
+)
+$excludeArgs = foreach ($e in $exclude) { "--exclude"; $e }
+
 Write-Host "Упаковываю: $(($items + $staged) -join ', ')"
-& tar.exe -a -c -f $zip -C $Game @items -C $stage @staged
+& tar.exe -a -c -f $zip @excludeArgs -C $Game @items -C $stage @staged
 $code = $LASTEXITCODE
 Remove-Item $stage -Recurse -Force
 if ($code -ne 0) { throw "tar завершился с ошибкой $code" }
