@@ -318,21 +318,164 @@ def save(img, path):
     Image.fromarray(img, "RGBA").save(path, optimize=True)
 
 
+# ---------------------------------------------------------------- horror restyle (v0.5.1)
+# Found-footage look: no neon, no colour fringes; dirty, dark, worn. All captions are drawn
+# by the code, so the textures carry no text at all.
+
+def horror_font_sheet():
+    """The same glyph shapes, printed by a tired typewriter: uneven ink (alpha), eroded
+    pixels and a baseline that jumps by one pixel now and then."""
+    r = np.random.default_rng(1954)
+    img = np.zeros((CELL_H * len(ROWS), CELL_W * 16, 4), np.uint8)
+    for row_i, row in enumerate(ROWS):
+        for c, ch in enumerate(row):
+            g = G.get(ch)
+            if not g:
+                continue
+            dy = 1 if r.random() < 0.22 else 0          # misaligned key
+            ink = r.uniform(0.72, 1.0)                  # this key's ink strength
+            for y, line in enumerate(g):
+                for x, px in enumerate(line):
+                    if px != "#":
+                        continue
+                    if r.random() < 0.10:               # dropped ink
+                        a = int(255 * ink * 0.30)
+                    else:
+                        a = int(255 * ink * r.uniform(0.80, 1.0))
+                    yy = row_i * CELL_H + min(CELL_H - 1, y + dy)
+                    img[yy, c * CELL_W + x] = (255, 255, 255, max(a, 40))
+    return img
+
+
+def horror_font_json():
+    data = font_json()
+    data["providers"][1]["file"] = "bodycamhorror:font/horror.png"
+    return data
+
+
+def vignette_tex():
+    s = 256
+    yy, xx = np.mgrid[:s, :s]
+    d = np.sqrt(((xx - s / 2 + 0.5) / (s / 2)) ** 2 + ((yy - s / 2 + 0.5) / (s / 2)) ** 2) / np.sqrt(2)
+    a = np.clip((d - 0.28) / 0.72, 0, 1) ** 1.6
+    # Uneven edge: blotchy darkness, like an old lens.
+    blot = np.asarray(Image.fromarray((rng.random((9, 9)) * 255).astype(np.uint8)).resize((s, s), Image.BICUBIC)) / 255
+    a = np.clip(a * (0.85 + 0.3 * blot), 0, 1)
+    img = np.zeros((s, s, 4), np.uint8)
+    img[..., 3] = (a * 255).astype(np.uint8)
+    return img
+
+
+def horror_noise_tex():
+    """Monochrome grain plus sparse dust and hair, tileable (the noise has no structure that seams)."""
+    s = 128
+    img = np.zeros((s, s, 4), np.uint8)
+    g = rng.random((s, s))
+    dark = g < 0.5
+    img[..., :3] = np.where(dark, 0, 200)[..., None]
+    img[..., 3] = (np.abs(g - 0.5) * 2 * 26).astype(np.uint8)  # faint grain
+    for _ in range(40):                                     # dust specks
+        y, x = rng.integers(0, s, 2)
+        img[y, x] = (8, 8, 8, 170) if rng.random() < 0.75 else (190, 184, 170, 110)
+    for _ in range(3):                                      # hairs
+        x = int(rng.integers(0, s))
+        y0 = int(rng.integers(0, s))
+        for k in range(int(rng.integers(10, 30))):
+            x = (x + int(rng.integers(-1, 2))) % s
+            img[(y0 + k) % s, x] = (6, 6, 6, 150)
+    return img
+
+
+def horror_slot(selected):
+    s = 24
+    f = np.zeros((s, s, 4), float)
+    f[3:21, 3:21, :3] = (10, 9, 8)
+    f[3:21, 3:21, 3] = 225
+    r = np.random.default_rng(77 if selected else 76)
+    edge = (150, 142, 124) if selected else (70, 66, 58)
+    for i in range(3, 21):
+        for (y, x) in ((3, i), (20, i), (i, 3), (i, 20)):
+            if r.random() > 0.3:                             # worn outline
+                f[y, x, :3] = edge
+                f[y, x, 3] = 230
+    f[4, 4:20, :3] = (3, 3, 2)                              # inner shadow: recessed
+    f[4:20, 4, :3] = (3, 3, 2)
+    if selected:                                            # dim bone glow, no neon
+        f[2, 3:21, :3] = f[21, 3:21, :3] = (120, 112, 98)
+        f[2, 3:21, 3] = f[21, 3:21, 3] = 70
+        f[3:21, 2, :3] = f[3:21, 21, :3] = (120, 112, 98)
+        f[3:21, 2, 3] = f[3:21, 21, 3] = 70
+    return np.clip(f, 0, 255).astype(np.uint8)
+
+
+def horror_inventory():
+    W, H, PW, PH = 256, 256, 252, 150
+    img = np.zeros((H, W, 4), float)
+    yy, xx = np.mgrid[:PH, :PW]
+    edge = np.minimum.reduce([xx, yy, PW - 1 - xx, PH - 1 - yy]).astype(float)
+    inside = edge + rng.random((PH, PW)) * 2.5 > 1.5          # ragged border
+    stain = np.asarray(Image.fromarray((rng.random((8, 13)) * 255).astype(np.uint8)).resize((PW, PH), Image.BICUBIC)) / 255
+    col = np.array([24, 22, 18], float)[None, None, :] * (0.75 + 0.5 * stain)[..., None]
+    col += rng.normal(0, 4, (PH, PW, 1))
+    rim = np.clip(1 - edge / 14, 0, 1)                      # soaked, darker rim
+    col *= (1 - 0.6 * rim)[..., None]
+    img[:PH, :PW, :3] = col
+    img[:PH, :PW, 3] = np.where(inside, 238, 0)
+    # Water stain rings.
+    for _ in range(3):
+        cy, cx, rad = rng.integers(10, PH - 10), rng.integers(10, PW - 10), rng.integers(12, 30)
+        d = np.sqrt((yy - cy) ** 2 + (xx - cx) ** 2)
+        ring = (np.abs(d - rad) < 1.0) & inside
+        img[:PH, :PW][ring, :3] *= 0.6
+    inv = np.clip(img, 0, 255).astype(np.uint8)
+    # "Photo" area x8..60 y16..120: faded paper with a height chart (the model is drawn on top).
+    px0, py0, px1, py1 = 8, 16, 60, 120
+    inv[py0:py1, px0:px1, :3] = (46, 43, 37)
+    inv[py0:py1, px0:px1, 3] = 245
+    for k in range(py0 + 4, py1, 6):
+        inv[k, px0:px1, :3] = (62, 58, 50) if (k - py0) % 24 else (78, 73, 63)
+    inv[py0, px0:px1, :3] = inv[py1 - 1, px0:px1, :3] = (88, 82, 70)
+    inv[py0:py1, px0, :3] = inv[py0:py1, px1 - 1, :3] = (88, 82, 70)
+    sp = rng.random((py1 - py0, px1 - px0)) < 0.05           # photo dust
+    inv[py0:py1, px0:px1][sp, :3] = (20, 18, 15)
+    # Recessed slots: 10 x 2 from (70, 40), pitch 18.
+    for rr in range(2):
+        for c in range(10):
+            x, y = 70 + c * 18, 40 + rr * 18
+            inv[y:y + 18, x:x + 18] = (9, 8, 7, 240)
+            worn = rng.random(72) > 0.3
+            k = 0
+            for i in range(18):
+                for (yy2, xx2) in ((y, x + i), (y + 17, x + i), (y + i, x), (y + i, x + 17)):
+                    if worn[k % 72]:
+                        inv[yy2, xx2] = (62, 58, 51, 255)
+                    k += 1
+            inv[y + 1, x + 1:x + 17, :3] = (3, 3, 2)
+            inv[y + 1:y + 17, x + 1, :3] = (3, 3, 2)
+    return inv
+
+
 def main():
     root = Path(sys.argv[1]).resolve()
     a = root / "src/main/resources/assets/bodycamhorror"
-    save(font_sheet(), a / "textures/font/vhs.png")
     (a / "font").mkdir(parents=True, exist_ok=True)
+    # Small OSD text keeps the clean 5x7 font; titles use the worn typewriter variant.
+    save(font_sheet(), a / "textures/font/vhs.png")
     (a / "font/vhs.json").write_text(json.dumps(font_json(), indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+    save(horror_font_sheet(), a / "textures/font/horror.png")
+    (a / "font/horror.json").write_text(json.dumps(horror_font_json(), indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
     gui = a / "textures/gui"
-    save(banner_plate(), gui / "banner_plate.png")
+    plate = gui / "banner_plate.png"
+    if plate.exists():
+        plate.unlink()                       # the banner has no plate any more
     save(scanlines(), gui / "scanlines.png")
-    save(noise_tex(), gui / "noise.png")
+    save(vignette_tex(), gui / "vignette.png")
+    save(horror_noise_tex(), gui / "noise.png")
     save(heart_frames(), gui / "heart.png")
     save(battery_frames(), gui / "battery.png")
-    save(slot(False), gui / "slot.png")
-    save(slot(True), gui / "slot_selected.png")
-    save(inventory(), gui / "inventory.png")
+    save(horror_slot(False), gui / "slot.png")
+    save(horror_slot(True), gui / "slot_selected.png")
+    save(horror_inventory(), gui / "inventory.png")
     print("gui assets written")
 
 
