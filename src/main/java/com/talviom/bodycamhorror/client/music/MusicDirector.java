@@ -122,6 +122,7 @@ public final class MusicDirector {
 
     private static void play(ResourceLocation id, float volume, boolean loop, int fadeIn, int fadeOutPrevious) {
         fadeOutCurrent(fadeOutPrevious);
+        BodycamHorror.LOGGER.info("[BH music] play {}", id);
         FadingMusic music = new FadingMusic(id, volume, loop, fadeIn);
         Minecraft.getInstance().getSoundManager().play(music);
         current = music;
