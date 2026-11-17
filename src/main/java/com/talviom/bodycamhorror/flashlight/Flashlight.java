@@ -14,7 +14,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -33,7 +32,7 @@ import java.util.UUID;
  * Нагрудный фонарик с батарейкой.
  *
  * Луч идёт от правого плеча вдоль взгляда: сервер ставит цепочку невидимых блоков света
- * (minecraft:light). Вдоль луча свет слабый, у стены, в которую упёрся луч, пятно поярче,
+ * (bodycamhorror:beam_light, убирают себя сами). Вдоль луча свет слабый, у стены, в которую упёрся луч, пятно поярче,
  * и чем дальше стена, тем пятно тусклее. Луч обрывается на первой стене, сквозь стены не светит.
  * Такой свет видят все игроки, поэтому включённый фонарик выдаёт владельца.
  *
@@ -228,17 +227,41 @@ public final class Flashlight {
 
     private static boolean canHoldLight(Spot s) {
         BlockState state = s.level().getBlockState(s.pos());
-        if (state.isAir()) return true;
-        // Свой блок света можно занять повторно. Чужой (поставленный строителем карты) не трогаем.
-        return state.is(Blocks.LIGHT) && PLACED.containsKey(s);
+        // Свой блок света можно занять повторно. Чужой (minecraft:light строителя карты) не трогаем.
+        return state.isAir() || state.is(ModBlocks.BEAM_LIGHT.get());
+    }
+
+    /** Для /bh debug: сколько блоков света числится за фонариками и сколько из них реально стоит в мире. */
+    public static String debugLights() {
+        int present = 0;
+        for (Spot s : PLACED.keySet()) {
+            if (s.level().getBlockState(s.pos()).is(ModBlocks.BEAM_LIGHT.get())) present++;
+        }
+        return present + "/" + PLACED.size();
+    }
+
+    /** Для проверки: забыть все фонарики, не убирая свет, как будто сервер упал и запустился заново. */
+    public static void debugForget() {
+        PLACED.clear();
+        ON.clear();
+        LIT.clear();
+    }
+
+    /** Светит ли сюда сейчас чей-то фонарик (для самоуборки BeamLightBlock). */
+    static boolean ownsLight(ServerLevel level, BlockPos pos) {
+        return PLACED.containsKey(new Spot(level, pos));
     }
 
     private static void apply(Map<Spot, Integer> wanted) {
+        applyBlocks(wanted);
+    }
+
+    private static void applyBlocks(Map<Spot, Integer> wanted) {
         for (Iterator<Map.Entry<Spot, Integer>> it = PLACED.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry<Spot, Integer> e = it.next();
             if (wanted.containsKey(e.getKey())) continue;
             Spot s = e.getKey();
-            if (s.level().getBlockState(s.pos()).is(Blocks.LIGHT)) {
+            if (s.level().getBlockState(s.pos()).is(ModBlocks.BEAM_LIGHT.get())) {
                 s.level().setBlock(s.pos(), Blocks.AIR.defaultBlockState(), 3);
             }
             it.remove();
@@ -247,9 +270,9 @@ public final class Flashlight {
             Spot s = e.getKey();
             int lvl = e.getValue();
             Integer have = PLACED.get(s);
-            if (have != null && have == lvl && s.level().getBlockState(s.pos()).is(Blocks.LIGHT)) continue;
+            if (have != null && have == lvl && s.level().getBlockState(s.pos()).is(ModBlocks.BEAM_LIGHT.get())) continue;
             if (!canHoldLight(s)) continue;
-            s.level().setBlock(s.pos(), Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, lvl), 3);
+            s.level().setBlock(s.pos(), ModBlocks.BEAM_LIGHT.get().defaultBlockState().setValue(BeamLightBlock.LEVEL, lvl), 3);
             PLACED.put(s, lvl);
         }
     }

@@ -1,0 +1,33 @@
+# Баланс страха: целый раунд в тёмной арене, четыре бота в разных условиях.
+#   A1, A2 — вдвоём в темноте (союзник рядом)
+#   B1     — один в темноте, без фонарика (худший случай)
+#   B2     — один в темноте, фонарик включён (садится через 90 с)
+# Запуск: gradlew runClient -PbhTest=tools/tests/fear_round.txt
+# Результат: строки [fear-trace] и [fear-event] в run/logs/latest.log,
+# график: python tools/tests/fear_chart.py run/logs/latest.log <png>
+
+bh stop
+bh bot remove all
+execute positioned 1000 120 1000 run bh arena build
+time set midnight
+weather clear
+tp @p 1020 125 1020
+gamemode spectator @p
+execute positioned 1005 120 1005 run bh bot add alpha A1
+execute positioned 1006 120 1005 run bh bot add alpha A2
+execute positioned 1035 120 1035 run bh bot add bravo B1
+execute positioned 1036 120 1035 run bh bot add bravo B2
+bh start
+bh skip
+expect PREP -> LIVE
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+tp B2 1015.5 120 1035.5
+give B2 bodycamhorror:flashlight
+bh bot light B2
+wait 20
+bh debug
+# Раунд 180 с: ждём до конца.
+wait 3560
+bh debug
+bh stop
+bh bot remove all

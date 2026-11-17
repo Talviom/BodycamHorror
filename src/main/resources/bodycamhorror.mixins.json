@@ -1,0 +1,12 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.talviom.bodycamhorror.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "OculusCommonUniformsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

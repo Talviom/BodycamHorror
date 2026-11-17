@@ -30,17 +30,26 @@ import java.util.UUID;
  * гибель союзника рядом, каждое случившееся событие.
  * Падает: свет или включённый фонарик, союзник рядом.
  *
- * События начинаются со страха 20. Чем выше страх, тем чаще и сильнее события:
- * 20..45 дальний стук и шёпот, 45..70 шаги за спиной и шёпот рядом,
- * от 70 стук рядом, помехи бодикама, глушение рации, мигание ламп.
+ * События начинаются со страха 25. Чем выше страх, тем чаще и сильнее события:
+ * 25..50 дальний стук и шёпот (раз в 30-45 с), 50..75 шаги за спиной и шёпот рядом (22-32 с),
+ * от 75 стук рядом, помехи бодикама, глушение рации, мигание ламп (16-24 с, не больше 3 за раунд).
  * Пока идёт перестрелка (недавно получил или нанёс урон), событий нет: бой важнее.
+ *
+ * Баланс v0.5.2 (модель в tools/tests/fear_sim.py): чем выше страх, тем медленнее он растёт,
+ * а после каждого события наступает передышка: страх не растёт и немного спадает. Получается пила
+ * "нарастание, испуг, отпустило", а не потолок 100 на весь раунд. Одно событие дважды подряд не бывает.
  */
 public final class FearSystem {
     public static final FearSystem INSTANCE = new FearSystem();
 
-    public static final float EVENTS_FROM = 20f;
+    public static final float EVENTS_FROM = 25f;
+    /** Чем выше страх, тем медленнее он растёт: при 65 вдвое медленнее, к 100 почти стоит. */
+    private static final float HEADROOM = 130f;
+    private static final int STRONG_PER_ROUND = 3;
     private static final int UPDATE_TICKS = 10;
     private static final int HUD_TICKS = 5;
+    /** В прогоне сценария (tools/tests) страх пишется в лог, по нему строится график. */
+    private static final boolean TRACE = System.getProperty("bh.testScript") != null;
 
     private static final class State {
         float fear;
@@ -50,6 +59,10 @@ public final class FearSystem {
         Vec3 lastPos;
         long lastHeartbeat;
         boolean dark;
+        /** До этого момента (тики раунда) передышка после испуга. */
+        long reliefUntil = -1;
+        HorrorEvent lastEvent;
+        int strongUsed;
     }
 
     private final Map<UUID, State> states = new HashMap<>();
@@ -122,6 +135,7 @@ public final class FearSystem {
                         Flashlight.charge(p),
                         Flashlight.hasFlashlight(p),
                         Flashlight.isOn(p),
+                        Flashlight.isLit(p),
                         inMatch,
                         inMatch && s != null && s.dark,
                         inMatch && s != null && tick - s.lastCombat < 40));
@@ -161,17 +175,27 @@ public final class FearSystem {
         float gain = 0f;
         if (dark) gain += HorrorConfig.FEAR_DARK_PER_SECOND.get().floatValue();
         if (!allyNear) gain += HorrorConfig.FEAR_ALONE_PER_SECOND.get().floatValue();
-        if (still && light <= 7 && !flashlight) gain += 0.5f;
+        if (still && light <= 7 && !flashlight) gain += 0.3f;
         if (p.getHealth() < p.getMaxHealth() * 0.4f) gain += 1f;
         int roundTicks = BhConfig.ROUND_SECONDS.get() * 20;
-        if (roundTicks - liveTicks < 60 * 20) gain += 0.5f;
+        if (roundTicks - liveTicks < 60 * 20) gain += 0.4f;
+        gain *= Math.max(0f, 1f - s.fear / HEADROOM);
 
         float calm = 0f;
         if (!dark) calm += HorrorConfig.FEAR_CALM_PER_SECOND.get().floatValue();
         if (allyClose) calm += 1f;
+        if (liveTicks < s.reliefUntil) {
+            // Передышка после испуга: страх не растёт и понемногу отпускает.
+            gain = 0f;
+            calm += HorrorConfig.FEAR_RELIEF_PER_SECOND.get().floatValue();
+        }
 
         s.fear = Mth.clamp(s.fear + (gain - calm) * dt, 0f, 100f);
 
+        if (TRACE && tick % 20 == 0) {
+            com.talviom.bodycamhorror.BodycamHorror.LOGGER.info("[fear-trace] t={} p={} fear={} dark={} ally={} light={}",
+                    liveTicks / 20, p.getGameProfile().getName(), Math.round(s.fear), dark, allyClose ? "close" : allyNear ? "near" : "none", flashlight);
+        }
         maybeFire(p, s, liveTicks);
     }
 
@@ -182,10 +206,10 @@ public final class FearSystem {
         }
         if (s.nextEventAt < 0) {
             // Страх только что перешёл порог: первое событие через несколько секунд.
-            s.nextEventAt = liveTicks + 100 + rnd.nextInt(140);
+            s.nextEventAt = liveTicks + 120 + rnd.nextInt(160);
             return;
         }
-        if (liveTicks < s.nextEventAt) return;
+        if (liveTicks < s.nextEventAt || liveTicks < s.reliefUntil) return;
         if (liveTicks < HorrorConfig.QUIET_SECONDS.get() * 20) return;
         int combat = HorrorConfig.COMBAT_SECONDS.get() * 20;
         if (tick - s.lastCombat < combat) {
@@ -193,35 +217,49 @@ public final class FearSystem {
             return;
         }
 
-        HorrorEvent ev;
+        HorrorEvent[] pool;
         int minSec;
         int maxSec;
-        if (s.fear < 45f) {
-            ev = rnd.nextBoolean() ? HorrorEvent.KNOCK : HorrorEvent.WHISPER;
-            minSec = 20;
-            maxSec = 35;
-        } else if (s.fear < 70f) {
-            ev = rnd.nextInt(3) == 0 ? HorrorEvent.WHISPER : HorrorEvent.FOOTSTEPS;
-            minSec = 14;
-            maxSec = 24;
+        int reliefSec;
+        boolean strong = s.fear >= 75f && s.strongUsed < STRONG_PER_ROUND;
+        if (s.fear < 50f) {
+            pool = new HorrorEvent[]{HorrorEvent.KNOCK, HorrorEvent.WHISPER};
+            minSec = 30;
+            maxSec = 45;
+            reliefSec = 10;
+        } else if (!strong) {
+            pool = new HorrorEvent[]{HorrorEvent.WHISPER, HorrorEvent.FOOTSTEPS, HorrorEvent.FOOTSTEPS};
+            minSec = 22;
+            maxSec = 32;
+            reliefSec = 14;
         } else {
-            HorrorEvent[] strong = {HorrorEvent.KNOCK, HorrorEvent.GLITCH, HorrorEvent.RADIO, HorrorEvent.FLICKER, HorrorEvent.FOOTSTEPS};
-            ev = strong[rnd.nextInt(strong.length)];
-            minSec = 9;
-            maxSec = 16;
+            pool = new HorrorEvent[]{HorrorEvent.KNOCK, HorrorEvent.GLITCH, HorrorEvent.RADIO, HorrorEvent.FLICKER, HorrorEvent.FOOTSTEPS};
+            minSec = 16;
+            maxSec = 24;
+            reliefSec = 20;
+            s.strongUsed++;
+        }
+        HorrorEvent ev = pool[rnd.nextInt(pool.length)];
+        // Одно и то же событие дважды подряд надоедает: берём другое.
+        for (int i = 0; i < 4 && ev == s.lastEvent; i++) ev = pool[rnd.nextInt(pool.length)];
+        s.lastEvent = ev;
+        if (TRACE) {
+            com.talviom.bodycamhorror.BodycamHorror.LOGGER.info("[fear-event] t={} p={} ev={} fear={}",
+                    liveTicks / 20, p.getGameProfile().getName(), ev.id, Math.round(s.fear));
         }
         HorrorDirector.INSTANCE.fire(ev, p);
         s.fear = Math.min(100f, s.fear + 4f);
         s.nextEventAt = liveTicks + (minSec + rnd.nextInt(maxSec - minSec + 1)) * 20;
+        s.reliefUntil = liveTicks + reliefSec * 20L;
     }
 
     private void heartbeat(ServerPlayer p) {
         State s = states.get(p.getUUID());
-        if (s == null || s.fear < 55f) return;
-        int period = s.fear >= 85f ? 14 : s.fear >= 70f ? 18 : 24;
+        if (s == null || s.fear < 65f) return;
+        int period = s.fear >= 85f ? 18 : s.fear >= 75f ? 24 : 30;
         if (tick - s.lastHeartbeat < period) return;
         s.lastHeartbeat = tick;
-        float volume = 0.35f + (s.fear - 55f) / 45f * 0.55f;
+        float volume = 0.25f + (s.fear - 65f) / 35f * 0.45f;
         HorrorDirector.INSTANCE.playSound(p, "bodycamhorror:heartbeat", p.position(), volume, 1.0f);
     }
 

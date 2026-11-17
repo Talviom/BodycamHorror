@@ -47,6 +47,6 @@ public class MatchEvents {
 
     @SubscribeEvent
     public void onLogin(PlayerEvent.PlayerLoggedInEvent e) {
-        if (e.getEntity() instanceof ServerPlayer p) match.onPlayerJoined(p);
+        if (e.getEntity() instanceof ServerPlayer p) match.onPlayerJoined(p.server, p);
     }
 }

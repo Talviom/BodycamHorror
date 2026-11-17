@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public final class BhNetwork {
     /** Меняется при изменении пакетов: клиент и сервер разных версий мода не соединятся. */
-    private static final String PROTOCOL = "2";
+    private static final String PROTOCOL = "3";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(BodycamHorror.MOD_ID, "main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 

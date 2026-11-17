@@ -43,7 +43,8 @@ public class RadioPlugin implements VoicechatPlugin {
         RadioState.Entry me = alive.get(senderId);
         if (me == null) return;
 
-        if (RadioState.isJammed(me.team()) && ThreadLocalRandom.current().nextDouble() < JAM_LOSS) return;
+        boolean senderJammed = RadioState.isJammed(senderId);
+        if (senderJammed && ThreadLocalRandom.current().nextDouble() < JAM_LOSS) return;
 
         VoicechatServerApi api = event.getVoicechat();
         double range = api.getBroadcastRange();
@@ -53,6 +54,8 @@ public class RadioPlugin implements VoicechatPlugin {
             if (e.getKey().equals(senderId) || e.getValue().team() != me.team()) continue;
             // Тот, кто рядом, и так слышит обычный голос. Рация нужна только на расстоянии.
             if (e.getValue().pos().distanceToSqr(me.pos()) <= rangeSq) continue;
+            // Помехи у слушателя: он теряет часть слов, остальные слышат всё.
+            if (!senderJammed && RadioState.isJammed(e.getKey()) && ThreadLocalRandom.current().nextDouble() < JAM_LOSS) continue;
             VoicechatConnection receiver = api.getConnectionOf(e.getKey());
             if (receiver == null) continue;
             api.sendStaticSoundPacketTo(receiver, event.getPacket().staticSoundPacketBuilder().build());

@@ -1,0 +1,50 @@
+# Макет картинки: темнота, наш фонарик (конус от плеча), страх. Шейдер FOOTAGE_bh.
+# Запуск: gradlew runClient -PbhShaders -PbhTest=tools/tests/shader_look.txt
+# Результат: run/screenshots/1*.png
+
+bh stop
+bh bot remove all
+execute positioned 1000 120 1000 run bh arena build
+time set midnight
+weather clear
+# Свет в здании выключен: убираем лампы.
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+bh team alpha Dev
+bh start test
+bh skip
+expect PREP -> LIVE
+give @p bodycamhorror:flashlight
+hud off
+tp @p 1003.5 120 1003.5 -45 8
+execute as Dev run bh horror fear 0
+wait 120
+shot 10_dark_off
+
+bh bot light Dev
+wait 40
+shot 11_dark_flashlight
+
+tp @p 1005 120 1005 -90 2
+wait 40
+shot 12_flashlight_doorway
+
+tp @p 1015 120 1006 0 25
+wait 40
+shot 13_flashlight_close_wall
+
+# Страх: края сжимаются, цвет уходит в серую кость.
+tp @p 1005 120 1005 -90 2
+execute as Dev run bh horror fear 90
+wait 80
+shot 14_fear90_flashlight
+
+bh bot light Dev
+wait 40
+shot 15_fear90_dark
+
+hud on
+bh bot light Dev
+execute as Dev run bh horror fear 60
+wait 60
+shot 16_hud_fear60
+bh stop
