@@ -55,6 +55,11 @@ public final class MatchManager {
         return teams.get(p.getUUID());
     }
 
+    /** Игрок участвует в текущем раунде и ещё жив. */
+    public boolean isAlive(ServerPlayer p) {
+        return alive.contains(p.getUUID());
+    }
+
     public int score(BhTeam t) {
         return score.get(t);
     }

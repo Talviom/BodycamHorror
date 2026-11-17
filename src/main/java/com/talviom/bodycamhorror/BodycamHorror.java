@@ -43,5 +43,10 @@ public class BodycamHorror {
         // v0.5.0: свой инвентарь на 20 слотов.
         ModMenus.register(FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.register(new InventoryRules());
+
+        // Проверка мультиплеера в одиночку: боты и /bh debug.
+        MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.bots.BotPlayers.BotTickEvents());
+        MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent e) -> com.talviom.bodycamhorror.command.BotCommand.register(e.getDispatcher()));
+        MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.bots.TestScript());
     }
 }

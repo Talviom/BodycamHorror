@@ -1,0 +1,97 @@
+# Матч 2 на 2 с ботами: команды, раунд, смерть, наблюдение, страх, рация, выход и возврат игрока.
+# Запуск: gradlew runClient -PbhTest=tools/tests/multiplayer_basic.txt
+# Результат: строки [bh-test] в run/logs/latest.log, в конце DONE failures=0.
+
+bh stop
+bh bot remove all
+execute positioned 1000 120 1000 run bh arena build
+expect Arena built
+tp @p 1005 120 1005
+
+execute positioned 1005 120 1005 run bh bot add alpha A1
+expect joined Alpha
+execute positioned 1007 120 1005 run bh bot add alpha A2
+execute positioned 1035 120 1035 run bh bot add bravo B1
+execute positioned 1037 120 1035 run bh bot add bravo B2
+bh debug
+expect A1(bot) team=alpha
+expect B2(bot) team=bravo
+
+# --- старт: заморозка ---
+bh start
+expect Match started
+wait 20
+bh debug
+expect state=PREP round=1
+expect A1(bot) team=alpha alive=true mode=adventure
+expect B1(bot) team=bravo alive=true mode=adventure
+
+# --- раунд идёт ---
+bh skip
+expect PREP -> LIVE
+wait 20
+bh debug
+expect state=LIVE
+expect radio=4
+
+# Страх одного игрока не должен менять страх остальных.
+execute as A1 run bh horror fear 80
+bh debug
+expect A1(bot) team=alpha alive=true mode=adventure hp=20 fear=80
+expect B1(bot) team=bravo alive=true mode=adventure hp=20 fear=0
+
+# Помехи рации от страха A1: глушится только Alpha.
+execute as A1 run bh horror test radio
+bh debug
+expect jam=A-
+
+# Фонарик бота.
+bh bot light B1
+expect B1 flashlight: on
+wait 10
+bh debug
+expect B1(bot) team=bravo alive=true mode=adventure hp=20 fear=0 light=on/lit
+
+# --- смерть: A1 погибает, становится наблюдателем и смотрит глазами A2 ---
+kill A1
+wait 5
+bh debug
+expect state=LIVE
+expect A1(bot) team=alpha alive=false mode=spectator
+expect cam=A2
+
+# --- выход и возврат посреди раунда: B2 выходит, раунд продолжается (B1 жив) ---
+bh bot remove B2
+wait 5
+bh debug
+expect state=LIVE
+reject B2
+
+# --- последний из Alpha погибает: раунд за Bravo ---
+kill A2
+wait 5
+bh debug
+expect state=ROUND_END
+expect score=0:1
+
+# --- следующий раунд: все снова живы ---
+bh skip
+wait 20
+bh debug
+expect state=PREP round=2
+expect A1(bot) team=alpha alive=true mode=adventure
+expect A2(bot) team=alpha alive=true mode=adventure
+
+# --- зашедший посреди матча (без команды) после матча не должен остаться наблюдателем ---
+execute positioned 1020 120 1020 run bh bot add bravo B2
+bh debug
+expect B2(bot) team=bravo
+bh stop
+wait 10
+bh debug
+expect state=LOBBY
+expect B2(bot) team=bravo alive=false mode=adventure
+expect A1(bot) team=alpha alive=false mode=adventure
+
+bh bot remove all
+expect Bots removed: 4

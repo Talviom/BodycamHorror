@@ -28,7 +28,14 @@ minecraft {
                 }
             }
         }
-        client {}
+        client {
+            // Проверка без человека: gradlew runClient -PbhTest=tools/tests/<сценарий>.txt
+            // Клиент сам заходит в мир "New World", сервер выполняет сценарий (см. bots/TestScript.java).
+            if (project.hasProperty('bhTest')) {
+                property 'bh.testScript', project.file(project.property('bhTest')).absolutePath
+                args '--quickPlaySingleplayer', 'New World'
+            }
+        }
         server {
             args '--nogui'
         }
