@@ -44,8 +44,9 @@ public final class LobbyBuilder {
         }
 
         // Площадки команд 3x3 в полу: приглушённые синий и кирпично-красный.
-        BlockPos alphaPad = base.offset(4, 0, 7);
-        BlockPos bravoPad = base.offset(10, 0, 7);
+        // Игрок появляется лицом на юг (+Z), значит слева от него большие X: Alpha слева, Bravo справа.
+        BlockPos alphaPad = base.offset(10, 0, 7);
+        BlockPos bravoPad = base.offset(4, 0, 7);
         pad(level, alphaPad, Blocks.BLUE_TERRACOTTA.defaultBlockState());
         pad(level, bravoPad, Blocks.RED_TERRACOTTA.defaultBlockState());
 
@@ -59,8 +60,8 @@ public final class LobbyBuilder {
         level.setBlock(base.offset(W - 1, 0, D - 1), candles, 3);
 
         // Таблички на дальней стене над площадками.
-        sign(level, base.offset(4, 2, D - 1), "ALPHA", "stand here");
-        sign(level, base.offset(10, 2, D - 1), "BRAVO", "stand here");
+        sign(level, base.offset(10, 2, D - 1), "ALPHA", "stand here");
+        sign(level, base.offset(4, 2, D - 1), "BRAVO", "stand here");
         sign(level, base.offset(W / 2, 2, D - 1), "THE HOST", "starts the tape", "/bh start");
 
         BlockPos spawn = base.offset(W / 2, 0, 2);
