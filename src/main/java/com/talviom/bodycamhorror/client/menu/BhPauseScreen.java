@@ -11,14 +11,19 @@ import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.GameType;
 
 /**
  * Клиент: меню паузы (Esc) вместо ванильного. Мир за ним темнеет, как будто камера ушла в режим ожидания:
  * зерно, тёмные края, служебные надписи камеры, слово STANDBY печатной машинкой.
- * Пункты: RESUME, OPTIONS, OPEN TO LAN (только у хоста, пока мир не открыт), SAVE AND QUIT или DISCONNECT.
+ * Пункты: RESUME, START THE MATCH (у хоста, пока матч не идёт), OPTIONS, OPEN TO FRIENDS (у хоста, пока мир не открыт:
+ * сразу на порту 25565), SAVE AND QUIT или DISCONNECT.
  * В одиночной игре мир на паузе, как в ванильном меню; в сетевой игре идёт дальше, о чём и говорит подпись.
  */
 public final class BhPauseScreen extends Screen {
+    /** Порт для друзей: его же хост делит в PortHole (см. pack/INSTALL.txt). */
+    public static final int FRIENDS_PORT = 25565;
+
     private final long openedAt = System.currentTimeMillis();
     private float textAlpha = 1f;
 
@@ -33,16 +38,27 @@ public final class BhPauseScreen extends Screen {
         boolean local = minecraft.isLocalServer();
         IntegratedServer host = minecraft.getSingleplayerServer();
         boolean canShare = host != null && !host.isPublished();
-        int rows = canShare ? 4 : 3;
+        // Погибший в матче хост наблюдает (inMatch у него false), ему кнопка запуска не нужна.
+        boolean canStart = host != null && !com.talviom.bodycamhorror.client.ClientState.inMatch
+                && minecraft.gameMode != null && minecraft.gameMode.getPlayerMode() != GameType.SPECTATOR;
+        int rows = 3 + (canShare ? 1 : 0) + (canStart ? 1 : 0);
         int y = Math.max(height / 2 - 4, height - 40 - (rows * step + 6));
 
         addRenderableWidget(new TapeButton(cx, y, "RESUME", this::textAlpha, b -> onClose()));
-        addRenderableWidget(new TapeButton(cx, y + step, "OPTIONS", this::textAlpha,
+        int next = y + step;
+        if (canStart) {
+            // Хост в лобби запускает матч отсюда, а не командой /bh start.
+            addRenderableWidget(new TapeButton(cx, next, "START THE MATCH", this::textAlpha, b -> {
+                minecraft.player.connection.sendCommand("bh start");
+                onClose();
+            }));
+            next += step;
+        }
+        addRenderableWidget(new TapeButton(cx, next, "OPTIONS", this::textAlpha,
                 b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
-        int next = y + step * 2;
+        next += step;
         if (canShare) {
-            addRenderableWidget(new TapeButton(cx, next, "OPEN TO LAN", this::textAlpha,
-                    b -> minecraft.setScreen(new ShareToLanScreen(this))));
+            addRenderableWidget(new TapeButton(cx, next, "OPEN TO FRIENDS", this::textAlpha, b -> openToFriends(host)));
             next += step;
         }
         TapeButton quit = new TapeButton(cx, next + 6, local ? "SAVE AND QUIT" : "DISCONNECT", this::textAlpha, b -> {
@@ -50,6 +66,21 @@ public final class BhPauseScreen extends Screen {
             leave();
         });
         addRenderableWidget(quit);
+    }
+
+    /**
+     * Открыть мир для друзей одним нажатием: сразу порт 25565 (его хост делит через PortHole), режим приключения,
+     * без читов для гостей (хост свои команды сохраняет, если они разрешены в мире). Если порт занят,
+     * открывается ванильный экран, где порт можно выбрать самому.
+     */
+    private void openToFriends(IntegratedServer host) {
+        if (host.publishServer(GameType.ADVENTURE, false, FRIENDS_PORT)) {
+            minecraft.gui.getChat().addMessage(Component.translatable("commands.publish.started", FRIENDS_PORT));
+            com.talviom.bodycamhorror.BodycamHorror.LOGGER.info("[BH menu] world opened to friends on port {}", FRIENDS_PORT);
+            minecraft.setScreen(new BhPauseScreen());
+        } else {
+            minecraft.setScreen(new ShareToLanScreen(this));
+        }
     }
 
     /** Как в ванильном меню паузы: выйти из мира и вернуться в главное меню или к списку серверов. */

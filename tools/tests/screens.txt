@@ -35,7 +35,7 @@ wait 20
 shot 064_pause_options
 screen close
 wait 10
-# OPEN TO LAN в паузе виден только до открытия мира; сам ванильный экран открытия для сети:
+# OPEN TO FRIENDS в паузе виден только до открытия мира (см. host_menu.txt); сам ванильный экран открытия для сети:
 screen lan
 wait 20
 shot 064_pause_open_lan

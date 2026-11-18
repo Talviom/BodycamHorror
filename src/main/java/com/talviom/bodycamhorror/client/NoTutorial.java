@@ -33,8 +33,8 @@ public final class NoTutorial {
     }
 
     /**
-     * Bleeding Mod при входе в мир пишет в чат «доступна новая версия» со ссылкой, и выключить это в его настройках нельзя.
-     * Такие строки до игрока не доходят.
+     * Bleeding Mod при входе в мир пишет в чат «доступна новая версия» со ссылкой, и выключить это в его настройках нельзя,
+     * а Yuushya пишет объявление про бесплатность своих модов. Такие строки до игрока не доходят.
      */
     @SubscribeEvent
     public static void onNoUpdateSpamChat(net.minecraftforge.client.event.ClientChatReceivedEvent e) {
@@ -42,6 +42,14 @@ public final class NoTutorial {
                 && t.getKey().startsWith("bleedingmod.update")) {
             e.setCanceled(true);
             BodycamHorror.LOGGER.info("[BH ui] mod update notice hidden ({})", t.getKey());
+            return;
+        }
+        // Yuushya при каждом входе пишет общее объявление «все работы Yuushya бесплатны, купившим вернуть деньги».
+        String text = e.getMessage().getString().toLowerCase(java.util.Locale.ROOT);
+        if (text.contains("yuushya") && (text.contains("refund") || text.contains("free")
+                || text.contains("возврат") || text.contains("бесплатн"))) {
+            e.setCanceled(true);
+            BodycamHorror.LOGGER.info("[BH ui] Yuushya notice hidden");
         }
     }
 

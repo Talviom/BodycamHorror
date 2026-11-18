@@ -1,0 +1,35 @@
+# 0.6.11: меню паузы хоста. OPEN TO FRIENDS открывает мир для друзей сразу на порту 25565,
+# START THE MATCH запускает матч (как /bh start). Чат без объявления Yuushya.
+# Запуск: gradlew runClient -PbhTest=tools/tests/host_menu.txt
+# Результат: [bh-test] DONE failures=0; в логе "[BH menu] world opened to friends on port 25565";
+# скриншоты run/screenshots/0611_*.png.
+
+bh stop
+bh bot remove all
+wait 20
+
+# Мир ещё не открыт: в паузе есть START THE MATCH и OPEN TO FRIENDS.
+screen pause
+wait 30
+shot 0611_pause_host
+press OPEN TO FRIENDS
+wait 40
+shot 0611_opened_chat
+screen close
+wait 10
+
+# Мир открыт: OPEN TO FRIENDS пропал, START THE MATCH остался.
+screen pause
+wait 30
+shot 0611_pause_published
+# Один игрок без бота: /bh start ответит, что в командах нет игроков. Важно, что команда ушла.
+press START THE MATCH
+wait 40
+shot 0611_after_start
+screen close
+wait 10
+bh stop
+wait 10
+screen pause
+wait 20
+press SAVE AND QUIT
