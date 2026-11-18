@@ -1,4 +1,4 @@
-# 0.6.4: меню паузы (Esc) в стиле плёнки.
+# 0.6.4: меню паузы (Esc) в стиле плёнки. 0.6.5: тёмные кнопки, ползунки, флажки и панель предметов.
 # Запуск: gradlew runClient -PbhTest=tools/tests/screens.txt
 # Остальное проверяется руками при обычном запуске (gradlew runClient):
 #   главное меню -> OPTIONS и SINGLEPLAYER: вместо земли тёмное зерно;
@@ -54,6 +54,15 @@ screen mods
 wait 20
 shot 064_mods
 screen close
+wait 10
+
+# --- 0.6.5: своя панель предметов в творческом режиме (widgets.png) ---
+gamemode creative Dev
+give Dev minecraft:torch 3
+wait 30
+shot 065_creative_hotbar
+gamemode adventure Dev
+clear Dev minecraft:torch
 wait 10
 
 # --- последним: SAVE AND QUIT (сервер останавливается, сценарий дальше не идёт) ---
