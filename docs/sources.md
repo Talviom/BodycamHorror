@@ -27,7 +27,7 @@
 | Что | Файлы | Как сделано |
 |---|---|---|
 | Фон главного меню (коридор, фигура в двери) | `textures/gui/menu/corridor_*.png` | Отрисовано скриптом `tools/assets/make_menu.py` с нуля, без чужих картинок |
-| Фон ванильных экранов вместо земли | `assets/minecraft/textures/gui/options_background.png`, `light_dirt_background.png` | Плёночное зерно, `tools/assets/make_menu.py` |
-| Кнопки, ползунки, флажки, панель предметов ванильных экранов | `assets/minecraft/textures/gui/widgets.png`, `slider.png`, `checkbox.png` | Нарисовано скриптом `tools/assets/make_widgets.py` с нуля |
+| Фон ванильных экранов вместо земли | `overrides/assets/minecraft/textures/gui/options_background.png`, `light_dirt_background.png` | Плёночное зерно, `tools/assets/make_menu.py` |
+| Кнопки, ползунки, флажки, панель предметов ванильных экранов | `overrides/assets/minecraft/textures/gui/widgets.png`, `slider.png`, `checkbox.png` | Нарисовано скриптом `tools/assets/make_widgets.py` с нуля |
 | Значок окна игры (объектив камеры, точка REC) | `icons/icon_16.png` … `icon_256.png` | Нарисовано скриптом `tools/assets/make_icon.py` с нуля |
-| Щелчок кнопок (вместо ванильного) | `sounds/ui_click.ogg`, подключён в `assets/minecraft/sounds.json` | Синтез в `tools/assets/make_sounds.py` (`ui_click`) |
+| Щелчок кнопок (вместо ванильного) | `sounds/ui_click.ogg`, подключён в `overrides/assets/minecraft/sounds.json` | Синтез в `tools/assets/make_sounds.py` (`ui_click`) |

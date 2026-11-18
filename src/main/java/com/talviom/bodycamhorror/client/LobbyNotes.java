@@ -131,6 +131,15 @@ public final class LobbyNotes {
         return out;
     }
 
+    /** Надпись клавиши по имени или частям имени (для других подсказок, например у щитка); null, если не назначена. */
+    static String keyLabel(String fallback, String... parts) {
+        for (KeyMapping k : Minecraft.getInstance().options.keyMappings) {
+            String name = k.getName().toLowerCase(Locale.ROOT);
+            if (parts.length == 1 ? name.equals(parts[0]) : containsAll(name, parts)) return label(k, fallback);
+        }
+        return fallback;
+    }
+
     private static boolean containsAll(String name, String[] parts) {
         for (String p : parts) if (!name.contains(p)) return false;
         return true;

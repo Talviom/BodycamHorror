@@ -331,7 +331,7 @@ def lamp_buzz(seed, sec):
 
 def ui_click():
     """A camcorder button: a dry plastic tick, the latch a moment later, a faint body thump.
-    Replaces the vanilla button click (assets/minecraft/sounds.json)."""
+    Replaces the vanilla button click (overrides/assets/minecraft/sounds.json)."""
     rng = np.random.default_rng(71)
     n = int(0.16 * SR)
     x = np.zeros(n)
@@ -365,7 +365,7 @@ SOUNDS = {
     "lamp_buzz2": lambda: lamp_buzz(62, 1.45),
     "ui_click": ui_click,
 }
-# 14 files listed in our sounds.json, plus ui_click used by assets/minecraft/sounds.json.
+# 14 files listed in our sounds.json, plus ui_click used by overrides/assets/minecraft/sounds.json.
 assert len(SOUNDS) == 15
 
 

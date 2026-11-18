@@ -11,7 +11,7 @@ and an open door at the far end with light behind it. Three versions are written
 The menu switches between them only while the lights are out, so the figure "moves" in the dark.
 Images are grayscale; the game tints them bone-coloured and adds grain, vignette and flicker.
 Also writes our own dark film-grain tiles over Minecraft's dirt background of vanilla screens
-(assets/minecraft/textures/gui/options_background.png, light_dirt_background.png).
+(overrides/assets/minecraft/textures/gui/options_background.png, light_dirt_background.png; the built-in pack on top).
 Preview: docs/previews/menu_bg.png
 """
 import sys
@@ -274,7 +274,7 @@ def film_tile(base, size=64, seed=7):
 
 def main():
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
-    vanilla_gui = root / "src/main/resources/assets/minecraft/textures/gui"
+    vanilla_gui = root / "src/main/resources/overrides/assets/minecraft/textures/gui"
     vanilla_gui.mkdir(parents=True, exist_ok=True)
     film_tile(110).save(vanilla_gui / "options_background.png", optimize=True)
     film_tile(42, seed=8).save(vanilla_gui / "light_dirt_background.png", optimize=True)

@@ -4,10 +4,10 @@ other vanilla screens match the found-footage style instead of bright grey butto
 Usage: python -I tools/assets/make_widgets.py <repo root>
 
 Writes (drawn here from scratch, nothing copied from Minecraft):
-  assets/minecraft/textures/gui/widgets.png   buttons, hotbar, hotbar selection, offhand slots,
+  overrides/assets/minecraft/textures/gui/widgets.png   buttons, hotbar, hotbar selection, offhand slots,
                                                language icon and difficulty lock icons (1.20.1 layout)
-  assets/minecraft/textures/gui/slider.png    slider track and handle
-  assets/minecraft/textures/gui/checkbox.png  checkbox
+  overrides/assets/minecraft/textures/gui/slider.png    slider track and handle
+  overrides/assets/minecraft/textures/gui/checkbox.png  checkbox
 Preview: docs/previews/widgets_preview.png
 """
 import sys
@@ -187,7 +187,7 @@ def checkbox():
 
 def preview(root, w_img, s_img, c_img):
     """Rough look of an options screen: film grain background, buttons, a slider and a checkbox."""
-    bg = Image.open(root / "src/main/resources/assets/minecraft/textures/gui/options_background.png").convert("RGB")
+    bg = Image.open(root / "src/main/resources/overrides/assets/minecraft/textures/gui/options_background.png").convert("RGB")
     W, H = 427, 240
     canvas = Image.new("RGB", (W, H))
     for x in range(0, W, 32):
@@ -218,7 +218,7 @@ def preview(root, w_img, s_img, c_img):
 
 def main():
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
-    out = root / "src/main/resources/assets/minecraft/textures/gui"
+    out = root / "src/main/resources/overrides/assets/minecraft/textures/gui"
     out.mkdir(parents=True, exist_ok=True)
     w_img, s_img, c_img = widgets(), slider(), checkbox()
     w_img.save(out / "widgets.png", optimize=True)

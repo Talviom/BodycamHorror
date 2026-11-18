@@ -22,7 +22,7 @@ import net.minecraftforge.fml.common.Mod;
  * Клиент: ванильные экраны заменяются нашими (если это не выключено в настройках, hud.customMenu):
  * титульный экран нашим главным меню, меню паузы нашим, экран смерти вне матча кадром SIGNAL LOST,
  * а при загрузке мира и входе на сервер вместо разноцветной карты чанков и земляного фона тёмный кадр «LOADING THE TAPE».
- * Земляной фон остальных ванильных экранов заменён текстурой (assets/minecraft/textures/gui/options_background.png).
+ * Земляной фон остальных ванильных экранов заменён текстурой (overrides/assets/minecraft/textures/gui/options_background.png, встроенный пак поверх всех).
  */
 @Mod.EventBusSubscriber(modid = BodycamHorror.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class MenuEvents {
