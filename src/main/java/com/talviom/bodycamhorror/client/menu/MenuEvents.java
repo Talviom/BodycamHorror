@@ -5,11 +5,14 @@ import com.talviom.bodycamhorror.BodycamHorror;
 import com.talviom.bodycamhorror.client.Vhs;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.DeathScreen;
+import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.screens.ProgressScreen;
 import net.minecraft.client.gui.screens.ReceivingLevelScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -63,26 +66,34 @@ public final class MenuEvents {
         }
     }
 
-    /** Загрузка мира и вход на сервер: свой тёмный кадр вместо ванильного. */
+    /**
+     * Загрузка мира, вход на сервер и короткие служебные экраны без кнопок («Joining world», «Reading world data»,
+     * «Saving world»): свой тёмный кадр вместо ванильного. Надписи свои и всегда на английском: шрифт печатной
+     * машинки без кириллицы, а у пользователя игра на русском.
+     */
     @SubscribeEvent
     public static void onMenuLoadingRender(ScreenEvent.Render.Pre e) {
         Screen s = e.getScreen();
-        if (!(s instanceof LevelLoadingScreen) && !(s instanceof ReceivingLevelScreen)) return;
-        if (!enabled()) return;
+        boolean loading = s instanceof LevelLoadingScreen || s instanceof ReceivingLevelScreen || s instanceof ProgressScreen;
+        boolean message = s instanceof GenericDirtMessageScreen;
+        if ((!loading && !message) || !enabled()) return;
         e.setCanceled(true);
-        drawLoading(e.getGuiGraphics(), s.width, s.height);
+        boolean saving = message && s.getTitle().getContents() instanceof TranslatableContents tc
+                && tc.getKey().toLowerCase(java.util.Locale.ROOT).contains("sav");
+        if (saving) drawLoading(e.getGuiGraphics(), s.width, s.height, "SAVING THE TAPE", "DON'T TURN IT OFF.");
+        else drawLoading(e.getGuiGraphics(), s.width, s.height, "LOADING THE TAPE", "DON'T LOOK AWAY.");
     }
 
-    private static void drawLoading(GuiGraphics g, int w, int h) {
+    private static void drawLoading(GuiGraphics g, int w, int h, String what, String omen) {
         g.fill(0, 0, w, h, 0xFF060606);
         Vhs.noise(g, 0, 0, w, h, 0.2f);
         Vhs.vignette(g, w, h, 1f);
         Vhs.flicker(g, w, h);
         int dots = (int) ((System.currentTimeMillis() / 450) % 4);
-        String text = "LOADING THE TAPE" + ".".repeat(dots);
-        int x = (w - Vhs.width(Vhs.title("LOADING THE TAPE..."))) / 2;
+        String text = what + ".".repeat(dots);
+        int x = (w - Vhs.width(Vhs.title(what + "..."))) / 2;
         Vhs.ghost(g, Vhs.title(text), x, h / 2 - 8, 0xD0000000 | Vhs.BONE, 1f, 0.3f);
-        Vhs.ghostCentered(g, Vhs.title("DON'T LOOK AWAY."), w / 2, h / 2 + 8, 0xC0000000 | Vhs.DRIED_BLOOD, 1f, 0.2f);
+        Vhs.ghostCentered(g, Vhs.title(omen), w / 2, h / 2 + 8, 0xC0000000 | Vhs.DRIED_BLOOD, 1f, 0.2f);
         MenuOsd.draw(g, w, h, 1f, null);
     }
 
