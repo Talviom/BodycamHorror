@@ -13,10 +13,10 @@ hud off
 wait 20
 
 # --- чужая музыка глушится ---
-playsound minecraft:music.game music Dev
-playsound minecraft:music_disc.cat record Dev
-playsound minecraft:music.creative music Dev
-playsound bodycamhorror:music.menu music Dev
+execute at Dev run playsound minecraft:music.game music Dev ~ ~ ~
+execute at Dev run playsound minecraft:music_disc.cat record Dev ~ ~ ~
+execute at Dev run playsound minecraft:music.creative music Dev ~ ~ ~
+execute at Dev run playsound bodycamhorror:music.menu music Dev ~ ~ ~
 wait 40
 stopsound Dev
 
