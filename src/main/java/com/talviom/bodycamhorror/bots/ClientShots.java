@@ -27,6 +27,12 @@ final class ClientShots {
         mc.execute(() -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("")));
     }
 
+    /** Открыть главное меню мода поверх мира (для скриншота и проверки, что оно рисуется). */
+    static void openMenu() {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> mc.setScreen(new com.talviom.bodycamhorror.client.menu.BhTitleScreen()));
+    }
+
     /** Закрыть открытый экран. */
     static void closeScreen() {
         Minecraft mc = Minecraft.getInstance();

@@ -12,10 +12,14 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Клиент: музыка мода вместо ванильной.
  *
- * Ванильная музыка Minecraft не играет совсем. Своя музыка:
+ * Ванильная музыка Minecraft не играет совсем, как и пластинки и музыка других модов
+ * (каждый заглушённый трек один раз пишется в лог: "[BH music] blocked ..."). Своя музыка:
  * - меню (главный экран, список серверов, настройки до входа в мир), по кругу;
  * - лобби (в мире, когда матч не идёт), по кругу, тише;
  * - начало раунда: один из четырёх отрывков (случайно, не тот же, что в прошлом раунде),
@@ -50,7 +54,23 @@ public final class MusicDirector {
     private static Kind lastKind;
     private static long lastBannerAt;
 
+    /** Какие чужие треки уже заглушены (в лог каждый пишется один раз). */
+    private static final Set<ResourceLocation> BLOCKED = new HashSet<>();
+
     private MusicDirector() {}
+
+    /**
+     * Чужая музыка: всё из категорий «Музыка» и «Пластинки», кроме нашей,
+     * а также любой звук другого мода или Minecraft, у которого в названии есть music
+     * (моды иногда пускают свои треки через другие категории).
+     */
+    static boolean isForeignMusic(SoundInstance sound) {
+        ResourceLocation id = sound.getLocation();
+        if (id == null || BodycamHorror.MOD_ID.equals(id.getNamespace())) return false;
+        SoundSource source = sound.getSource();
+        if (source == SoundSource.MUSIC || source == SoundSource.RECORDS) return true;
+        return id.getPath().contains("music");
+    }
 
     private static ResourceLocation id(String path) {
         return new ResourceLocation(BodycamHorror.MOD_ID, path);
@@ -150,12 +170,15 @@ public final class MusicDirector {
             if (e.phase == TickEvent.Phase.END) tick();
         }
 
-        /** Ванильная музыка Minecraft не играет: своя музыка вместо неё. */
+        /** Чужая музыка не играет совсем: ни Minecraft, ни пластинки, ни музыка других модов. Своя вместо неё. */
         @SubscribeEvent
         public static void onMusicPlaySound(PlaySoundEvent e) {
             SoundInstance sound = e.getSound();
-            if (sound == null || sound.getSource() != SoundSource.MUSIC) return;
-            if (!BodycamHorror.MOD_ID.equals(sound.getLocation().getNamespace())) e.setSound(null);
+            if (sound == null || !isForeignMusic(sound)) return;
+            e.setSound(null);
+            if (BLOCKED.add(sound.getLocation())) {
+                BodycamHorror.LOGGER.info("[BH music] blocked {} ({})", sound.getLocation(), sound.getSource().getName());
+            }
         }
     }
 }

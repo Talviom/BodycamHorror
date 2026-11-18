@@ -50,11 +50,15 @@ public final class LobbyBuilder {
         pad(level, alphaPad, Blocks.BLUE_TERRACOTTA.defaultBlockState());
         pad(level, bravoPad, Blocks.RED_TERRACOTTA.defaultBlockState());
 
-        // Тусклый невидимый свет под потолком и пара свечей у стены: в лобби тоже темно.
-        BlockState light = Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, 6);
+        // Приглушённый невидимый свет под потолком, отдельно над каждой площадкой, и пара свечей у стены.
+        // В лобби полутьма, но площадки и таблички видно (на тесте 0.6.0 было слишком темно).
+        BlockState light = Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, 9);
         level.setBlock(base.offset(3, H - 1, 3), light, 3);
         level.setBlock(base.offset(W - 3, H - 1, 3), light, 3);
         level.setBlock(base.offset(W / 2, H - 1, 7), light, 3);
+        BlockState padLight = Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, 8);
+        level.setBlock(alphaPad.above(H - 1), padLight, 3);
+        level.setBlock(bravoPad.above(H - 1), padLight, 3);
         BlockState candles = Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.CANDLES, 3).setValue(CandleBlock.LIT, true);
         level.setBlock(base.offset(1, 0, D - 1), candles, 3);
         level.setBlock(base.offset(W - 1, 0, D - 1), candles, 3);

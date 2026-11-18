@@ -1,0 +1,37 @@
+# 0.6.1: своё главное меню и никакой чужой музыки.
+# Запуск: gradlew runClient -PbhTest=tools/tests/menu_music.txt
+# Настоящий титульный экран проверяется глазами при запуске (скриншот окна до входа в мир);
+# здесь меню открывается поверх мира, чтобы снять кадры и убедиться, что свет гаснет и всё рисуется.
+# Чужая музыка: playsound с ванильными треками и пластинкой должен попасть в лог как
+#   [BH music] blocked minecraft:music.game (music)
+#   [BH music] blocked minecraft:music_disc.cat (record)
+# а наша музыка меню не должна попасть в blocked. Строки [bh-test] и [BH music] в run/logs/latest.log.
+
+bh stop
+bh bot remove all
+hud off
+wait 20
+
+# --- чужая музыка глушится ---
+playsound minecraft:music.game music Dev
+playsound minecraft:music_disc.cat record Dev
+playsound minecraft:music.creative music Dev
+playsound bodycamhorror:music.menu music Dev
+wait 40
+stopsound Dev
+
+# --- главное меню мода поверх мира ---
+screen menu
+wait 60
+shot 061_menu
+wait 100
+shot 061_menu_b
+wait 100
+shot 061_menu_c
+wait 100
+shot 061_menu_d
+wait 100
+shot 061_menu_e
+screen close
+hud on
+wait 20

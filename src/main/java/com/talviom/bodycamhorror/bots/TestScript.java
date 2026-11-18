@@ -128,7 +128,7 @@ public final class TestScript {
         }
     }
 
-    /** Экран у хозяина мира (первый вошедший игрок): чат, инвентарь мода или закрыть. */
+    /** Экран у хозяина мира (первый вошедший игрок): чат, инвентарь мода, главное меню мода или закрыть. */
     private void screen(MinecraftServer server, String what) {
         BodycamHorror.LOGGER.info(PREFIX + "> screen " + what);
         if (server.getPlayerList().getPlayers().isEmpty()) return;
@@ -136,6 +136,7 @@ public final class TestScript {
         switch (what) {
             case "inventory" -> com.talviom.bodycamhorror.inventory.BhInventoryMenu.open(host);
             case "chat" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openChat);
+            case "menu" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openMenu);
             default -> {
                 host.closeContainer();
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::closeScreen);

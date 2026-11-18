@@ -27,6 +27,7 @@ public final class BhConfig {
     public static final ForgeConfigSpec.DoubleValue TAPE_CARRIER_FEAR;
     public static final ForgeConfigSpec.IntValue LOBBY_RETURN_SECONDS;
     public static final ForgeConfigSpec.BooleanValue FORCE_SKINS;
+    public static final ForgeConfigSpec.BooleanValue CUSTOM_MENU;
 
     public static final ForgeConfigSpec.BooleanValue HIDE_VANILLA_HUD;
     public static final ForgeConfigSpec.BooleanValue BLOCK_INVENTORY;
@@ -91,6 +92,8 @@ public final class BhConfig {
         SLOT_STRIP = c.comment("Show carried items as a strip in the bottom right corner").define("slotStrip", true);
         FORCE_SKINS = c.comment("Draw every player with the mod's military skin of their team instead of their own skin")
                 .define("forceSkins", true);
+        CUSTOM_MENU = c.comment("Replace the vanilla title screen with the bodycam main menu")
+                .define("customMenu", true);
         c.pop();
         CLIENT_SPEC = c.build();
     }
