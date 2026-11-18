@@ -6,6 +6,7 @@ import com.talviom.bodycamhorror.match.MapData;
 import com.talviom.bodycamhorror.match.MatchManager;
 import com.talviom.bodycamhorror.objective.TapeObjective;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,6 +26,8 @@ public final class LobbyManager {
 
     private int returnIn;
     private long tick;
+    /** Подсказка лобби сейчас висит у игроков над панелью. */
+    private boolean statusShown;
 
     private LobbyManager() {}
 
@@ -42,6 +45,11 @@ public final class LobbyManager {
         MatchManager match = MatchManager.INSTANCE;
         if (match.running()) {
             returnIn = 0;
+            // Подсказка лобби в строке над панелью гаснет сразу, а не просвечивает сквозь заставку раунда.
+            if (statusShown) {
+                statusShown = false;
+                for (ServerPlayer p : server.getPlayerList().getPlayers()) p.displayClientMessage(Component.empty(), true);
+            }
             return;
         }
         if (returnIn > 0 && --returnIn == 0) sendAllToLobby(server);
@@ -102,6 +110,7 @@ public final class LobbyManager {
             }
             if (tick % 40 == 0 && !onAnyPad(p, map)) {
                 p.displayClientMessage(TapeObjective.text(status(server), TapeObjective.ASH), true);
+                statusShown = true;
             }
         }
     }
