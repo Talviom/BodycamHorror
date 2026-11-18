@@ -180,6 +180,7 @@ public final class TapeObjective {
     /** Кто-то поднял кассету. */
     public void onPickedUp(ServerPlayer p) {
         if (!active) return;
+        com.talviom.bodycamhorror.match.MatchReport.tapePickedUp(p.server, p);
         ServerLevel level = p.serverLevel();
         play(level, p.position(), ModSounds.TAPE_PICKUP.get(), 1.0f, 1.0f);
         // Только ему: кассета будто что-то шепчет.

@@ -19,12 +19,16 @@ public class MatchEvents {
     public void onServerTick(TickEvent.ServerTickEvent e) {
         if (e.phase != TickEvent.Phase.END) return;
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-        if (server != null) match.tick(server);
+        if (server != null) {
+            match.tick(server);
+            MatchReport.tick(server);
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onDeath(LivingDeathEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer p)) return;
+        if (match.running() && match.isAlive(p)) MatchReport.kill(p.server, p, e.getSource());
         if (match.onPlayerKilled(p.server, p)) e.setCanceled(true);
     }
 

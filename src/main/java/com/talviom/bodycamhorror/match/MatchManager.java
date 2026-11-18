@@ -134,12 +134,14 @@ public final class MatchManager {
         testMode = test;
         resetScore();
         round = 0;
+        MatchReport.matchStart(server, test);
         startRound(server);
         return null;
     }
 
     public void stop(MinecraftServer server) {
         if (!running()) return;
+        MatchReport.matchEnd(server, "Stopped (/bh stop) at " + score(BhTeam.ALPHA) + ":" + score(BhTeam.BRAVO));
         state = MatchState.LOBBY;
         alive.clear();
         frozenAt.clear();
@@ -151,6 +153,7 @@ public final class MatchManager {
 
     private void startRound(MinecraftServer server) {
         round++;
+        MatchReport.roundStart(server, round);
         ServerLevel level = server.overworld();
         MapData map = MapData.get(level);
 
@@ -196,6 +199,7 @@ public final class MatchManager {
         frozenAt.clear();
         ticksLeft = BhConfig.ROUND_SECONDS.get() * 20;
         broadcastBanner(server, BannerPacket.Kind.GO, 30);
+        MatchReport.live(server);
         TapeObjective.INSTANCE.announce(server, round == 1);
         // За время заморозки команда могла остаться без игроков (все вышли).
         if (!testMode) checkRoundOver(server);
@@ -207,10 +211,14 @@ public final class MatchManager {
 
     /** @param reason строка в чат всем игрокам, чем кончился раунд (null = без пояснения) */
     private void endRound(MinecraftServer server, BhTeam winner, String reason) {
+        // Для отчёта о матче: чем кончился раунд (до того, как ticksLeft перезапишется).
+        String how = reason != null ? reason : ticksLeft <= 0 ? "Time ran out."
+                : winner == null ? "Both teams fell." : winner.other().displayName + " was wiped out.";
         state = MatchState.ROUND_END;
         TapeObjective.INSTANCE.onRoundEnd();
         ticksLeft = BhConfig.ROUND_END_SECONDS.get() * 20;
         if (winner != null) score.merge(winner, 1, Integer::sum);
+        MatchReport.roundEnd(server, winner, how, score(BhTeam.ALPHA), score(BhTeam.BRAVO));
 
         boolean matchOver = winner != null && score.get(winner) >= BhConfig.ROUNDS_TO_WIN.get();
         int showTicks = matchOver ? 120 : ticksLeft;
@@ -235,6 +243,7 @@ public final class MatchManager {
         }
 
         if (matchOver) {
+            MatchReport.matchEnd(server, winner.displayName + " won " + score(BhTeam.ALPHA) + ":" + score(BhTeam.BRAVO));
             state = MatchState.LOBBY;
             TapeObjective.INSTANCE.onMatchEnd(server);
             releaseAll(server);
