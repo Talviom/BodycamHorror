@@ -42,6 +42,14 @@ public final class NoTutorial {
         if (mc.getToasts().getToast(SystemToast.class, SystemToast.SystemToastIds.UNSECURE_SERVER_WARNING) != null) {
             mc.getToasts().clear();
             BodycamHorror.LOGGER.info("[BH ui] chat verification toast hidden");
+            return;
+        }
+        // Ванильные «Открыты новые рецепты!» и достижения: в полной сборке они всплывали поверх REC при старте матча.
+        Object none = net.minecraft.client.gui.components.toasts.Toast.NO_TOKEN;
+        if (mc.getToasts().getToast(net.minecraft.client.gui.components.toasts.RecipeToast.class, none) != null
+                || mc.getToasts().getToast(net.minecraft.client.gui.components.toasts.AdvancementToast.class, none) != null) {
+            mc.getToasts().clear();
+            BodycamHorror.LOGGER.info("[BH ui] recipe/advancement toast hidden");
         }
     }
 }
