@@ -140,6 +140,13 @@ public final class LobbyNotes {
     private static String label(KeyMapping k, String fallback) {
         if (k == null) return fallback;
         if (k.isUnbound()) return null;
+        // Буквы и цифры берём по коду клавиши, а не по раскладке: на русской раскладке O стала бы «Щ»,
+        // а в шрифте печатной машинки нет кириллицы (вместо буквы был пустой квадрат).
+        com.mojang.blaze3d.platform.InputConstants.Key key = k.getKey();
+        if (key.getType() == com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM) {
+            int v = key.getValue();
+            if ((v >= 'A' && v <= 'Z') || (v >= '0' && v <= '9')) return String.valueOf((char) v);
+        }
         Component c = k.getTranslatedKeyMessage();
         return c.getString().toUpperCase(Locale.ROOT);
     }
