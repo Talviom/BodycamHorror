@@ -54,6 +54,9 @@ execute as Dev2 run bh horror fear 0
 wait 20
 
 # --- кассета у второго игрока: шипение, подсказка, доставка к выходу Bravo ---
+# Сначала отводим Dev2 от выхода: один из спавнов Bravo в 1,5 блока от него, и кассета ушла бы сразу.
+tp Dev2 1035.5 120 1035.5
+wait 10
 give Dev2 bodycamhorror:tape
 wait 120
 tp Dev2 1040.5 120 1040.5

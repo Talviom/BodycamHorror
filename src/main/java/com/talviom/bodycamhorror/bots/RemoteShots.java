@@ -42,7 +42,47 @@ public final class RemoteShots {
     private static int lastFear = -1;
     private static final Set<ResourceLocation> HEARD = new HashSet<>();
 
+    /**
+     * Адрес хоста (свойство bh.join). Заходим сами, а не через --quickPlayMultiplayer:
+     * у быстрого входа нет данных опроса сервера, клиент Forge считает сервер ванильным,
+     * не отвечает на его рукопожатие модов, и вход обрывается по тайм-ауту («Timed out»).
+     * Поэтому сначала опрашиваем сервер, как список серверов, и подключаемся уже с этими данными.
+     */
+    private static final String JOIN = System.getProperty("bh.join", "");
+    private static net.minecraft.client.multiplayer.ServerStatusPinger pinger;
+    private static net.minecraft.client.multiplayer.ServerData joinData;
+    private static long joinPingAt;
+    private static boolean joinStarted;
+
     private RemoteShots() {}
+
+    /** Опросить хоста и зайти к нему (один раз, когда клиент дошёл до главного меню). */
+    private static void joinTick() {
+        if (JOIN.isBlank() || joinStarted) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level != null || mc.screen == null || mc.getOverlay() != null) return;
+        long now = System.currentTimeMillis();
+        if (pinger == null) {
+            pinger = new net.minecraft.client.multiplayer.ServerStatusPinger();
+            joinData = new net.minecraft.client.multiplayer.ServerData("BhTest host", JOIN, false);
+            joinPingAt = now;
+            BodycamHorror.LOGGER.info(PREFIX + "pinging " + JOIN);
+            try {
+                pinger.pingServer(joinData, () -> {});
+            } catch (Exception ex) {
+                BodycamHorror.LOGGER.warn(PREFIX + "ping failed: " + ex);
+            }
+            return;
+        }
+        pinger.tick();
+        boolean pinged = joinData.forgeData != null;
+        if (!pinged && now - joinPingAt < 10000) return;
+        joinStarted = true;
+        pinger.removeAll();
+        BodycamHorror.LOGGER.info(PREFIX + "connecting to " + JOIN + (pinged ? " (Forge server)" : " (no ping answer)"));
+        net.minecraft.client.gui.screens.ConnectScreen.startConnecting(mc.screen, mc,
+                net.minecraft.client.multiplayer.resolver.ServerAddress.parseString(JOIN), joinData, false);
+    }
 
     /** Пришла заставка с сервера: снять кадр, когда она проявится. */
     public static void onBanner(BannerPacket.Kind kind) {
@@ -106,7 +146,10 @@ public final class RemoteShots {
     public static final class RemoteShotsEvents {
         @SubscribeEvent
         public static void onRemoteClientTick(TickEvent.ClientTickEvent e) {
-            if (ON && e.phase == TickEvent.Phase.END) tick();
+            if (ON && e.phase == TickEvent.Phase.END) {
+                joinTick();
+                tick();
+            }
         }
 
         /** Первый раз услышанный звук мода (шипение кассеты, музыка, щитки) пишется в лог. */
