@@ -88,6 +88,7 @@ public final class ArenaBuilder {
 
         // Кассета появляется в одной из точек на диагонали x + z = SIZE: до обоих выходов одинаково далеко.
         for (int x : new int[]{7, 17, 23, 33}) map.tapePoints().add(base.offset(x, 0, SIZE - x));
+        map.setPairedLoot(false);
         map.setDirty();
 
         String lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 15), 0, 0));

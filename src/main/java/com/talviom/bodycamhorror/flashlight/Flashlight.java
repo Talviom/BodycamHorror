@@ -89,6 +89,11 @@ public final class Flashlight {
         FLICKER_UNTIL.remove(id);
     }
 
+    /** Новая батарейка: заряд фонарика сразу полный. */
+    public static void refill(ServerPlayer p) {
+        CHARGE.put(p.getUUID(), 1f);
+    }
+
     public static void toggle(ServerPlayer p) {
         if (!hasFlashlight(p)) {
             p.displayClientMessage(Component.literal("No flashlight"), true);

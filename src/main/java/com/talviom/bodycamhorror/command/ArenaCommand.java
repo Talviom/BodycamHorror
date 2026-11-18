@@ -21,6 +21,12 @@ public final class ArenaCommand {
                     String result = ArenaBuilder.build(c.getSource().getServer().overworld(), base);
                     c.getSource().sendSuccess(() -> Component.literal(result), true);
                     return 1;
-                }))));
+                }).then(Commands.literal("facility").executes(c -> {
+                    // «Комплекс»: три уровня, лестницы и спуски, зеркальный лут (FacilityBuilder).
+                    BlockPos base = BlockPos.containing(c.getSource().getPosition()).offset(2, 0, 2);
+                    String result = com.talviom.bodycamhorror.arena.FacilityBuilder.build(c.getSource().getServer().overworld(), base);
+                    c.getSource().sendSuccess(() -> Component.literal(result), true);
+                    return 1;
+                })))));
     }
 }

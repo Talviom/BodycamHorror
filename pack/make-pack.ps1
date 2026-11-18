@@ -34,6 +34,8 @@ if (Test-Path $hostOptions) {
         "darkMojangStudiosBackground" = "true"
         # Меню голосового чата на 0: V занята ударом прикладом TACZ, B рюкзаком ZeroContact, свободен только 0.
         "key_key.voice_chat" = "key.keyboard.0"
+        # Z (TACZ: осмотр и обвесы) в матче не нужен: оружие выдаётся готовым. Экран обвесов мод и так не открывает.
+        "key_key.tacz.refit.desc" = "key.keyboard.unknown"
     }
     $lines = foreach ($line in [System.IO.File]::ReadAllLines($hostOptions)) {
         $key = ($line -split ":", 2)[0]

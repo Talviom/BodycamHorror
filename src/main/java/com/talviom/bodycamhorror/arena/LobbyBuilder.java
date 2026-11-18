@@ -63,6 +63,10 @@ public final class LobbyBuilder {
         level.setBlock(base.offset(1, 0, D - 1), candles, 3);
         level.setBlock(base.offset(W - 1, 0, D - 1), candles, 3);
 
+        // Плакат «полевое руководство» на западной стене: правила, управление, опасности, Жилец (PosterRenderer).
+        level.setBlock(base.offset(1, 0, 7), com.talviom.bodycamhorror.gear.ModGear.POSTER.get().defaultBlockState()
+                .setValue(com.talviom.bodycamhorror.lobby.PosterBlock.FACING, net.minecraft.core.Direction.EAST), 3);
+
         // Таблички на дальней стене над площадками.
         sign(level, base.offset(10, 2, D - 1), "ALPHA", "stand here");
         sign(level, base.offset(4, 2, D - 1), "BRAVO", "stand here");

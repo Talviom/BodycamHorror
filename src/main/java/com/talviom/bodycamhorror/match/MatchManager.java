@@ -158,7 +158,8 @@ public final class MatchManager {
         MapData map = MapData.get(level);
 
         LootSpawner.clearGroundItems(level);
-        LootSpawner.spawn(level, map.lootPoints());
+        if (map.pairedLoot()) LootSpawner.spawnPaired(level, map.lootPoints());
+        else LootSpawner.spawn(level, map.lootPoints());
 
         // Смена сторон: каждые N раундов команды меняются точками спавна.
         int swapAfter = BhConfig.SWAP_SIDES_AFTER_ROUNDS.get();
@@ -443,7 +444,8 @@ public final class MatchManager {
         p.setRemainingFireTicks(0);
         p.fallDistance = 0;
         Flashlight.resetPlayer(p);
-        for (String spec : BhConfig.START_KIT.get()) {
+        BhTeam team = teams.get(p.getUUID());
+        for (String spec : (team == BhTeam.BRAVO ? BhConfig.START_KIT_BRAVO : BhConfig.START_KIT).get()) {
             ItemStack stack = ItemSpec.parse(spec);
             if (!stack.isEmpty()) p.getInventory().add(stack);
         }
