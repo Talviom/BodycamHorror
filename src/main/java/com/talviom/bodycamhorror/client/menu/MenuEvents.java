@@ -26,6 +26,15 @@ public final class MenuEvents {
 
     private MenuEvents() {}
 
+    /**
+     * Пока открыта наша пауза, интерфейс игры (прицел, строка лобби над панелью, слоты, REC и сердце)
+     * не рисуется: иначе он просвечивает сквозь затемнение и наезжает на пункты меню.
+     */
+    @SubscribeEvent
+    public static void onMenuPauseHideHud(net.minecraftforge.client.event.RenderGuiOverlayEvent.Pre e) {
+        if (net.minecraft.client.Minecraft.getInstance().screen instanceof BhPauseScreen) e.setCanceled(true);
+    }
+
     @SubscribeEvent
     public static void onMenuScreenOpening(ScreenEvent.Opening e) {
         Screen next = e.getNewScreen();
