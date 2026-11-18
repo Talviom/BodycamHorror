@@ -15,6 +15,9 @@ public final class FearHud {
     /** Анатомическое сердце: 4 кадра 48x48 в одну строку (tools/assets/make_gui.py). */
     private static final int HEART_FRAME = 48;
     private static final ResourceLocation BATTERY = Vhs.rl("textures/gui/battery.png");
+    /** Батарея: 5 кадров 24x24 (пусто, 25, 50, 75, 100 %), на экране 20x20. */
+    private static final int BATTERY_FRAME = 24;
+    private static final int BATTERY_SIZE = 20;
     private static final long COMMENT_MS = 3500;
 
     private FearHud() {}
@@ -31,7 +34,7 @@ public final class FearHud {
             drawComment(g, x, bottom + 6 + 9);
             x += size + 6;
         }
-        if (ClientState.hasFlashlight) drawBattery(g, x, bottom - 16);
+        if (ClientState.hasFlashlight) drawBattery(g, x, bottom - BATTERY_SIZE);
     }
 
     /** @return сколько места заняло сердце по ширине */
@@ -94,7 +97,8 @@ public final class FearHud {
         int frame = b <= 0.02f ? 0 : b < 0.375f ? 1 : b < 0.625f ? 2 : b < 0.875f ? 3 : 4;
         float alpha = on ? 1f : 0.5f;
         if (Vhs.has(BATTERY)) {
-            Vhs.blitAlpha(g, BATTERY, x, y, 16, 16, frame * 16, 0, 16, 16, 80, 16, alpha);
+            Vhs.blitAlpha(g, BATTERY, x, y, BATTERY_SIZE, BATTERY_SIZE, frame * BATTERY_FRAME, 0,
+                    BATTERY_FRAME, BATTERY_FRAME, BATTERY_FRAME * 5, BATTERY_FRAME, alpha);
         } else {
             int a = (int) (alpha * 255) << 24;
             int col = low ? 0xE53935 : 0xE0E0E0;

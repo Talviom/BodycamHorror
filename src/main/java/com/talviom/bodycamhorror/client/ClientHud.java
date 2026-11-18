@@ -8,11 +8,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -111,6 +116,15 @@ public final class ClientHud {
             if (HIDDEN.contains(e.getOverlay().id())) e.setCanceled(true);
         }
 
+        /** «X joined the game» и «X left the game» не ванильным жёлтым, а тусклым пеплом. */
+        @SubscribeEvent
+        public static void onHudJoinLeaveMessage(ClientChatReceivedEvent.System e) {
+            if (e.isOverlay() || !(e.getMessage().getContents() instanceof TranslatableContents tc)) return;
+            if (!tc.getKey().startsWith("multiplayer.player.")) return;
+            e.setMessage(Component.translatable(tc.getKey(), tc.getArgs())
+                    .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(Vhs.ASH))));
+        }
+
         /** Ванильный инвентарь (E) заменяется нашим экраном на 20 слотов. */
         @SubscribeEvent
         public static void onScreen(ScreenEvent.Opening e) {
@@ -127,18 +141,18 @@ public final class ClientHud {
         @SubscribeEvent
         public static void registerHudOverlays(RegisterGuiOverlaysEvent e) {
             e.registerAboveAll("bodycam_slots", (gui, g, partialTick, width, height) ->
-                    aboveChat(g, () -> drawSlotStrip(g, width, height)));
+                    aboveChat(g, ABOVE_CHAT_Z, () -> drawSlotStrip(g, width, height)));
             e.registerAboveAll("bodycam_fear", (gui, g, partialTick, width, height) -> {
-                if (!creativeOrSpectator()) aboveChat(g, () -> FearHud.draw(g, width, height));
+                if (!creativeOrSpectator()) aboveChat(g, ABOVE_CHAT_Z, () -> FearHud.draw(g, width, height));
             });
             e.registerAboveAll("bodycam", (gui, g, partialTick, width, height) -> {
                 Minecraft mc = Minecraft.getInstance();
                 if (!BhConfig.BODYCAM_OVERLAY.get() || mc.player == null || mc.options.hideGui) return;
-                aboveChat(g, () -> drawCameraText(g, mc, width));
+                aboveChat(g, ABOVE_CHAT_Z, () -> drawCameraText(g, mc, width));
             });
-            // Заставки раунда поверх всего остального, в том числе поверх открытого чата.
+            // Заставки раунда поверх всего остального: поверх открытого чата и предметов в полоске слотов.
             e.registerAboveAll("bodycam_banner", (gui, g, partialTick, width, height) ->
-                    aboveChat(g, () -> Banners.draw(g, width, height)));
+                    aboveChat(g, BANNER_Z, () -> Banners.draw(g, width, height)));
         }
     }
 
@@ -163,10 +177,15 @@ public final class ClientHud {
      * Строка ввода чата (сам экран чата) всё равно остаётся сверху: экраны рисуются после HUD.
      */
     private static final float ABOVE_CHAT_Z = 200f;
+    /**
+     * Предметы в полоске слотов рисуются ещё на +150..+250 выше своего слоя (иконка фонарика,
+     * часы), поэтому заставка раунда идёт отдельным, самым верхним слоем.
+     */
+    private static final float BANNER_Z = 800f;
 
-    private static void aboveChat(GuiGraphics g, Runnable draw) {
+    private static void aboveChat(GuiGraphics g, float z, Runnable draw) {
         g.pose().pushPose();
-        g.pose().translate(0f, 0f, ABOVE_CHAT_Z);
+        g.pose().translate(0f, 0f, z);
         try {
             draw.run();
         } finally {

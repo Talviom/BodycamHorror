@@ -438,22 +438,50 @@ def heart_frames():
     return np.concatenate(frames, axis=1)
 
 
+# ---------------------------------------------------------------- flashlight battery (v0.5.5)
+# Four worn AA cells that die one by one: a dead cell goes black and leaks rusty acid, the last
+# live one gets a dried-blood label. 5 frames of 24x24: 0, 25, 50, 75, 100 %.
+BAT = 24
+
+
+def battery_frame(level):
+    r = np.random.default_rng(5)
+    bone_d, ash, soot, soot_d, ink = (150, 143, 128), (120, 114, 102), (78, 74, 66), (46, 43, 38), (16, 14, 12)
+    blood_d, rust, acid = (78, 14, 12), (96, 62, 38), (112, 104, 60)
+    f = np.zeros((BAT, BAT, 4), np.uint8)
+
+    def put(x0, y0, x1, y1, c, a=255):
+        f[y0:y1 + 1, x0:x1 + 1, :3] = c
+        f[y0:y1 + 1, x0:x1 + 1, 3] = a
+
+    for i in range(4):
+        x0 = 2 + i * 5
+        put(x0 - 1, 4, x0 + 4, 21, ink)              # outline
+        put(x0, 3, x0 + 3, 3, ink)
+        f[4, x0 - 1, 3] = f[4, x0 + 4, 3] = 0
+        if i < level:
+            put(x0 + 1, 4, x0 + 2, 4, ash)            # terminal
+            put(x0, 5, x0 + 3, 20, ash)
+            put(x0, 5, x0, 20, bone_d)                # highlight
+            put(x0 + 3, 5, x0 + 3, 20, soot)          # shadow
+            put(x0, 8, x0 + 3, 10, blood_d if level == 1 else soot)   # label band
+        else:
+            put(x0 + 1, 4, x0 + 2, 4, soot)
+            put(x0, 5, x0 + 3, 20, (34, 31, 27))
+            put(x0 + 3, 5, x0 + 3, 20, (24, 22, 19))
+            for _ in range(int(r.integers(3, 7))):    # leaked crust running down
+                y, x = 14 + int(r.integers(0, 7)), x0 + int(r.integers(0, 4))
+                f[y, x, :3] = acid if r.random() < 0.6 else rust
+            put(x0 + 1, 21, x0 + 1, 21, acid, 200)
+            if r.random() < 0.7:
+                put(x0 + 2, 22, x0 + 2, 22, acid, 140)
+    grit = (f[..., 3] > 0) & (r.random((BAT, BAT)) < 0.10)
+    f[grit, :3] = (f[grit, :3] * 0.7).astype(np.uint8)
+    return f
+
+
 def battery_frames():
-    frames = []
-    for level in (0, 1, 2, 3, 4):  # empty, 25, 50, 75, 100 %
-        f = np.zeros((16, 16, 4), np.uint8)
-        col = (230, 230, 220, 255) if level > 1 else (230, 60, 45, 255)
-        # Body outline x1..14, y4..11, terminal at x15.
-        f[4, 1:15] = col
-        f[11, 1:15] = col
-        f[4:12, 1] = col
-        f[4:12, 14] = col
-        f[6:10, 15] = col
-        for i in range(level):
-            x0 = 3 + i * 3
-            f[6:10, x0:x0 + 2] = col
-        frames.append(f)
-    return np.concatenate(frames, axis=1)
+    return np.concatenate([battery_frame(level) for level in range(5)], axis=1)
 
 
 def slot(selected):
