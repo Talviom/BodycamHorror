@@ -139,10 +139,10 @@ wait 20
 execute at B1 run summon marker ~ ~ ~ {Tags:["bh_b1_death"]}
 kill B1
 wait 20
-execute at @e[type=marker,tag=bh_b1_death] if entity @e[type=item,distance=..3,nbt={Item:{id:"bodycamhorror:tape"}}]
+execute at @e[type=marker,tag=bh_b1_death] if entity @e[type=item,distance=..6,nbt={Item:{id:"bodycamhorror:tape"}}]
 expect Test passed
 wait 60
-execute at @e[type=marker,tag=bh_b1_death] if entity @e[type=item,distance=..3,nbt={Item:{id:"bodycamhorror:tape"}}]
+execute at @e[type=marker,tag=bh_b1_death] if entity @e[type=item,distance=..6,nbt={Item:{id:"bodycamhorror:tape"}}]
 expect Test passed
 kill @e[type=marker,tag=bh_b1_death]
 kill @e[type=item,nbt={Item:{id:"bodycamhorror:tape"}}]

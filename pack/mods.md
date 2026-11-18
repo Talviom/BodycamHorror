@@ -37,7 +37,7 @@ voicechat 2.6.24, sound-physics-remastered 1.5.1, PresenceFootsteps 1.9.1-beta.1
 
 ## Эффекты
 
-ragdollified 1.1.1, Explosion-Overhaul 0.2.3.0 (самый тяжёлый, 84 МБ), bleedingmod 1.6, betterbloodoverlay 2.2.0,
+ragdollified 1.1.1, bleedingmod 1.6, betterbloodoverlay 2.2.0,
 ItemPhysicLite 1.6.11, itemphysicguns 1.0.3.
 
 ## Строительство карты
@@ -61,3 +61,5 @@ CreativeCore 2.12.39, vinconfig 0.0.4.5, MRU 1.0.4.
 ## Настройки (`pack/config-backup/options.txt`)
 
 Дальность прорисовки 12 → 8, симуляция 12 → 6, VSync выключен. Оригинал: `options.txt.original`.
+
+Убран 2026-11-18 по решению пользователя: Explosion-Overhaul 0.2.3.0 (84 МБ; запрос «Start chunk scanning?» поверх интерфейса). Jar лежит в `mods_disabled`.

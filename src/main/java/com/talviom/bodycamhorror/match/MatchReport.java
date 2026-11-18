@@ -87,10 +87,25 @@ public final class MatchReport {
         } else if (killer instanceof LivingEntity le) {
             by = le.getType().getDescription().getString();
         } else {
-            by = src.getMsgId();
+            by = cause(src.getMsgId());
         }
         stat(victim, 1);
-        event(server, name(victim) + " killed by " + by);
+        event(server, name(victim) + (by.startsWith("(") ? " died " + by : " killed by " + by));
+    }
+
+    /** Причина смерти без убийцы человеческими словами (в скобках: это не «убит кем-то»). */
+    private static String cause(String msgId) {
+        return switch (msgId) {
+            case "genericKill", "outOfWorld" -> "(removed by a command)";
+            case "fall" -> "(fell)";
+            case "inFire", "onFire", "lava" -> "(burned)";
+            case "drown" -> "(drowned)";
+            case "inWall" -> "(suffocated in a wall)";
+            case "explosion", "explosion.player" -> "(in an explosion)";
+            case "starve" -> "(starved)";
+            case "magic", "indirectMagic" -> "(magic)";
+            default -> "(" + msgId + ")";
+        };
     }
 
     public static void tapePickedUp(MinecraftServer server, ServerPlayer p) {
