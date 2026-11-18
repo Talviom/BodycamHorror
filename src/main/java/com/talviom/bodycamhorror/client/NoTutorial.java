@@ -32,6 +32,19 @@ public final class NoTutorial {
         BodycamHorror.LOGGER.info("[BH ui] vanilla tutorial hints turned off");
     }
 
+    /**
+     * Bleeding Mod при входе в мир пишет в чат «доступна новая версия» со ссылкой, и выключить это в его настройках нельзя.
+     * Такие строки до игрока не доходят.
+     */
+    @SubscribeEvent
+    public static void onNoUpdateSpamChat(net.minecraftforge.client.event.ClientChatReceivedEvent e) {
+        if (e.getMessage().getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents t
+                && t.getKey().startsWith("bleedingmod.update")) {
+            e.setCanceled(true);
+            BodycamHorror.LOGGER.info("[BH ui] mod update notice hidden ({})", t.getKey());
+        }
+    }
+
     @SubscribeEvent
     public static void onNoChatToastClientTick(TickEvent.ClientTickEvent e) {
         if (e.phase != TickEvent.Phase.END) return;
