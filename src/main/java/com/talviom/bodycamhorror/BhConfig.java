@@ -92,7 +92,7 @@ public final class BhConfig {
         SLOT_STRIP = c.comment("Show carried items as a strip in the bottom right corner").define("slotStrip", true);
         FORCE_SKINS = c.comment("Draw every player with the mod's military skin of their team instead of their own skin")
                 .define("forceSkins", true);
-        CUSTOM_MENU = c.comment("Replace the vanilla title screen with the bodycam main menu")
+        CUSTOM_MENU = c.comment("Replace the vanilla title screen, pause menu and loading screens with the bodycam ones")
                 .define("customMenu", true);
         c.pop();
         CLIENT_SPEC = c.build();

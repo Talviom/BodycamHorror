@@ -33,6 +33,12 @@ final class ClientShots {
         mc.execute(() -> mc.setScreen(new com.talviom.bodycamhorror.client.menu.BhTitleScreen()));
     }
 
+    /** Открыть меню паузы (как Esc): мод подменяет его своим. */
+    static void openPause() {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> mc.setScreen(new net.minecraft.client.gui.screens.PauseScreen(true)));
+    }
+
     /** Закрыть открытый экран. */
     static void closeScreen() {
         Minecraft mc = Minecraft.getInstance();

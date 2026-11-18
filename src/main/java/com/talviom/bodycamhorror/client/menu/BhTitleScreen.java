@@ -6,23 +6,19 @@ import com.talviom.bodycamhorror.ModSounds;
 import com.talviom.bodycamhorror.client.Vhs;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.OptionsScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.multiplayer.SafetyScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraftforge.client.gui.ModListScreen;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.versions.forge.ForgeVersion;
 
-import java.time.LocalDateTime;
 import java.util.Random;
 
 /**
@@ -48,7 +44,6 @@ public final class BhTitleScreen extends Screen {
             "NO ONE CAME BACK.", "THIS TAPE WAS FOUND.", "DON'T WATCH IT ALONE.",
             "IT'S STILL RECORDING.", "IT HEARD US FIRST.", "COUNT YOUR FRIENDS."
     };
-    private static final String[] MONTHS = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 
     /** Первое открытие после запуска игры: долгий выход из черноты. Потом короткий. */
     private static boolean firstOpen = true;
@@ -91,14 +86,14 @@ public final class BhTitleScreen extends Screen {
         int cx = width / 2;
         int y = menuTop();
         int step = step();
-        addRenderableWidget(new MenuButton(cx, y, "SINGLEPLAYER", b -> minecraft.setScreen(new SelectWorldScreen(this))));
-        MenuButton mp = new MenuButton(cx, y + step, "MULTIPLAYER", b -> minecraft.setScreen(
+        addRenderableWidget(new TapeButton(cx, y, "SINGLEPLAYER", this::textAlpha, b -> minecraft.setScreen(new SelectWorldScreen(this))));
+        TapeButton mp = new TapeButton(cx, y + step, "MULTIPLAYER", this::textAlpha, b -> minecraft.setScreen(
                 minecraft.options.skipMultiplayerWarning ? new JoinMultiplayerScreen(this) : new SafetyScreen(this)));
         mp.active = minecraft.allowsMultiplayer();
         addRenderableWidget(mp);
-        addRenderableWidget(new MenuButton(cx, y + step * 2, "OPTIONS", b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
-        addRenderableWidget(new MenuButton(cx, y + step * 3, "MODS", b -> minecraft.setScreen(new ModListScreen(this))));
-        addRenderableWidget(new MenuButton(cx, y + step * 4 + 6, "QUIT", b -> minecraft.stop()));
+        addRenderableWidget(new TapeButton(cx, y + step * 2, "OPTIONS", this::textAlpha, b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
+        addRenderableWidget(new TapeButton(cx, y + step * 3, "MODS", this::textAlpha, b -> minecraft.setScreen(new ModListScreen(this))));
+        addRenderableWidget(new TapeButton(cx, y + step * 4 + 6, "QUIT", this::textAlpha, b -> minecraft.stop()));
     }
 
     @Override
@@ -210,28 +205,15 @@ public final class BhTitleScreen extends Screen {
         Vhs.ghostCentered(g, Vhs.title(omen), cx, y + Math.round(9 * scale) + 6, alpha(220) | Vhs.DRIED_BLOOD, 1f, 0.25f);
     }
 
-    /** Служебные надписи камеры по углам, как на старой кассете. */
+    /** Служебные надписи камеры по углам и строка версии внизу. */
     private void drawOsd(GuiGraphics g, long now) {
         if (textAlpha <= 0.01f) return;
-        int dim = alpha(170) | Vhs.ASH;
-        Vhs.plain(g, "CAM 01", 12, 12, dim);
-        Vhs.plain(g, "TAPE 07", 12, 23, alpha(120) | Vhs.SOOT);
-        String rec = "REC";
-        int rx = width - 12 - Vhs.width(rec);
-        Vhs.plain(g, rec, rx, 12, alpha(200) | Vhs.BONE);
-        if ((now / 700) % 2 == 0) Vhs.plain(g, "●", rx - Vhs.width("● "), 12, alpha(230) | Vhs.DRIED_BLOOD);
-
-        LocalDateTime t = LocalDateTime.now();
-        int hour = t.getHour() % 12 == 0 ? 12 : t.getHour() % 12;
-        String date = MONTHS[t.getMonthValue() - 1] + " " + String.format("%02d", t.getDayOfMonth()) + " 1998";
-        String time = String.format("%d:%02d:%02d %s", hour, t.getMinute(), t.getSecond(), t.getHour() < 12 ? "AM" : "PM");
-        Vhs.plain(g, date, 12, height - 22, dim);
-        Vhs.plain(g, time, width - 12 - Vhs.width(time), height - 22, dim);
+        int corner = MenuOsd.draw(g, width, height, textAlpha, "TAPE 07");
 
         String version = "BODYCAM HORROR " + modVersion() + "  FORGE " + ForgeVersion.getVersion()
                 + "  MC " + SharedConstants.getCurrentVersion().getName();
         String copyright = "COPYRIGHT MOJANG AB. DO NOT DISTRIBUTE!";
-        int room = width - 2 * (12 + Math.max(Vhs.width(date), Vhs.width(time)) + 12);
+        int room = width - 2 * (12 + corner + 12);
         int soot = alpha(150) | Vhs.SOOT;
         int menuBottom = menuTop() + menuHeight();
         // Строки внизу рисуются, только если им хватает места и рядом с датой, и под меню.
@@ -241,6 +223,10 @@ public final class BhTitleScreen extends Screen {
         if (Vhs.width(copyright) <= room && menuBottom <= height - 25) {
             Vhs.plain(g, copyright, (width - Vhs.width(copyright)) / 2, height - 22, soot);
         }
+    }
+
+    private float textAlpha() {
+        return textAlpha;
     }
 
     private int alpha(int max) {
@@ -307,47 +293,6 @@ public final class BhTitleScreen extends Screen {
             tearY = rnd.nextInt(Math.max(1, height - tearH));
             tearShift = (rnd.nextBoolean() ? 1 : -1) * (3 + rnd.nextInt(9));
             nextTearAt = now + 5000 + rnd.nextInt(9000);
-        }
-    }
-
-    // ---------- пункты меню ----------
-
-    /** Пункт меню: просто текст. Обычный выцветший, под мышью светлее, с мигающей кареткой печатной машинки. */
-    private final class MenuButton extends Button {
-        private final String label;
-
-        MenuButton(int cx, int y, String label, OnPress press) {
-            super(cx - (Vhs.width(Vhs.title(label)) + 24) / 2, y - 2, Vhs.width(Vhs.title(label)) + 24, 13,
-                    Vhs.title(label), press, DEFAULT_NARRATION);
-            this.label = label;
-        }
-
-        @Override
-        public void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-            if (textAlpha <= 0.01f) return;
-            int cx = getX() + getWidth() / 2;
-            int y = getY() + 2;
-            if (!active) {
-                Vhs.ghostCentered(g, Vhs.title(label), cx, y, alpha(110) | Vhs.SOOT, 1f, 0f);
-                return;
-            }
-            boolean hot = isHoveredOrFocused();
-            if (hot) {
-                g.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), alpha(70) & 0xFF000000);
-                Vhs.ghostCentered(g, Vhs.title(label), cx, y, alpha(240) | Vhs.BONE, 1f, 0.3f);
-                if ((System.currentTimeMillis() / 450) % 2 == 0) {
-                    int w = Vhs.width(Vhs.title(label));
-                    Vhs.ghost(g, Vhs.title("_"), cx + w / 2 + 2, y, alpha(200) | Vhs.BONE, 1f, 0f);
-                }
-            } else {
-                Vhs.ghostCentered(g, Vhs.title(label), cx, y, alpha(175) | Vhs.ASH, 1f, 0f);
-            }
-        }
-
-        /** Глухой щелчок кассетной деки вместо звонкого ванильного. */
-        @Override
-        public void playDownSound(SoundManager sounds) {
-            sounds.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.55f));
         }
     }
 }

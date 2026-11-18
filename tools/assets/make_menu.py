@@ -10,6 +10,8 @@ and an open door at the far end with light behind it. Three versions are written
   corridor_2.png  the same figure closer, just past the lamp
 The menu switches between them only while the lights are out, so the figure "moves" in the dark.
 Images are grayscale; the game tints them bone-coloured and adds grain, vignette and flicker.
+Also writes our own dark film-grain tiles over Minecraft's dirt background of vanilla screens
+(assets/minecraft/textures/gui/options_background.png, light_dirt_background.png).
 Preview: docs/previews/menu_bg.png
 """
 import sys
@@ -252,8 +254,31 @@ def preview(img, path):
     Image.fromarray(np.clip(rgb * 255, 0, 255).astype(np.uint8)).save(path)
 
 
+def film_tile(base, size=64, seed=7):
+    """Tileable dark film grain that replaces Minecraft's dirt behind vanilla screens.
+    The game draws it tinted to 25% (screens) or 12% (lists), so the base is mid grey."""
+    r = np.random.default_rng(seed)
+    fine = r.normal(0, 1, (size, size))
+    low = r.normal(0, 1, (size, size))
+    for _ in range(6):  # wrap-around blur keeps it tileable
+        low = (low + np.roll(low, 1, 0) + np.roll(low, -1, 0) + np.roll(low, 1, 1) + np.roll(low, -1, 1)) / 5
+    low = low / (np.abs(low).max() + 1e-6)
+    v = base + fine * base * 0.16 + low * base * 0.12
+    # a few dust specks
+    for _ in range(5):
+        x, y = r.integers(0, size, 2)
+        v[y, x] = base * (0.35 if r.random() < 0.5 else 1.5)
+    rgb = np.stack([v, v * 0.96, v * 0.87], -1)
+    return Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8), "RGB")
+
+
 def main():
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
+    vanilla_gui = root / "src/main/resources/assets/minecraft/textures/gui"
+    vanilla_gui.mkdir(parents=True, exist_ok=True)
+    film_tile(110).save(vanilla_gui / "options_background.png", optimize=True)
+    film_tile(42, seed=8).save(vanilla_gui / "light_dirt_background.png", optimize=True)
+    print("wrote", vanilla_gui / "options_background.png", "and light_dirt_background.png")
     out = root / "src/main/resources/assets/bodycamhorror/textures/gui/menu"
     out.mkdir(parents=True, exist_ok=True)
     imgs = []
