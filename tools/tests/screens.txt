@@ -1,5 +1,5 @@
 # 0.6.4: меню паузы (Esc) в стиле плёнки. 0.6.5: тёмные кнопки, ползунки, флажки и панель предметов.
-# 0.6.6: экран смерти, заголовок и значок окна, свой щелчок кнопок, тёмная загрузка.
+# 0.6.6: экран смерти, заголовок и значок окна, свой щелчок кнопок, тёмная загрузка. 0.6.7: записка с управлением.
 # Запуск: gradlew runClient -PbhTest=tools/tests/screens.txt
 # Остальное проверяется руками при обычном запуске (gradlew runClient):
 #   главное меню -> OPTIONS и SINGLEPLAYER: вместо земли тёмное зерно;
@@ -9,13 +9,18 @@
 # на паузу, и сценарий, который идёт по тикам сервера, остановился бы. Открытый для сети мир на паузу не встаёт.
 # 0.6.6 (руками): заголовок окна BODYCAM HORROR и значок-объектив на панели задач (в логе [BH window] icon set);
 #   щелчок кнопок свой (короткий щелчок камеры); при следующем запуске загрузка Forge на чёрном фоне, а не на красном.
-# Результат: [bh-test] DONE failures=0, скриншоты run/screenshots/064_*.png, 065_*.png, 066_death.png.
+# Результат: [bh-test] DONE failures=0, скриншоты run/screenshots/064_*.png, 065_*.png, 066_death.png, 067_field_notes.png.
 
 bh stop
 bh bot remove all
 wait 20
 publish false adventure 25566
 expect 25566
+
+# --- 0.6.7: записка с управлением справа, пока матч не идёт ---
+# В логе: [BH lobby] field notes shown: O FLASHLIGHT, TAB GEAR, F BREAKER / GENERATOR, R RELOAD, V VOICE SETUP
+wait 40
+shot 067_field_notes
 
 # --- меню паузы и его пункты ---
 screen pause

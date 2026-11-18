@@ -28,6 +28,7 @@ public final class BhConfig {
     public static final ForgeConfigSpec.IntValue LOBBY_RETURN_SECONDS;
     public static final ForgeConfigSpec.BooleanValue FORCE_SKINS;
     public static final ForgeConfigSpec.BooleanValue CUSTOM_MENU;
+    public static final ForgeConfigSpec.BooleanValue LOBBY_NOTES;
 
     public static final ForgeConfigSpec.BooleanValue HIDE_VANILLA_HUD;
     public static final ForgeConfigSpec.BooleanValue BLOCK_INVENTORY;
@@ -94,6 +95,8 @@ public final class BhConfig {
                 .define("forceSkins", true);
         CUSTOM_MENU = c.comment("Replace the vanilla title screen, pause menu and loading screens with the bodycam ones")
                 .define("customMenu", true);
+        LOBBY_NOTES = c.comment("Show the field notes with the controls while no match is running")
+                .define("lobbyNotes", true);
         c.pop();
         CLIENT_SPEC = c.build();
     }
