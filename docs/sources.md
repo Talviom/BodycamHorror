@@ -28,3 +28,4 @@
 |---|---|---|
 | Фон главного меню (коридор, фигура в двери) | `textures/gui/menu/corridor_*.png` | Отрисовано скриптом `tools/assets/make_menu.py` с нуля, без чужих картинок |
 | Фон ванильных экранов вместо земли | `assets/minecraft/textures/gui/options_background.png`, `light_dirt_background.png` | Плёночное зерно, `tools/assets/make_menu.py` |
+| Кнопки, ползунки, флажки, панель предметов ванильных экранов | `assets/minecraft/textures/gui/widgets.png`, `slider.png`, `checkbox.png` | Нарисовано скриптом `tools/assets/make_widgets.py` с нуля |
