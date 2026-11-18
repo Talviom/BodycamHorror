@@ -90,7 +90,7 @@ public final class BhTitleScreen extends Screen {
     protected void init() {
         int cx = width / 2;
         int y = menuTop();
-        int step = 15;
+        int step = step();
         addRenderableWidget(new MenuButton(cx, y, "SINGLEPLAYER", b -> minecraft.setScreen(new SelectWorldScreen(this))));
         MenuButton mp = new MenuButton(cx, y + step, "MULTIPLAYER", b -> minecraft.setScreen(
                 minecraft.options.skipMultiplayerWarning ? new JoinMultiplayerScreen(this) : new SafetyScreen(this)));
@@ -127,9 +127,24 @@ public final class BhTitleScreen extends Screen {
         return Math.max(26, (int) (height * 0.17f));
     }
 
+    private int step() {
+        return height < 260 ? 13 : 15;
+    }
+
+    /** Высота столбца пунктов: четыре шага, отступ перед QUIT и сама строка. */
+    private int menuHeight() {
+        return step() * 4 + 6 + 11;
+    }
+
+    /**
+     * Верх меню: под названием, примерно с середины экрана, но так, чтобы QUIT не наезжал
+     * на строку версии внизу (в маленьком окне 854x480 наезжал).
+     */
     private int menuTop() {
         int belowTitle = titleY() + Math.round(9 * titleScale()) + 34;
-        return Math.max(belowTitle, (int) (height * 0.55f));
+        int wanted = Math.max(belowTitle, (int) (height * 0.55f));
+        int limit = height - 40 - menuHeight();
+        return Math.max(belowTitle - 12, Math.min(wanted, limit));
     }
 
     // ---------- кадр ----------
@@ -218,8 +233,14 @@ public final class BhTitleScreen extends Screen {
         String copyright = "COPYRIGHT MOJANG AB. DO NOT DISTRIBUTE!";
         int room = width - 2 * (12 + Math.max(Vhs.width(date), Vhs.width(time)) + 12);
         int soot = alpha(150) | Vhs.SOOT;
-        if (Vhs.width(version) <= room) Vhs.plain(g, version, (width - Vhs.width(version)) / 2, height - 33, soot);
-        if (Vhs.width(copyright) <= room) Vhs.plain(g, copyright, (width - Vhs.width(copyright)) / 2, height - 22, soot);
+        int menuBottom = menuTop() + menuHeight();
+        // Строки внизу рисуются, только если им хватает места и рядом с датой, и под меню.
+        if (Vhs.width(version) <= room && menuBottom <= height - 36) {
+            Vhs.plain(g, version, (width - Vhs.width(version)) / 2, height - 33, soot);
+        }
+        if (Vhs.width(copyright) <= room && menuBottom <= height - 25) {
+            Vhs.plain(g, copyright, (width - Vhs.width(copyright)) / 2, height - 22, soot);
+        }
     }
 
     private int alpha(int max) {
