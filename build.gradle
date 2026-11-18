@@ -37,6 +37,14 @@ minecraft {
                 property 'bh.testScript', project.file(project.property('bhTest')).absolutePath
                 args '--quickPlaySingleplayer', 'New World'
             }
+            // Второе окно игры для проверки по сети: gradlew runClient -PbhJoin=localhost:25565 [-PbhName=Dev2]
+            // Своя папка run2 (настройки, логи, скриншоты), само заходит на сервер хоста и снимает кадры (bots/RemoteShots.java).
+            if (project.hasProperty('bhJoin')) {
+                workingDirectory project.file('run2')
+                args '--quickPlayMultiplayer', project.property('bhJoin')
+                args '--username', project.findProperty('bhName') ?: 'Dev2'
+                property 'bh.remoteShots', 'true'
+            }
             // Клиент с шейдерами: gradlew runClient -PbhShaders (вместе с -PbhTest сам снимает скриншоты).
             // Embeddium и Oculus берутся из папки модов игры, см. dependencies.
             if (project.hasProperty('bhShaders')) {

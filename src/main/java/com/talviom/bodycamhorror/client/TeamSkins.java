@@ -39,7 +39,7 @@ public final class TeamSkins {
 
     private TeamSkins() {}
 
-    static ResourceLocation skinFor(Scoreboard scoreboard, String name) {
+    public static ResourceLocation skinFor(Scoreboard scoreboard, String name) {
         PlayerTeam team = scoreboard.getPlayersTeam(name);
         if (team != null) {
             if ("bh_alpha".equals(team.getName())) return ALPHA;

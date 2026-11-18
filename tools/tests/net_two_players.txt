@@ -1,0 +1,94 @@
+# Проверка по сети: два настоящих окна игры на одном ПК, как хост и друг на тесте.
+# Хост Dev выполняет сценарий во встроенном сервере и открывает мир для сети (как «Открыть для сети», порт 25565).
+# Второе окно Dev2 заходит само и смотрит глазами друга: кадры run2/screenshots/net2_*.png,
+# строки [bh-remote] в run2/logs/latest.log (вход, заставки, какие скины видит, страх, звуки мода).
+# Запуск (roundsToWin = 2 в run/config/bodycamhorror-common.toml):
+#   1) gradlew runClient -PbhTest=tools/tests/net_two_players.txt
+#   2) когда в логе хоста появится "[bh-test] > waitplayers 2": gradlew runClient -PbhJoin=localhost:25565
+# Сценарий ждёт второе окно до 3 минут. Результат: [bh-test] DONE failures=0 у хоста.
+# Координаты как в tape_lobby.txt: арена от 1002 120 1002, выход Bravo 1040 120 1040,
+# лобби x 981..995, z 1002..1012, площадки Alpha 991 120 1009, Bravo 985 120 1009.
+
+bh stop
+bh bot remove all
+execute positioned 1000 120 1000 run bh arena build
+expect tape points
+publish false adventure 25565
+expect 25565
+waitplayers 2 3600
+list
+expect Dev2
+wait 60
+
+# --- второй игрок при входе попадает в лобби ---
+execute as Dev2 if entity @s[x=981,y=118,z=1002,dx=14,dy=6,dz=10]
+expect Test passed
+# Dev на площадку Alpha, Dev2 на площадку Bravo, по боту в каждую команду
+tp Dev 991.5 120 1009.5 180 0
+tp Dev2 985.5 120 1009.5 180 0
+execute positioned 991 120 1008 run bh bot add alpha A1
+execute positioned 985 120 1008 run bh bot add bravo B1
+wait 40
+bh debug
+expect Dev team=alpha
+expect Dev2 team=bravo
+# Dev2 смотрит на Dev и A1: в его логе [bh-remote] skins у всех должна быть своя форма ("ok")
+tp Dev2 985.5 120 1004.5 -35 8
+wait 320
+
+# --- матч: заставка и музыка начала раунда у обоих ---
+say Radio check. Dev2, do you hear the tape?
+bh start
+expect Match started
+wait 100
+bh skip
+expect PREP -> LIVE
+wait 60
+bh debug
+expect state=LIVE
+
+# --- страх второго игрока доходит до его интерфейса (сердце) ---
+execute as Dev2 run bh horror fear 70
+wait 120
+execute as Dev2 run bh horror fear 0
+wait 20
+
+# --- кассета у второго игрока: шипение, подсказка, доставка к выходу Bravo ---
+give Dev2 bodycamhorror:tape
+wait 120
+tp Dev2 1040.5 120 1040.5
+wait 100
+bh debug
+expect state=ROUND_END
+expect score=0:1
+
+# --- раунд 2: второй игрок погибает и наблюдает за своей командой ---
+bh skip
+wait 40
+bh skip
+expect PREP -> LIVE
+wait 40
+kill Dev2
+wait 100
+bh debug
+expect Dev2 team=bravo alive=false
+wait 200
+
+# --- Bravo выносит вторую кассету: конец матча, через 8 с все в лобби ---
+give B1 bodycamhorror:tape
+tp B1 1040.5 120 1040.5
+wait 100
+bh debug
+expect state=LOBBY
+expect score=0:2
+wait 220
+execute as Dev2 if entity @s[x=981,y=118,z=1002,dx=14,dy=6,dz=10]
+expect Test passed
+wait 100
+
+# --- второй игрок уходит: сервер это переживает ---
+bh bot remove all
+kick Dev2 Network check finished
+wait 40
+list
+reject Dev2

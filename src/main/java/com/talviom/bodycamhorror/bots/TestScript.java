@@ -33,7 +33,9 @@ import java.util.List;
  *   reject текст       в ответе на прошлую команду этого текста быть не должно
  *   shot имя           скриншот клиента в run/screenshots/имя.png (с шейдерами, как по F2)
  *   hud on|off         показать или спрятать интерфейс (как F1)
- *   screen chat|inventory|close   открыть чат (как T), инвентарь мода (как Tab) у хозяина мира или закрыть экран
+ *   screen chat|inventory|menu|close   открыть чат (как T), инвентарь мода (как Tab), главное меню мода или закрыть экран
+ *   waitplayers 2 2400 ждать, пока на сервере будет 2 игрока (не дольше 2400 тиков, иначе FAIL);
+ *                      так сценарий по сети ждёт второе окно игры (gradlew runClient -PbhJoin=localhost:25565)
  *   любая другая строка выполняется как команда сервера (без косой черты)
  * В конце пишет [bh-test] DONE и число ошибок.
  */
@@ -46,6 +48,9 @@ public final class TestScript {
     private int waitTicks;
     private int failures;
     private boolean done = true;
+    /** waitplayers: сколько игроков ждём и сколько тиков ещё готовы ждать. */
+    private int waitPlayers;
+    private int waitPlayersTicks;
 
     private final CommandSource sink = new CommandSource() {
         @Override
@@ -82,7 +87,11 @@ public final class TestScript {
             failures = 0;
             // Даём миру и игроку пару секунд на загрузку.
             waitTicks = 60;
+            waitPlayers = 0;
             done = false;
+            // Только в сценарии проверки (свойство есть лишь в dev-запуске): второе окно игры
+            // заходит под своим именем без входа в аккаунт, поэтому сервер не проверяет имена.
+            e.getServer().setUsesAuthentication(false);
             BodycamHorror.LOGGER.info(PREFIX + "START " + file + " (" + lines.size() + " lines)");
         } catch (IOException ex) {
             BodycamHorror.LOGGER.error(PREFIX + "Cannot read " + file, ex);
@@ -100,10 +109,31 @@ public final class TestScript {
             waitTicks--;
             return;
         }
+        if (waitPlayers > 0) {
+            int count = server.getPlayerList().getPlayerCount();
+            if (count >= waitPlayers) {
+                BodycamHorror.LOGGER.info(PREFIX + "PASS waitplayers " + waitPlayers + " (" + count + " on the server)");
+                waitPlayers = 0;
+                waitTicks = 40; // дать вошедшему догрузиться
+                return;
+            }
+            if (--waitPlayersTicks <= 0) {
+                failures++;
+                BodycamHorror.LOGGER.error(PREFIX + "FAIL waitplayers " + waitPlayers + " (only " + count + " on the server)");
+                waitPlayers = 0;
+            }
+            return;
+        }
         while (next < lines.size() && waitTicks == 0) {
             String line = lines.get(next++).trim();
             if (line.isEmpty() || line.startsWith("#")) continue;
-            if (line.startsWith("wait ")) {
+            if (line.startsWith("waitplayers ")) {
+                String[] parts = line.substring(12).trim().split("\\s+");
+                waitPlayers = Integer.parseInt(parts[0]);
+                waitPlayersTicks = parts.length > 1 ? Integer.parseInt(parts[1]) : 2400;
+                BodycamHorror.LOGGER.info(PREFIX + "> " + line);
+                break;
+            } else if (line.startsWith("wait ")) {
                 waitTicks = Integer.parseInt(line.substring(5).trim());
             } else if (line.startsWith("expect ")) {
                 check(line.substring(7).trim(), true);

@@ -78,6 +78,7 @@ public final class MusicDirector {
 
     /** Вызывается при каждой заставке с сервера. */
     public static void onBanner(Kind kind) {
+        com.talviom.bodycamhorror.bots.RemoteShots.onBanner(kind); // только в проверке по сети, иначе ничего
         lastKind = kind;
         lastBannerAt = System.currentTimeMillis();
         switch (kind) {
