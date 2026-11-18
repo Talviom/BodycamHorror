@@ -6,7 +6,29 @@ import net.minecraft.client.Screenshot;
 
 /** Клиентская часть сценария проверки: скриншот, поворот камеры, скрытие интерфейса. Только для TestScript. */
 final class ClientShots {
+    /** Настройка «пауза при потере фокуса» до начала сценария; null, если сценарий её не трогал. */
+    private static Boolean pauseOnLostFocusBefore;
+
     private ClientShots() {}
+
+    /**
+     * Во время сценария игра не встаёт на паузу, когда окно теряет фокус. Иначе стоит кликнуть в браузер,
+     * и встроенный сервер замирает вместе с матчем ботов. Меняем только в памяти, в конце сценария
+     * возвращаем как было, чтобы в options.txt пользователя осталась его настройка.
+     */
+    static void keepRunningUnfocused(boolean on) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> {
+            if (on) {
+                if (pauseOnLostFocusBefore == null) pauseOnLostFocusBefore = mc.options.pauseOnLostFocus;
+                mc.options.pauseOnLostFocus = false;
+                BodycamHorror.LOGGER.info("[bh-test] no pause on lost focus while the script runs");
+            } else if (pauseOnLostFocusBefore != null) {
+                mc.options.pauseOnLostFocus = pauseOnLostFocusBefore;
+                pauseOnLostFocusBefore = null;
+            }
+        });
+    }
 
     /** Скриншот в run/screenshots/<имя>.png (с шейдерами, как по F2). */
     static void shot(String name) {

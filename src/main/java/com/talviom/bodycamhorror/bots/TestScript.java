@@ -92,6 +92,8 @@ public final class TestScript {
             // Только в сценарии проверки (свойство есть лишь в dev-запуске): второе окно игры
             // заходит под своим именем без входа в аккаунт, поэтому сервер не проверяет имена.
             e.getServer().setUsesAuthentication(false);
+            // Пока идёт сценарий, игра не встаёт на паузу, если окно потеряло фокус: можно работать в других окнах.
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.keepRunningUnfocused(true));
             BodycamHorror.LOGGER.info(PREFIX + "START " + file + " (" + lines.size() + " lines)");
         } catch (IOException ex) {
             BodycamHorror.LOGGER.error(PREFIX + "Cannot read " + file, ex);
@@ -158,6 +160,7 @@ public final class TestScript {
         }
         if (next >= lines.size() && waitTicks == 0) {
             done = true;
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.keepRunningUnfocused(false));
             BodycamHorror.LOGGER.info(PREFIX + "DONE failures=" + failures);
         }
     }
