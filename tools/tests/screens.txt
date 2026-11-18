@@ -4,19 +4,59 @@
 #   главное меню -> OPTIONS и SINGLEPLAYER: вместо земли тёмное зерно;
 #   вход в мир: кадр LOADING THE TAPE вместо цветной карты чанков;
 #   Esc в мире: наше меню паузы; SAVE AND QUIT возвращает в главное меню.
+# Мир сразу открывается для сети: в одиночной игре ванильные экраны (настройки, открытие для сети) ставят игру
+# на паузу, и сценарий, который идёт по тикам сервера, остановился бы. Открытый для сети мир на паузу не встаёт.
 # Результат: [bh-test] DONE failures=0, скриншоты run/screenshots/064_*.png.
 
 bh stop
 bh bot remove all
 wait 20
+publish false adventure 25566
+expect 25566
+
+# --- меню паузы и его пункты ---
 screen pause
 wait 30
 shot 064_pause
+press RESUME
+wait 10
+screen pause
+wait 20
+press OPTIONS
+wait 20
+shot 064_pause_options
 screen close
 wait 10
-publish false adventure 25566
-expect 25566
-screen pause
-wait 30
-shot 064_pause_lan
+# OPEN TO LAN в паузе виден только до открытия мира; сам ванильный экран открытия для сети:
+screen lan
+wait 20
+shot 064_pause_open_lan
 screen close
+wait 10
+
+# --- ванильные экраны на тёмном зерне вместо земли ---
+screen options
+wait 20
+shot 064_options
+screen video
+wait 20
+shot 064_video
+screen close
+screen packs
+wait 30
+shot 064_packs
+screen close
+screen worlds
+wait 30
+shot 064_worlds
+screen close
+screen mods
+wait 20
+shot 064_mods
+screen close
+wait 10
+
+# --- последним: SAVE AND QUIT (сервер останавливается, сценарий дальше не идёт) ---
+screen pause
+wait 20
+press SAVE AND QUIT

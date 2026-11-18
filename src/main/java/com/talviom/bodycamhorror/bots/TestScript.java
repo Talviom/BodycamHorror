@@ -146,6 +146,10 @@ public final class TestScript {
             } else if (line.startsWith("hud ")) {
                 boolean visible = line.substring(4).trim().equals("on");
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.hud(visible));
+            } else if (line.startsWith("press ")) {
+                String label = line.substring(6).trim();
+                BodycamHorror.LOGGER.info(PREFIX + "> " + line);
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.press(label));
             } else if (line.startsWith("screen ")) {
                 screen(server, line.substring(7).trim());
             } else {
@@ -168,6 +172,7 @@ public final class TestScript {
             case "chat" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openChat);
             case "menu" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openMenu);
             case "pause" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openPause);
+            case "options", "video", "packs", "worlds", "mods", "lan" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openVanilla(what));
             default -> {
                 host.closeContainer();
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::closeScreen);

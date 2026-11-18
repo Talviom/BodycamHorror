@@ -27,12 +27,18 @@ public final class MenuEvents {
     private MenuEvents() {}
 
     /**
-     * Пока открыта наша пауза, интерфейс игры (прицел, строка лобби над панелью, слоты, REC и сердце)
-     * не рисуется: иначе он просвечивает сквозь затемнение и наезжает на пункты меню.
+     * Пока открыта наша пауза или вызванные из неё экраны (настройки, открытие для сети и т. п.),
+     * интерфейс игры (прицел, строка лобби над панелью, слоты, REC и сердце) не рисуется:
+     * иначе он просвечивает сквозь затемнение и наезжает на пункты меню.
+     * Чат и инвентарь не трогаем: там интерфейс игры нужен.
      */
     @SubscribeEvent
     public static void onMenuPauseHideHud(net.minecraftforge.client.event.RenderGuiOverlayEvent.Pre e) {
-        if (net.minecraft.client.Minecraft.getInstance().screen instanceof BhPauseScreen) e.setCanceled(true);
+        Screen s = net.minecraft.client.Minecraft.getInstance().screen;
+        if (s == null || s instanceof net.minecraft.client.gui.screens.ChatScreen
+                || s instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>
+                || s instanceof net.minecraft.client.gui.screens.DeathScreen) return;
+        e.setCanceled(true);
     }
 
     @SubscribeEvent

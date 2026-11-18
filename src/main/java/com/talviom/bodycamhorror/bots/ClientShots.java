@@ -44,4 +44,42 @@ final class ClientShots {
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> mc.setScreen(null));
     }
+
+    /** Открыть ванильный экран поверх текущего: настройки, видео, ресурспаки, список миров, моды. */
+    static void openVanilla(String what) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> {
+            net.minecraft.client.gui.screens.Screen parent = mc.screen;
+            net.minecraft.client.gui.screens.Screen next = switch (what) {
+                case "options" -> new net.minecraft.client.gui.screens.OptionsScreen(parent, mc.options);
+                case "video" -> new net.minecraft.client.gui.screens.VideoSettingsScreen(parent, mc.options);
+                case "packs" -> new net.minecraft.client.gui.screens.packs.PackSelectionScreen(mc.getResourcePackRepository(),
+                        r -> {}, mc.getResourcePackDirectory(), net.minecraft.network.chat.Component.literal("Resource Packs"));
+                case "worlds" -> new net.minecraft.client.gui.screens.worldselection.SelectWorldScreen(parent);
+                case "lan" -> new net.minecraft.client.gui.screens.ShareToLanScreen(parent);
+                default -> new net.minecraftforge.client.gui.ModListScreen(parent);
+            };
+            mc.setScreen(next);
+        });
+    }
+
+    /** Нажать кнопку на открытом экране по надписи (как щелчок мышью). */
+    static void press(String label) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> {
+            if (mc.screen == null) {
+                BodycamHorror.LOGGER.error("[bh-test] press " + label + ": no screen open");
+                return;
+            }
+            for (net.minecraft.client.gui.components.events.GuiEventListener c : mc.screen.children()) {
+                if (c instanceof net.minecraft.client.gui.components.AbstractButton b
+                        && b.getMessage().getString().trim().equalsIgnoreCase(label)) {
+                    b.onPress();
+                    BodycamHorror.LOGGER.info("[bh-test] pressed " + label + " -> " + (mc.screen == null ? "game" : mc.screen.getClass().getSimpleName()));
+                    return;
+                }
+            }
+            BodycamHorror.LOGGER.error("[bh-test] press " + label + ": no such button on " + mc.screen.getClass().getSimpleName());
+        });
+    }
 }
