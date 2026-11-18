@@ -291,8 +291,15 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
     private void attackTick(ServerLevel level, long now) {
         ServerPlayer p = targetPlayer();
         if (p == null) {
-            lastOutcome = "victim-gone";
-            vanish(25 * 20);
+            ServerPlayer any = victimAny();
+            lastOutcome = any == null ? "victim-gone" : "victim-killed";
+            abortAttack(any);
+            return;
+        }
+        com.talviom.bodycamhorror.match.MatchState ms = com.talviom.bodycamhorror.match.MatchManager.INSTANCE.state();
+        if (ms == com.talviom.bodycamhorror.match.MatchState.ROUND_END || ms == com.talviom.bodycamhorror.match.MatchState.PREP) {
+            lastOutcome = "round-end";
+            abortAttack(p);
             return;
         }
         attackTicks++;
@@ -550,6 +557,20 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
             if (d2 < 12 * 12) FearSystem.INSTANCE.add(p, 1.5f);
             if (d2 < 8 * 8 && tickCount % 40 == 0) BhNetwork.sendGlitch(p, 10, 0.25f);
         }
+    }
+
+    /** Жертва на сервере, даже если она уже наблюдатель (погибла). */
+    @Nullable
+    private ServerPlayer victimAny() {
+        if (target == null || !(level() instanceof ServerLevel sl)) return null;
+        return sl.getServer().getPlayerList().getPlayer(target);
+    }
+
+    /** Атака оборвалась: у жертвы (если она ещё на сервере) снимаются красный экран и запертая камера. */
+    private void abortAttack(@Nullable ServerPlayer victim) {
+        if (victim != null) BhNetwork.sendScreamer(victim, ScreamerPacket.FREED, 1);
+        BodycamHorror.LOGGER.info("[tenant] attack stopped: {}", lastOutcome);
+        vanish(25 * 20);
     }
 
     @Nullable

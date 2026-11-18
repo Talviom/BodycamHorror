@@ -1,0 +1,96 @@
+# Что будет, если атака Жильца обрывается: жертву добил враг, жертва вышла, раунд кончился.
+# Настоящий матч с ботами. Запуск: gradlew runClient -PbhShaders -PbhTest=tools/tests/tenant_kill.txt
+# Кадры: run/screenshots/8*.png
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 1000 120 1000 run bh arena build
+expect Arena built
+time set midnight
+weather clear
+gamemode adventure @p
+gamerule naturalRegeneration false
+hud on
+
+# Команды: Alpha — Dev, A1, A2; Bravo — B1, B2.
+bh team alpha Dev
+execute positioned 1005 120 1005 run bh bot add alpha A1
+execute positioned 1006 120 1005 run bh bot add alpha A2
+execute positioned 1035 120 1035 run bh bot add bravo B1
+execute positioned 1036 120 1035 run bh bot add bravo B2
+bh start
+expect Match started
+bh skip
+expect PREP -> LIVE
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+wait 10
+bh debug
+
+# --- 1. Жилец душит A1, враг B1 его добивает ---
+execute at A1 positioned ~1 ~ ~5 run bh tenant spawn frozen
+bh tenant attack A1 strangle
+expect Tenant attacks A1
+wait 60
+bh tenant info
+expect state=strangle
+damage A1 40 minecraft:player_attack by B1
+wait 5
+bh tenant info
+expect last=victim-killed
+expect state=retreat
+bh debug
+expect A1(bot) team=alpha alive=false mode=spectator
+expect state=LIVE
+bh tenant remove
+
+# --- 2. Душит Dev, враг добивает: красный экран и камера у Dev должны сняться ---
+execute at @p positioned ~1 ~ ~5 run bh tenant spawn frozen
+bh tenant attack Dev strangle
+wait 65
+shot 80_dev_strangled
+damage Dev 40 minecraft:player_attack by B1
+wait 6
+bh tenant info
+expect last=victim-killed
+shot 81_dev_killed_effects_cleared
+bh debug
+expect Dev team=alpha alive=false mode=spectator
+bh tenant remove
+
+# --- 3. Душит A2, а A2 выходит с сервера ---
+execute at A2 positioned ~1 ~ ~5 run bh tenant spawn frozen
+bh tenant attack A2 strangle
+wait 60
+bh bot remove A2
+wait 3
+bh tenant info
+expect last=victim-gone
+expect state=retreat
+bh tenant remove
+bh debug
+expect state=ROUND_END
+
+# --- 4. Следующий раунд: душит B1, раунд кончается по времени посреди удушья ---
+bh skip
+expect ROUND_END -> PREP
+bh skip
+expect PREP -> LIVE
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+wait 5
+execute at B1 positioned ~-1 ~ ~-4 run bh tenant spawn frozen
+bh tenant attack B1 strangle
+wait 60
+bh skip
+expect LIVE -> ROUND_END
+wait 3
+bh tenant info
+expect last=round-end
+bh debug
+reject B1(bot) team=bravo alive=true mode=adventure hp=12
+
+bh stop
+bh tenant remove
+bh bot remove all
+bh team leave Dev
+gamerule naturalRegeneration true

@@ -57,8 +57,12 @@ public final class TenantFx {
                 quietTicks = quietLength = Math.max(1, ticks);
             }
             case ScreamerPacket.FREED -> {
+                // Отбили, погиб или раунд кончился: эффекты удушья снимаются сразу, красное быстро уходит.
+                boolean wasHeld = strangleTicks > 0;
                 strangleTicks = 0;
-                quietTicks = quietLength = 30;
+                flashTicks = 0;
+                quietTicks = quietLength = wasHeld ? 20 : 1;
+                BodycamHorror.LOGGER.info("[tenant-fx] effects cleared");
             }
             default -> {}
         }
@@ -140,7 +144,7 @@ public final class TenantFx {
                 if (quietTicks > 0) {
                     int age = quietLength - quietTicks;
                     // Сначала чернота, потом красное медленно уходит.
-                    float dark = age < 12 ? 1f : Math.max(0f, 1f - (age - 12) / 20f);
+                    float dark = quietLength <= 20 ? 0f : age < 12 ? 1f : Math.max(0f, 1f - (age - 12) / 20f);
                     bloodEdges(g, width, height, 0.8f * quietTicks / (float) quietLength);
                     if (dark > 0) g.fill(0, 0, width, height, ((int) (255 * dark) << 24));
                 }
