@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public final class BhNetwork {
     /** Меняется при изменении пакетов: клиент и сервер разных версий мода не соединятся. */
-    private static final String PROTOCOL = "4";
+    private static final String PROTOCOL = "6";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(BodycamHorror.MOD_ID, "main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 
@@ -29,6 +29,8 @@ public final class BhNetwork {
                 BannerPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(5, ScreamerPacket.class, ScreamerPacket::encode, ScreamerPacket::decode,
                 ScreamerPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(6, TenantSnapPacket.class, TenantSnapPacket::encode, TenantSnapPacket::decode,
+                TenantSnapPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(4, OpenInventoryPacket.class, OpenInventoryPacket::encode, OpenInventoryPacket::decode,
                 OpenInventoryPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
@@ -37,8 +39,14 @@ public final class BhNetwork {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new GlitchPacket(ticks, strength));
     }
 
-    public static void sendScreamer(ServerPlayer player, int ticks) {
-        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ScreamerPacket(ticks));
+    public static void sendScreamer(ServerPlayer player, int kind, int ticks) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ScreamerPacket(kind, ticks));
+    }
+
+    /** Всем, кто видит существо: поставить его на место сразу, без плавного перемещения. */
+    public static void sendSnap(net.minecraft.world.entity.Entity e) {
+        CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> e),
+                new TenantSnapPacket(e.getId(), e.getX(), e.getY(), e.getZ(), e.getYRot()));
     }
 
     public static void sendHud(ServerPlayer player, HudStatePacket packet) {

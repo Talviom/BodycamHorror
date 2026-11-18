@@ -20,7 +20,7 @@ import java.util.List;
  *
  * /bh tenant spawn [frozen]   — поставить Жильца там, где вы стоите (frozen: стоит на месте, для скриншотов)
  * /bh tenant remove           — убрать всех
- * /bh tenant scare <игрок>    — скример сейчас, без лимитов
+ * /bh tenant attack <игрок> [scare|strangle|take] — атака сейчас, без лимитов (концовку можно задать)
  * /bh tenant freeze|unfreeze  — остановить или отпустить
  * /bh tenant info             — состояние каждого Жильца
  */
@@ -41,8 +41,7 @@ public final class TenantCommand {
                         .then(pose())
                         .then(Commands.literal("freeze").executes(c -> freeze(c, true)))
                         .then(Commands.literal("unfreeze").executes(c -> freeze(c, false)))
-                        .then(Commands.literal("scare").then(Commands.argument("player", EntityArgument.player())
-                                .executes(TenantCommand::scare)))
+                        .then(attack())
                         .then(Commands.literal("info").executes(c -> {
                             List<TenantEntity> all = all(c.getSource().getLevel());
                             if (all.isEmpty()) c.getSource().sendSuccess(() -> Component.literal("[tenant] none, noises=" + TenantHearing.count()), false);
@@ -96,7 +95,15 @@ public final class TenantCommand {
         return all.size();
     }
 
-    private static int scare(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> attack() {
+        var player = Commands.argument("player", EntityArgument.player()).executes(c -> attack(c, null));
+        for (TenantEntity.Ending e : TenantEntity.Ending.values()) {
+            player.then(Commands.literal(e.name().toLowerCase()).executes(c -> attack(c, e)));
+        }
+        return Commands.literal("attack").then(player);
+    }
+
+    private static int attack(CommandContext<CommandSourceStack> c, TenantEntity.Ending ending) throws CommandSyntaxException {
         ServerPlayer p = EntityArgument.getPlayer(c, "player");
         List<TenantEntity> all = all(c.getSource().getLevel());
         if (all.isEmpty()) {
@@ -105,8 +112,9 @@ public final class TenantCommand {
         }
         TenantEntity t = all.get(0);
         t.setFrozen(false);
-        t.startScare(p, c.getSource().getLevel().getGameTime(), false);
-        c.getSource().sendSuccess(() -> Component.literal("Tenant scared " + p.getGameProfile().getName()), false);
+        t.startAttack(p, c.getSource().getLevel().getGameTime(), ending);
+        c.getSource().sendSuccess(() -> Component.literal("Tenant attacks " + p.getGameProfile().getName()
+                + (ending == null ? "" : " (" + ending.name().toLowerCase() + ")")), false);
         return 1;
     }
 }

@@ -1,0 +1,102 @@
+# Атака Жильца: смотрит, прыжки влево-вправо, рывок, удушье или скример; не дольше 5 с.
+# Запуск: gradlew runClient -PbhShaders -PbhTest=tools/tests/tenant_attack.txt
+# Кадры: run/screenshots/6*.png и 7*.png, проверки [bh-test] в run/logs/latest.log
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 1000 120 1000 run bh arena build
+expect Arena built
+time set midnight
+weather clear
+gamemode adventure @p
+clear @p
+give @p bodycamhorror:flashlight
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+gamerule naturalRegeneration false
+hud on
+
+# --- скример: Жилец в 9 блоках, фонарик горит, чтобы его было видно ---
+tp @p 1004.5 120 1004.5 -59 12
+bh bot light Dev
+execute positioned 1009.5 120 1007.5 rotated 120 0 run bh tenant spawn frozen
+wait 40
+bh tenant attack Dev scare
+expect Tenant attacks Dev
+wait 10
+shot 60_stare
+wait 12
+shot 61_blink_left
+wait 7
+shot 62_blink_right
+wait 9
+shot 63_rush
+wait 7
+shot 64_at_face
+wait 30
+bh tenant info
+expect last=scare
+bh bot light Dev
+
+# --- удушье: красный экран, затихание; вся атака не дольше 5 с (100 тиков) ---
+bh tenant remove
+tp @p 1004.5 120 1004.5 -59 12
+bh bot light Dev
+execute positioned 1009.5 120 1007.5 rotated 120 0 run bh tenant spawn frozen
+wait 40
+bh tenant attack Dev strangle
+wait 55
+shot 70_strangle_start
+wait 20
+shot 71_strangle_red
+wait 21
+bh tenant info
+expect state=retreat
+shot 72_quiet_dark
+wait 25
+shot 73_quiet_fade
+bh tenant info
+expect last=strangle
+# Урон по Dev здесь не проверяем: вне матча лобби не даёт ранить игрока без команды. Урон проверяет бот B3 ниже.
+bh bot light Dev
+
+# --- спастись: луч в лицо, пока он смотрит ---
+bh tenant remove
+tp @p 1004.5 120 1004.5 -59 0
+execute positioned 1009.5 120 1007.5 rotated 120 0 run bh tenant spawn frozen
+bh bot light Dev
+wait 20
+bh tenant attack Dev
+wait 15
+bh tenant info
+expect last=escaped
+bh bot light Dev
+
+# --- сам находит бота с фонариком и нападает (комната 1032..1042) ---
+bh tenant remove
+execute positioned 1040 120 1040 run bh bot add bravo B1
+give B1 bodycamhorror:flashlight
+bh bot light B1
+execute positioned 1034 120 1034 rotated -45 0 run bh tenant spawn
+wait 200
+bh tenant info
+expect B1
+reject last=-
+
+# --- союзник рядом: удушье, 4 сердца (новые боты: у B1 ещё не прошли 40 с между атаками) ---
+bh tenant remove
+bh bot remove all
+execute positioned 1040 120 1040 run bh bot add bravo B3
+give B3 bodycamhorror:flashlight
+bh bot light B3
+execute positioned 1038 120 1040 run bh bot add bravo B4
+execute positioned 1034 120 1034 rotated -45 0 run bh tenant spawn
+wait 260
+bh tenant info
+expect last=strangle
+bh debug
+expect B3(bot) team=bravo alive=false mode=adventure hp=12
+
+gamerule naturalRegeneration true
+bh tenant remove
+bh bot remove all

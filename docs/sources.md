@@ -31,3 +31,21 @@
 | Кнопки, ползунки, флажки, панель предметов ванильных экранов | `overrides/assets/minecraft/textures/gui/widgets.png`, `slider.png`, `checkbox.png` | Нарисовано скриптом `tools/assets/make_widgets.py` с нуля |
 | Значок окна игры (объектив камеры, точка REC) | `icons/icon_16.png` … `icon_256.png` | Нарисовано скриптом `tools/assets/make_icon.py` с нуля |
 | Щелчок кнопок (вместо ванильного) | `sounds/ui_click.ogg`, подключён в `overrides/assets/minecraft/sounds.json` | Синтез в `tools/assets/make_sounds.py` (`ui_click`) |
+
+## Звуки Жильца
+
+Собраны из записей CC0 скриптом `tools/assets/make_tenant_sfx.py` (слои, замедление, эхо, плёночное плавание). Лицензия каждой проверена на её странице 2026-11-18. Исходники лежат на ПК в `D:\Minecraft\dev\sfx_src	enant`, в репозиторий не кладутся.
+
+| Что взято | Лицензия | Источник |
+|---|---|---|
+| Horror Hit Soundpack 1 (удары: прыжки, нарастание, скример, затихание) | CC0 | https://opengameart.org/content/horror-hit-soundpack-1 |
+| Ghost Monster Voice Moaning & Growling | CC0 | https://opengameart.org/content/ghost-monster-voice-moaning-growling |
+| Deep Bone Crack/Break SFX (хруст суставов, удушье) | CC0 | https://opengameart.org/content/deep-bone-crackbreak-sfx |
+| Ghost breath (дыхание) | CC0 | https://opengameart.org/content/ghost-breath |
+| growl | CC0 | https://opengameart.org/content/growl |
+| 80 CC0 creature SFX (рычание, крик, кашель, дыхание) | CC0 | https://opengameart.org/content/80-cc0-creature-sfx |
+| Breathing tired (хрип жертвы) | CC0 | https://opengameart.org/content/breathing-tired |
+| Heartbeat sounds (глухое сердце) | CC0 | https://opengameart.org/content/heartbeat-sounds |
+| Horror breathing | CC0 | https://opengameart.org/content/horror-breathing |
+| horror sfx | CC0 | https://opengameart.org/content/horror-sfx |
+| Monster or beast sounds (скачан, пока не используется) | CC0 | https://opengameart.org/content/monster-or-beast-sounds |

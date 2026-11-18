@@ -1,14 +1,19 @@
 package com.talviom.bodycamhorror.tenant;
 
+import com.talviom.bodycamhorror.BodycamHorror;
 import com.talviom.bodycamhorror.ModSounds;
 import com.talviom.bodycamhorror.flashlight.Flashlight;
 import com.talviom.bodycamhorror.horror.FearSystem;
 import com.talviom.bodycamhorror.net.BhNetwork;
+import com.talviom.bodycamhorror.net.ScreamerPacket;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -36,35 +41,57 @@ import java.util.UUID;
 
 /**
  * Жилец (THE TENANT). Слепой, живёт в темноте, идёт на свет и шум (TenantHearing), к горящим лампам не подходит.
- * Вплотную: скример (один, страх ниже 60), хват (союзник рядом) или утащить (один, страх 60+).
- * Убить нельзя: 40 урона от игроков прогоняют его на 30 с, луч фонарика в лицо вблизи оглушает на 3 с.
  *
- * Утащить в «Затёртую запись» пока не сделано: вместо этого скример (в /bh tenant info видно «take->scare»).
+ * Атака (решение пользователя 2026-11-18), всё вместе не дольше 5 с:
+ *   1,0 с  смотрит на жертву с 8-10 блоков; луч в лицо или уход на свет его спугивают
+ *   0,35 с прыжок на 2 шага влево, 0,35 с на 2 шага вправо
+ *   0,75 с пять быстрых прыжков к лицу
+ *   2,2 с  душит: камера заперта на его лице, экран краснеет, двигаться и стрелять нельзя
+ * Концовки:
+ *   рядом союзник          — душит, 4 сердца; союзник отбивает двумя попаданиями или лучом в лицо
+ *   один и страшно (60+)   — душит, потом «утащить» в «Затёртую запись» (пока заглушка: чернота и пробуждение)
+ *   один и ещё не страшно  — у самого лица исчезает со скримером, не трогая
+ * Во время удушья жертву могут добить враги (решение 2026-11-18): урон от игроков проходит как обычно.
  */
 public class TenantEntity extends PathfinderMob implements GeoEntity {
-    public enum State { WAIT, FOLLOW, STALK, SCARE, GRAB, STUNNED, RETREAT }
+    public enum State { WAIT, FOLLOW, STALK, STARE, BLINK, RUSH, STRANGLE, VANISH, STUNNED, RETREAT }
+
+    /** Чем кончится атака: решается в момент, когда он доходит до лица. */
+    public enum Ending { SCARE, STRANGLE, TAKE }
 
     private static final EntityDataAccessor<Integer> STATE = SynchedEntityData.defineId(TenantEntity.class, EntityDataSerializers.INT);
 
     private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.tenant.idle");
     private static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.tenant.walk");
     private static final RawAnimation STALK_ANIM = RawAnimation.begin().thenLoop("animation.tenant.stalk");
-    private static final RawAnimation SCARE_ANIM = RawAnimation.begin().thenPlay("animation.tenant.scare");
-    private static final RawAnimation GRAB_ANIM = RawAnimation.begin().thenLoop("animation.tenant.grab");
+    private static final RawAnimation STARE_ANIM = RawAnimation.begin().thenLoop("animation.tenant.stare");
+    private static final RawAnimation REACH_ANIM = RawAnimation.begin().thenPlay("animation.tenant.scare");
+    private static final RawAnimation STRANGLE_ANIM = RawAnimation.begin().thenLoop("animation.tenant.strangle");
     private static final RawAnimation STUN_ANIM = RawAnimation.begin().thenLoop("animation.tenant.stunned");
 
     private static final double FOLLOW_SPEED = 1.4;
     private static final double STALK_SPEED = 1.0;
-    private static final double REACH = 2.2;
     private static final double STALK_RANGE = 10.0;
-    private static final int SCARE_TICKS = 14;
-    /** Вплотную; камера жертвы в это время сама смотрит ему в лицо (TenantFx). */
-    private static final double SCARE_DIST = 2.2;
-    private static final int GRAB_TICKS = 40;
+    private static final double ATTACK_RANGE = 10.0;
+
+    // Время атаки в тиках от её начала.
+    private static final int T_LEFT = 20;
+    private static final int T_RIGHT = 27;
+    private static final int T_RUSH = 34;
+    private static final int RUSH_STEPS = 5;
+    private static final int RUSH_STEP_TICKS = 3;
+    private static final int T_FACE = T_RUSH + RUSH_STEPS * RUSH_STEP_TICKS;
+    private static final int STRANGLE_TICKS = 44;
+    /** Руки дотягиваются до горла, а лицо ещё в кадре. */
+    private static final double STRANGLE_DIST = 1.35;
+    private static final int VANISH_TICKS = 10;
+    private static final int STARE_BEAM_TO_ESCAPE = 8;
+
     private static final int STUN_TICKS = 60;
     private static final int STUN_IMMUNE_TICKS = 160;
     private static final int BEAM_TICKS_TO_STUN = 30;
-    private static final float GRAB_DAMAGE_HALF = 4f;
+    private static final int BEAM_TICKS_TO_FREE = 15;
+    private static final float STRANGLE_DAMAGE_HALF = 4f;
     private static final float DAMAGE_TO_RETREAT = 40f;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -76,11 +103,18 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
     @Nullable private UUID target;
     @Nullable private Vec3 goal;
     private float damageTaken;
-    private int grabHits;
-    private Vec3 grabPos;
     private int beamTicks;
     private long stunImmuneUntil;
     private String lastOutcome = "-";
+
+    // Атака.
+    private int attackTicks;
+    private Vec3 stareFrom;
+    private Vec3 holdPos;
+    private Ending ending;
+    @Nullable private Ending forcedEnding;
+    private int rescueHits;
+    private int rescueBeam;
 
     public TenantEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -126,6 +160,11 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         if (frozen) getNavigation().stop();
     }
 
+    /** Жертва сейчас в его руках: стоит, не стреляет. */
+    public boolean holds(ServerPlayer p) {
+        return state() == State.STRANGLE && p.getUUID().equals(target);
+    }
+
     public String info() {
         ServerPlayer t = targetPlayer();
         return String.format("state=%s target=%s dist=%s damage=%.0f beam=%d last=%s frozen=%s home=%s",
@@ -145,11 +184,16 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         stateTicks++;
 
         checkBeam(level, now);
-        if (tickCount % 10 == 0) pressure(level, now);
+        if (tickCount % 10 == 0) pressure(level);
 
-        // На свету ему нельзя: уходит, кроме середины скримера и хвата.
         State s = state();
-        if (s != State.SCARE && s != State.GRAB && s != State.RETREAT && TenantRules.litNear(level, position(), TenantRules.LIGHT_ZONE)) {
+        boolean attacking = s == State.STARE || s == State.BLINK || s == State.RUSH || s == State.STRANGLE || s == State.VANISH;
+        if (attacking) {
+            attackTick(level, now);
+            return;
+        }
+        // На свету ему нельзя: уходит.
+        if (s != State.RETREAT && TenantRules.litNear(level, position(), TenantRules.LIGHT_ZONE)) {
             retreat(20 * 20);
             return;
         }
@@ -157,30 +201,30 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         switch (s) {
             case WAIT -> {
                 getNavigation().stop();
-                if (tickCount % 10 == 0) listen(level, now);
+                if (tickCount % 10 == 0) listen(now);
             }
-            case FOLLOW -> follow(level, now);
+            case FOLLOW -> follow(now);
             case STALK -> stalk(level, now);
-            case SCARE -> scareTick();
-            case GRAB -> grabTick();
             case STUNNED -> {
                 getNavigation().stop();
-                if (stateTicks >= STUN_TICKS) setState(targetPlayer() != null ? State.STALK : State.FOLLOW);
+                if (stateTicks >= STUN_TICKS) retreat(25 * 20);
             }
             case RETREAT -> {
                 retreatTicks--;
                 if (tickCount % 20 == 0) getNavigation().moveTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5, FOLLOW_SPEED);
                 if (retreatTicks <= 0) {
-                    if (distanceToSqr(Vec3.atBottomCenterOf(home)) > 9) teleportTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5);
+                    if (distanceToSqr(Vec3.atBottomCenterOf(home)) > 9) teleportHome();
                     target = null;
                     goal = null;
+                    setInvisible(false);
                     setState(State.WAIT);
                 }
             }
+            default -> {}
         }
     }
 
-    private void listen(ServerLevel level, long now) {
+    private void listen(long now) {
         TenantHearing.Noise n = TenantHearing.best(this, now);
         if (n == null) return;
         goal = n.pos();
@@ -188,136 +232,269 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         setState(State.FOLLOW);
     }
 
-    private void follow(ServerLevel level, long now) {
-        if (tickCount % 10 == 0) {
-            TenantHearing.Noise n = TenantHearing.best(this, now);
-            if (n != null) {
-                goal = n.pos();
-                target = n.source();
-            }
-            ServerPlayer p = targetPlayer();
-            if (p != null && p.distanceTo(this) <= STALK_RANGE && n != null && now - n.time() < 60) {
-                setState(State.STALK);
-                return;
-            }
-            if (goal != null) getNavigation().moveTo(goal.x, goal.y, goal.z, FOLLOW_SPEED);
-            // Дошёл до места, а там тихо: возвращается ждать.
-            if (n == null && (goal == null || goal.distanceToSqr(position()) < 4) && stateTicks > TenantHearing.FORGET_TICKS) {
-                retreat(5 * 20);
-            }
+    private void follow(long now) {
+        if (tickCount % 10 != 0) return;
+        TenantHearing.Noise n = TenantHearing.best(this, now);
+        if (n != null) {
+            goal = n.pos();
+            target = n.source();
+        }
+        ServerPlayer p = targetPlayer();
+        if (p != null && p.distanceTo(this) <= STALK_RANGE * 1.5 && n != null && now - n.time() < 60) {
+            setState(State.STALK);
+            return;
+        }
+        if (goal != null) getNavigation().moveTo(goal.x, goal.y, goal.z, FOLLOW_SPEED);
+        // Дошёл до места, а там тихо: возвращается ждать.
+        if (n == null && (goal == null || goal.distanceToSqr(position()) < 4) && stateTicks > TenantHearing.FORGET_TICKS) {
+            retreat(5 * 20);
         }
     }
 
     private void stalk(ServerLevel level, long now) {
         ServerPlayer p = targetPlayer();
-        if (p == null || p.distanceTo(this) > STALK_RANGE * 2 || TenantRules.litNear(level, p.position(), TenantRules.LIGHT_ZONE)) {
+        if (p == null || p.distanceTo(this) > STALK_RANGE * 2.5 || TenantRules.litNear(level, p.position(), TenantRules.LIGHT_ZONE)) {
             setState(State.FOLLOW);
             return;
         }
         getLookControl().setLookAt(p, 30f, 30f);
-        if (tickCount % 10 == 0) getNavigation().moveTo(p, STALK_SPEED);
-        if (p.distanceTo(this) <= REACH) encounter(p, now);
-    }
-
-    /** Вплотную: скример, хват или утащить. */
-    private void encounter(ServerPlayer p, long now) {
-        target = p.getUUID();
-        if (TenantRules.allyNear(p)) {
-            startGrab(p);
-        } else if (TenantRules.canTake(p)) {
-            // «Затёртая запись» ещё не сделана: пока скример.
-            lastOutcome = "take->scare";
-            startScare(p, now, true);
-        } else if (TenantRules.canScare(p, now)) {
-            startScare(p, now, false);
-        } else {
-            lastOutcome = "limit";
-            retreat(25 * 20);
-        }
-    }
-
-    /** Скример: встаёт вплотную перед камерой жертвы, рывок, крик, фонарик гаснет. Урона нет. */
-    public void startScare(ServerPlayer p, long now, boolean fromTake) {
-        if (!fromTake) lastOutcome = "scare";
-        target = p.getUUID();
-        TenantRules.scared(p, now);
-        setState(State.SCARE);
-        getNavigation().stop();
-        placeInFront(p, SCARE_DIST);
-        BhNetwork.sendScreamer(p, 18);
-        p.playNotifySound(ModSounds.TENANT_SCREAM.get(), SoundSource.HOSTILE, 1.0f, 0.95f + random.nextFloat() * 0.1f);
-        level().playSound(p, getX(), getY(), getZ(), ModSounds.TENANT_SCREAM.get(), SoundSource.HOSTILE, 0.6f, 0.9f);
-        FearSystem.INSTANCE.add(p, 35f);
-    }
-
-    private void scareTick() {
-        ServerPlayer p = targetPlayer();
-        if (p != null && stateTicks < SCARE_TICKS) {
-            placeInFront(p, SCARE_DIST);
+        if (p.distanceTo(this) <= ATTACK_RANGE && hasLineOfSight(p)) {
+            if (TenantRules.canAttack(p, now)) {
+                startAttack(p, now, null);
+                return;
+            }
+            // Нападать ещё рано: держится на расстоянии в темноте.
+            getNavigation().stop();
             return;
         }
-        // Фонарик гаснет уже после того, как его лицо увидели, и он исчезает в темноте.
-        if (p != null) Flashlight.blackout(p, 40);
-        teleportTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5);
-        retreat(25 * 20);
+        if (tickCount % 10 == 0) getNavigation().moveTo(p, STALK_SPEED);
     }
 
-    private void startGrab(ServerPlayer p) {
-        lastOutcome = "grab";
-        setState(State.GRAB);
+    // ---------- атака ----------
+
+    /** Начать атаку: смотрит, прыжки влево-вправо, рывок к лицу, концовка. forced: для проверки. */
+    public void startAttack(ServerPlayer p, long now, @Nullable Ending forced) {
+        target = p.getUUID();
+        forcedEnding = forced;
+        TenantRules.attacked(p, now);
         getNavigation().stop();
-        grabHits = 0;
-        grabPos = p.position();
-        placeInFront(p, 0.9);
-        p.hurt(tenantDamage(), GRAB_DAMAGE_HALF);
+        stareFrom = position();
+        attackTicks = 0;
+        rescueHits = 0;
+        rescueBeam = 0;
+        faceTowards(p);
+        setState(State.STARE);
+        FearSystem.INSTANCE.add(p, 15f);
+        BodycamHorror.LOGGER.info("[tenant] attack on {} from {} blocks", p.getGameProfile().getName(), String.format("%.1f", p.distanceTo(this)));
+    }
+
+    private void attackTick(ServerLevel level, long now) {
+        ServerPlayer p = targetPlayer();
+        if (p == null) {
+            lastOutcome = "victim-gone";
+            vanish(25 * 20);
+            return;
+        }
+        attackTicks++;
+        getNavigation().stop();
+        State s = state();
+
+        if (s == State.STARE) {
+            faceTowards(p);
+            // Спастись можно, пока он только смотрит: луч в лицо или уйти на свет.
+            if (beamTicks >= STARE_BEAM_TO_ESCAPE || TenantRules.litNear(level, p.position(), TenantRules.LIGHT_ZONE)) {
+                lastOutcome = "escaped";
+                BhNetwork.sendScreamer(p, ScreamerPacket.BLINK, 4);
+                vanish(20 * 20);
+                return;
+            }
+            if (attackTicks >= T_LEFT) {
+                setState(State.BLINK);
+                blinkTo(p, sidePoint(p, 2.0));
+            }
+            return;
+        }
+        if (s == State.BLINK) {
+            faceTowards(p);
+            if (attackTicks == T_RIGHT) blinkTo(p, sidePoint(p, -2.0));
+            if (attackTicks >= T_RUSH) {
+                setState(State.RUSH);
+                p.playNotifySound(ModSounds.TENANT_RUSH.get(), SoundSource.HOSTILE, 1.0f, 1.0f);
+                rushStep(p, 1);
+            }
+            return;
+        }
+        if (s == State.RUSH) {
+            int step = (attackTicks - T_RUSH) / RUSH_STEP_TICKS + 1;
+            if ((attackTicks - T_RUSH) % RUSH_STEP_TICKS == 0 && step <= RUSH_STEPS) rushStep(p, step);
+            if (attackTicks >= T_FACE) atFace(p);
+            return;
+        }
+        if (s == State.STRANGLE) {
+            strangleTick(p);
+            return;
+        }
+        if (s == State.VANISH) {
+            placeInFront(p, 1.6);
+            if (stateTicks >= VANISH_TICKS) {
+                Flashlight.blackout(p, 40);
+                vanish(25 * 20);
+            }
+        }
+    }
+
+    /** Точка сбоку от линии «жертва — он» (плюс: левее для жертвы). */
+    private Vec3 sidePoint(ServerPlayer p, double side) {
+        Vec3 toMe = stareFrom.subtract(p.position());
+        Vec3 flat = new Vec3(toMe.x, 0, toMe.z);
+        if (flat.lengthSqr() < 1e-4) flat = new Vec3(0, 0, 1);
+        flat = flat.normalize();
+        Vec3 right = new Vec3(-flat.z, 0, flat.x);
+        return stareFrom.add(right.scale(side));
+    }
+
+    private void rushStep(ServerPlayer p, int step) {
+        Vec3 face = frontOf(p, 1.1);
+        double f = step / (double) RUSH_STEPS;
+        Vec3 pos = position().lerp(face, step == RUSH_STEPS ? 1.0 : 1.0 / (RUSH_STEPS - step + 1));
+        Vec3 dir = face.subtract(stareFrom);
+        Vec3 right = new Vec3(-dir.z, 0, dir.x);
+        if (right.lengthSqr() > 1e-4) right = right.normalize();
+        double zig = step == RUSH_STEPS ? 0 : (step % 2 == 0 ? 0.5 : -0.5) * (1 - f);
+        blinkTo(p, pos.add(right.scale(zig)));
+    }
+
+    /** Прыжок: мгновенно оказывается в точке, скачок кадра у жертвы, глухой удар для всех рядом. */
+    private void blinkTo(ServerPlayer p, Vec3 to) {
+        // Если точка в стене, пробуем ближе к нынешнему месту, потом в другую сторону.
+        Vec3 from = position();
+        Vec3 off = to.subtract(from);
+        Vec3 safe = null;
+        for (double k : new double[]{1.0, 0.7, 0.45, -0.7}) {
+            safe = safeSpot(from.add(off.scale(k)));
+            if (safe != null) break;
+        }
+        if (safe != null) moveTo(safe.x, safe.y, safe.z, getYRot(), 0);
+        faceTowards(p);
+        BhNetwork.sendSnap(this);
+        level().playSound(null, getX(), getY(), getZ(), ModSounds.TENANT_BLINK.get(), SoundSource.HOSTILE, 1.4f,
+                0.9f + random.nextFloat() * 0.2f);
+        BhNetwork.sendScreamer(p, ScreamerPacket.BLINK, 3);
+    }
+
+    /** Свободное место на полу рядом с точкой (не в стене). */
+    @Nullable
+    private Vec3 safeSpot(Vec3 at) {
+        for (int dy : new int[]{0, 1, -1}) {
+            Vec3 c = new Vec3(at.x, Math.floor(at.y) + dy, at.z);
+            if (level().noCollision(this, getType().getDimensions().makeBoundingBox(c))
+                    && !level().getBlockState(BlockPos.containing(c).below()).isAir()) return c;
+        }
+        return null;
+    }
+
+    private void atFace(ServerPlayer p) {
+        Ending e = forcedEnding;
+        if (e == null) {
+            if (TenantRules.allyNear(p)) e = Ending.STRANGLE;
+            else if (TenantRules.canTake(p)) e = Ending.TAKE;
+            else e = Ending.SCARE;
+        }
+        ending = e;
+        if (e == Ending.SCARE) {
+            lastOutcome = "scare";
+            setState(State.VANISH);
+            placeInFront(p, 1.6);
+            BhNetwork.sendSnap(this);
+            BhNetwork.sendScreamer(p, ScreamerPacket.FLASH, 14);
+            p.playNotifySound(ModSounds.TENANT_SCARE.get(), SoundSource.HOSTILE, 1.0f, 1.0f);
+            level().playSound(p, getX(), getY(), getZ(), ModSounds.TENANT_SCARE.get(), SoundSource.HOSTILE, 0.7f, 1.0f);
+            FearSystem.INSTANCE.add(p, 35f);
+            return;
+        }
+        lastOutcome = e == Ending.TAKE ? "take" : "strangle";
+        setState(State.STRANGLE);
+        holdPos = p.position();
+        placeInFront(p, STRANGLE_DIST);
+        BhNetwork.sendSnap(this);
+        BhNetwork.sendScreamer(p, ScreamerPacket.STRANGLE, STRANGLE_TICKS);
+        p.playNotifySound(ModSounds.TENANT_STRANGLE.get(), SoundSource.HOSTILE, 1.0f, 1.0f);
+        level().playSound(p, getX(), getY(), getZ(), ModSounds.TENANT_STRANGLE.get(), SoundSource.HOSTILE, 0.8f, 1.0f);
         FearSystem.INSTANCE.setFear(p, 100f);
         for (ServerPlayer o : p.server.getPlayerList().getPlayers()) {
             if (o != p && o.distanceToSqr(p) < 100) FearSystem.INSTANCE.add(o, 25f);
         }
-        BhNetwork.sendGlitch(p, GRAB_TICKS, 0.8f);
-        p.playNotifySound(ModSounds.TENANT_SCREAM.get(), SoundSource.HOSTILE, 0.8f, 0.7f);
     }
 
-    private void grabTick() {
-        ServerPlayer p = targetPlayer();
-        if (p == null || !p.isAlive() || p.isSpectator()) {
-            retreat(25 * 20);
-            return;
-        }
-        if (p.position().distanceToSqr(grabPos) > 0.01) p.teleportTo(grabPos.x, grabPos.y, grabPos.z);
-        placeInFront(p, 0.9);
-        if (grabHits >= 2) {
-            lastOutcome = "grab-freed";
+    private void strangleTick(ServerPlayer p) {
+        if (p.position().distanceToSqr(holdPos) > 0.01) p.teleportTo(holdPos.x, holdPos.y, holdPos.z);
+        placeInFront(p, STRANGLE_DIST);
+        if (rescueHits >= 2 || rescueBeam >= BEAM_TICKS_TO_FREE) {
+            lastOutcome = "freed";
+            BhNetwork.sendScreamer(p, ScreamerPacket.FREED, 1);
             stun();
             return;
         }
-        if (stateTicks >= GRAB_TICKS) {
-            p.hurt(tenantDamage(), GRAB_DAMAGE_HALF);
-            retreat(25 * 20);
+        if (ending == Ending.STRANGLE && stateTicks == STRANGLE_TICKS / 2) p.hurt(tenantDamage(), STRANGLE_DAMAGE_HALF);
+        if (stateTicks < STRANGLE_TICKS) return;
+
+        if (ending == Ending.STRANGLE) p.hurt(tenantDamage(), STRANGLE_DAMAGE_HALF);
+        if (!p.isAlive()) {
+            vanish(25 * 20);
+            return;
+        }
+        BhNetwork.sendScreamer(p, ScreamerPacket.QUIET, 80);
+        p.playNotifySound(ModSounds.TENANT_QUIET.get(), SoundSource.HOSTILE, 1.0f, 1.0f);
+        if (ending == Ending.TAKE) {
+            // «Затёртая запись» ещё не сделана: пока только чернота, игрок приходит в себя на месте.
+            TenantRules.taken(p);
+            FearSystem.INSTANCE.setFear(p, 40f);
+            vanish(40 * 20);
+        } else {
+            vanish(25 * 20);
         }
     }
 
-    /** Свой тип урона: не зависит от сложности (на «Мирной» обычный урон моба был бы 0). */
-    private DamageSource tenantDamage() {
-        return new DamageSource(level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE)
-                .getHolderOrThrow(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DAMAGE_TYPE,
-                        new net.minecraft.resources.ResourceLocation(com.talviom.bodycamhorror.BodycamHorror.MOD_ID, "tenant"))), this);
+    /** Исчезает: возвращается к себе и некоторое время не охотится. */
+    private void vanish(int retreatFor) {
+        teleportHome();
+        BhNetwork.sendSnap(this);
+        setInvisible(true);
+        retreat(retreatFor);
+    }
+
+    private void teleportHome() {
+        teleportTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5);
+    }
+
+    private Vec3 frontOf(ServerPlayer p, double dist) {
+        Vec3 look = p.getLookAngle();
+        Vec3 flat = new Vec3(look.x, 0, look.z);
+        if (flat.lengthSqr() < 1e-4) flat = new Vec3(0, 0, 1);
+        return p.position().add(flat.normalize().scale(dist));
     }
 
     /** Встать лицом к игроку на расстоянии dist перед его взглядом. */
     private void placeInFront(ServerPlayer p, double dist) {
-        Vec3 look = p.getLookAngle();
-        Vec3 flat = new Vec3(look.x, 0, look.z);
-        if (flat.lengthSqr() < 1e-4) flat = new Vec3(0, 0, 1);
-        flat = flat.normalize();
-        Vec3 at = p.position().add(flat.scale(dist));
-        moveTo(at.x, p.getY(), at.z, 0, 0);
-        double dx = p.getX() - at.x;
-        double dz = p.getZ() - at.z;
+        Vec3 at = frontOf(p, dist);
+        moveTo(at.x, p.getY(), at.z, getYRot(), 0);
+        faceTowards(p);
+    }
+
+    private void faceTowards(ServerPlayer p) {
+        double dx = p.getX() - getX();
+        double dz = p.getZ() - getZ();
         float yaw = (float) (Mth.atan2(dz, dx) * Mth.RAD_TO_DEG) - 90f;
         setYRot(yaw);
         setYHeadRot(yaw);
         setYBodyRot(yaw);
+    }
+
+    /** Свой тип урона: не зависит от сложности (на «Мирной» обычный урон моба был бы 0). */
+    private DamageSource tenantDamage() {
+        return new DamageSource(level().registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
+                .getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE,
+                        new ResourceLocation(BodycamHorror.MOD_ID, "tenant"))), this);
     }
 
     private void retreat(int ticks) {
@@ -332,29 +509,41 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         playSound(ModSounds.TENANT_CLICK.get(), 1.0f, 0.7f);
     }
 
-    /** Луч фонарика в лицо с 6 блоков дольше 1,5 с оглушает его. */
+    /**
+     * Луч фонарика в лицо с 6 блоков: 1,5 с оглушают на охоте; во время удушья союзник жертвы освобождает её за 0,75 с;
+     * пока он только смотрит, жертве хватает 0,4 с, чтобы спугнуть его.
+     */
     private void checkBeam(ServerLevel level, long now) {
         boolean lit = false;
+        boolean allyLit = false;
+        ServerPlayer victim = targetPlayer();
         Vec3 eye = getEyePosition();
         for (ServerPlayer p : level.players()) {
-            if (!Flashlight.isLit(p) || p.distanceToSqr(this) > 36) continue;
+            // Пока он смотрит, жертва спугивает его лучом с любого расстояния атаки (до 10 блоков), иначе с 6.
+            double reach = state() == State.STARE && p == victim ? ATTACK_RANGE + 1 : 6;
+            if (!Flashlight.isLit(p) || p.distanceToSqr(this) > reach * reach) continue;
             Vec3 to = eye.subtract(p.getEyePosition()).normalize();
             if (to.dot(p.getLookAngle()) > 0.978 && p.hasLineOfSight(this)) {
-                lit = true;
-                break;
+                if (state() == State.STRANGLE) {
+                    if (victim != null && p != victim && TenantRules.sameSide(victim, p)) allyLit = true;
+                } else if (state() == State.STARE) {
+                    if (p == victim) lit = true;
+                } else {
+                    lit = true;
+                }
             }
         }
+        rescueBeam = allyLit ? rescueBeam + 1 : Math.max(0, rescueBeam - 1);
         beamTicks = lit ? beamTicks + 1 : Math.max(0, beamTicks - 1);
         State s = state();
-        if (beamTicks >= BEAM_TICKS_TO_STUN && now >= stunImmuneUntil
-                && (s == State.STALK || s == State.FOLLOW || s == State.GRAB)) {
+        if (beamTicks >= BEAM_TICKS_TO_STUN && now >= stunImmuneUntil && (s == State.STALK || s == State.FOLLOW)) {
             lastOutcome = "stunned";
             stun();
         }
     }
 
     /** Рядом с ним страшно: страх растёт, бодикам ловит помехи. */
-    private void pressure(ServerLevel level, long now) {
+    private void pressure(ServerLevel level) {
         for (ServerPlayer p : level.players()) {
             if (p.isSpectator() || !p.isAlive()) continue;
             double d2 = p.distanceToSqr(this);
@@ -375,11 +564,16 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (source.is(DamageTypes.GENERIC_KILL)) return super.hurt(source, amount);
-        if (level().isClientSide || !(source.getEntity() instanceof ServerPlayer)) return false;
+        if (level().isClientSide || !(source.getEntity() instanceof ServerPlayer shooter)) return false;
+        if (state() == State.STRANGLE) {
+            // Отбить жертву могут только её союзники; попадания врагов он не замечает.
+            ServerPlayer victim = targetPlayer();
+            if (victim == null || shooter == victim || !TenantRules.sameSide(victim, shooter)) return false;
+            rescueHits++;
+        }
         damageTaken += amount;
-        if (state() == State.GRAB) grabHits++;
         playSound(ModSounds.TENANT_CLICK.get(), 0.8f, 0.8f + random.nextFloat() * 0.3f);
-        if (damageTaken >= DAMAGE_TO_RETREAT) {
+        if (damageTaken >= DAMAGE_TO_RETREAT && state() != State.STRANGLE) {
             damageTaken = 0;
             lastOutcome = "shot-away";
             retreat(30 * 20);
@@ -409,17 +603,17 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
 
     @Override
     public int getAmbientSoundInterval() {
-        return 160;
+        return 200;
     }
 
     @Override
     protected float getSoundVolume() {
-        return 0.6f;
+        return 0.7f;
     }
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
-        if (random.nextInt(4) == 0) playSound(ModSounds.TENANT_CLICK.get(), 0.25f, 0.9f + random.nextFloat() * 0.2f);
+        if (random.nextInt(3) == 0) playSound(ModSounds.TENANT_CLICK.get(), 0.3f, 0.9f + random.nextFloat() * 0.2f);
     }
 
     @Override
@@ -440,9 +634,11 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "main", 4, st -> switch (state()) {
-            case SCARE -> st.setAndContinue(SCARE_ANIM);
-            case GRAB -> st.setAndContinue(GRAB_ANIM);
+        controllers.add(new AnimationController<>(this, "main", 3, st -> switch (state()) {
+            case STARE, BLINK -> st.setAndContinue(STARE_ANIM);
+            case RUSH -> st.setAndContinue(STALK_ANIM);
+            case VANISH -> st.setAndContinue(REACH_ANIM);
+            case STRANGLE -> st.setAndContinue(STRANGLE_ANIM);
             case STUNNED -> st.setAndContinue(STUN_ANIM);
             case STALK -> st.setAndContinue(STALK_ANIM);
             case FOLLOW, RETREAT -> st.setAndContinue(st.isMoving() ? WALK : IDLE);

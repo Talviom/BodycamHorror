@@ -91,6 +91,12 @@ public final class FearSystem {
         states.clear();
     }
 
+    /** Идёт перестрелка: игрок недавно ранил или был ранен (настройка combatSeconds). */
+    public boolean inCombat(ServerPlayer p) {
+        State s = states.get(p.getUUID());
+        return s != null && tick - s.lastCombat < HorrorConfig.COMBAT_SECONDS.get() * 20L;
+    }
+
     /** Игрок получил или нанёс урон: на время боя события не мешают. */
     public void markCombat(ServerPlayer p) {
         state(p).lastCombat = tick;

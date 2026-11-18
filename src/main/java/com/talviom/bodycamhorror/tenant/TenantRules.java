@@ -16,18 +16,18 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Правила Жильца: зоны света, кто рядом, лимиты скримеров и утаскиваний. Числа из документа
- * «Монстр «Жилец»: механика и баланс».
+ * Правила Жильца: зоны света, кто рядом, лимиты атак и утаскиваний. Числа из документа
+ * «Монстр «Жилец»: механика и баланс» и решений пользователя от 2026-11-18.
  */
 public final class TenantRules {
     /** Вокруг горящей лампы он не ходит. Свет фонарика зоной не считается. */
     public static final double LIGHT_ZONE = 7.0;
     public static final double ALLY_RANGE = 10.0;
     public static final float TAKE_FEAR = 60f;
-    public static final int SCARE_COOLDOWN_TICKS = 40 * 20;
-    public static final int SCARES_PER_ROUND = 4;
+    public static final int ATTACK_COOLDOWN_TICKS = 40 * 20;
+    public static final int ATTACKS_PER_ROUND = 4;
 
-    private record Count(int round, int scares, long lastScare, boolean taken) {}
+    private record Count(int round, int attacks, long lastAttack, boolean taken) {}
 
     private static final Map<UUID, Count> COUNTS = new HashMap<>();
 
@@ -43,16 +43,31 @@ public final class TenantRules {
         return false;
     }
 
-    /** Союзник ближе 10 блоков. Вне матча союзником считается любой другой живой игрок. */
-    public static boolean allyNear(ServerPlayer p) {
+    /** Союзники: одна команда. Вне матча союзником считается любой другой игрок. */
+    public static boolean sameSide(ServerPlayer a, ServerPlayer b) {
         MatchManager m = MatchManager.INSTANCE;
-        BhTeam team = m.teamOf(p);
+        BhTeam ta = m.teamOf(a);
+        return ta == null || ta == m.teamOf(b);
+    }
+
+    /** Союзник ближе 10 блоков. */
+    public static boolean allyNear(ServerPlayer p) {
         for (ServerPlayer o : p.server.getPlayerList().getPlayers()) {
-            if (o == p || o.isSpectator() || !o.isAlive()) continue;
-            if (team != null && m.teamOf(o) != team) continue;
+            if (o == p || o.isSpectator() || !o.isAlive() || !sameSide(p, o)) continue;
             if (o.distanceToSqr(p) <= ALLY_RANGE * ALLY_RANGE) return true;
         }
         return false;
+    }
+
+    /** Последний живой в своей команде (во время матча). */
+    public static boolean lastAlive(ServerPlayer p) {
+        MatchManager m = MatchManager.INSTANCE;
+        BhTeam team = m.teamOf(p);
+        if (!m.running() || team == null) return false;
+        for (ServerPlayer o : p.server.getPlayerList().getPlayers()) {
+            if (o != p && m.teamOf(o) == team && m.isAlive(o)) return false;
+        }
+        return true;
     }
 
     private static Count count(ServerPlayer p) {
@@ -63,19 +78,26 @@ public final class TenantRules {
         return c;
     }
 
-    public static boolean canScare(ServerPlayer p, long now) {
+    /** Можно нападать: не чаще раза в 40 с, не больше 4 за раунд, не в перестрелке. */
+    public static boolean canAttack(ServerPlayer p, long now) {
         Count c = count(p);
-        return c.scares() < SCARES_PER_ROUND && now - c.lastScare() >= SCARE_COOLDOWN_TICKS;
+        return c.attacks() < ATTACKS_PER_ROUND && now - c.lastAttack() >= ATTACK_COOLDOWN_TICKS
+                && !FearSystem.INSTANCE.inCombat(p);
     }
 
-    public static void scared(ServerPlayer p, long now) {
+    public static void attacked(ServerPlayer p, long now) {
         Count c = count(p);
-        COUNTS.put(p.getUUID(), new Count(c.round(), c.scares() + 1, now, c.taken()));
+        COUNTS.put(p.getUUID(), new Count(c.round(), c.attacks() + 1, now, c.taken()));
     }
 
-    /** Утащить можно одного, напуганного, ещё не утащенного в этом раунде. */
+    /** Утащить можно одного, напуганного, ещё не утащенного в этом раунде и не последнего живого. */
     public static boolean canTake(ServerPlayer p) {
-        return !allyNear(p) && FearSystem.INSTANCE.fear(p) >= TAKE_FEAR && !count(p).taken();
+        return !allyNear(p) && FearSystem.INSTANCE.fear(p) >= TAKE_FEAR && !count(p).taken() && !lastAlive(p);
+    }
+
+    public static void taken(ServerPlayer p) {
+        Count c = count(p);
+        COUNTS.put(p.getUUID(), new Count(c.round(), c.attacks(), c.lastAttack(), true));
     }
 
     public static void clear() {

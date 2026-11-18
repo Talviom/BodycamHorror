@@ -56,5 +56,6 @@ public class BodycamHorror {
         // Монстр «Жилец» (GeckoLib).
         com.talviom.bodycamhorror.tenant.ModEntities.register(FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.tenant.TenantEvents());
+        com.talviom.bodycamhorror.tenant.TaczCompat.init();
     }
 }
