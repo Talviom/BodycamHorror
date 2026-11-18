@@ -20,5 +20,8 @@
   "music.match_lost": { "sounds": [{ "name": "bodycamhorror:music/match_lost", "stream": true }] },
   "tape_hiss": { "sounds": ["bodycamhorror:tape_hiss"] },
   "tape_pickup": { "sounds": ["bodycamhorror:tape_pickup"] },
-  "tape_out": { "sounds": ["bodycamhorror:tape_out"] }
+  "tape_out": { "sounds": ["bodycamhorror:tape_out"] },
+  "tenant_scream": { "sounds": ["bodycamhorror:tenant_scream"] },
+  "tenant_breath": { "sounds": ["bodycamhorror:tenant_breath"] },
+  "tenant_click": { "sounds": ["bodycamhorror:tenant_click"] }
 }

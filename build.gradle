@@ -78,6 +78,9 @@ dependencies {
     // Simple Voice Chat API: нужен только для компиляции рации, в игре его даёт сам мод voicechat.
     compileOnly "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
 
+    // GeckoLib: модель и анимации Жильца. В игре стоит тот же jar (geckolib-forge-1.20.1-4.8.4).
+    implementation fg.deobf('blank:geckolib-forge-1.20.1:4.8.4')
+
     // Классы Oculus нужны только для компиляции миксина; в игре их даёт сам Oculus, а без него миксин пропускается.
     compileOnly fg.deobf('blank:oculus-mc1.20.1:1.8.0')
 

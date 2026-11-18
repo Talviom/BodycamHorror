@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public final class BhNetwork {
     /** Меняется при изменении пакетов: клиент и сервер разных версий мода не соединятся. */
-    private static final String PROTOCOL = "3";
+    private static final String PROTOCOL = "4";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(BodycamHorror.MOD_ID, "main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 
@@ -27,12 +27,18 @@ public final class BhNetwork {
                 HudStatePacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(3, BannerPacket.class, BannerPacket::encode, BannerPacket::decode,
                 BannerPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(5, ScreamerPacket.class, ScreamerPacket::encode, ScreamerPacket::decode,
+                ScreamerPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(4, OpenInventoryPacket.class, OpenInventoryPacket::encode, OpenInventoryPacket::decode,
                 OpenInventoryPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
     public static void sendGlitch(ServerPlayer player, int ticks, float strength) {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new GlitchPacket(ticks, strength));
+    }
+
+    public static void sendScreamer(ServerPlayer player, int ticks) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ScreamerPacket(ticks));
     }
 
     public static void sendHud(ServerPlayer player, HudStatePacket packet) {

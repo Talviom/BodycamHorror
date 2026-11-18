@@ -72,6 +72,7 @@ public final class Sabotage {
         level.updateNeighborsAt(pos, block);
         COOLDOWN_UNTIL.put(pos.immutable(), now + HorrorConfig.SWITCH_COOLDOWN_SECONDS.get() * 20L);
         needsRecompute = true;
+        com.talviom.bodycamhorror.tenant.TenantHearing.breaker(level, pos);
 
         // Громкий звук: переключение выдаёт позицию того, кто это сделал.
         if (block.global) {

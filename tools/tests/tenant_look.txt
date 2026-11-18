@@ -1,0 +1,87 @@
+# Жилец в игре: вид при свете, в темноте, в луче, скример, позы; поведение на ботах.
+# Запуск: gradlew runClient -PbhShaders -PbhTest=tools/tests/tenant_look.txt
+# Скриншоты: run/screenshots/5*.png, проверки [bh-test] в run/logs/latest.log
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 1000 120 1000 run bh arena build
+expect Arena built
+time set midnight
+weather clear
+gamemode adventure @p
+clear @p
+give @p bodycamhorror:flashlight
+hud off
+tp @p 1005.5 120 1005.5 -45 6
+
+# --- вид: при свете ламп, 5 блоков ---
+execute positioned 1009 120 1009 rotated 135 0 run bh tenant spawn frozen
+expect Tenant spawned
+wait 80
+shot 50_tenant_lit
+
+# --- позы ---
+bh tenant pose stalk
+wait 40
+shot 51_pose_stalk
+bh tenant pose grab
+wait 40
+shot 52_pose_grab
+bh tenant pose stunned
+wait 40
+shot 53_pose_stunned
+bh tenant pose wait
+
+# --- темнота: ламп нет ---
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+wait 60
+shot 54_tenant_dark
+
+# --- в луче фонарика ---
+bh bot light Dev
+expect flashlight: on
+wait 40
+shot 55_tenant_in_beam
+
+# --- скример ---
+bh tenant scare Dev
+expect Tenant scared Dev
+wait 2
+shot 56_scare_flash
+wait 5
+shot 57_scare_face
+wait 30
+bh tenant info
+expect last=scare
+bh bot light Dev
+bh tenant remove
+
+# --- поведение: одинокий бот с фонариком, Жилец в той же комнате (комната 1032..1042) ---
+execute positioned 1040 120 1040 run bh bot add bravo B1
+give B1 bodycamhorror:flashlight
+bh bot light B1
+execute positioned 1034 120 1034 rotated -45 0 run bh tenant spawn
+wait 20
+bh tenant info
+wait 200
+bh tenant info
+expect scare frozen=false
+bh debug
+reject B1(bot) team=- alive=false mode=adventure hp=16
+
+# --- хват: рядом с ботом союзник (без естественной регенерации, иначе урон быстро зарастает) ---
+gamerule naturalRegeneration false
+bh tenant remove
+execute positioned 1038 120 1040 run bh bot add bravo B2
+execute positioned 1034 120 1034 rotated -45 0 run bh tenant spawn
+wait 220
+bh tenant info
+expect last=grab
+bh debug
+expect hp=12
+
+gamerule naturalRegeneration true
+bh tenant remove
+bh bot remove all
+hud on

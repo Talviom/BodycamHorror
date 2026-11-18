@@ -175,9 +175,9 @@ def texture(seed=461):
 def main():
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     assets = root / "src/main/resources/assets/bodycamhorror"
-    (assets / "geo").mkdir(parents=True, exist_ok=True)
+    (assets / "geo/entity").mkdir(parents=True, exist_ok=True)
     (assets / "textures/entity").mkdir(parents=True, exist_ok=True)
-    (assets / "geo/tenant.geo.json").write_text(json.dumps(geo(), indent=2), encoding="utf-8")
+    (assets / "geo/entity/tenant.geo.json").write_text(json.dumps(geo(), indent=2), encoding="utf-8")
     texture().save(assets / "textures/entity/tenant.png")
     # Проверка: развёртки не налезают друг на друга и не выходят за текстуру.
     used = {}
@@ -189,7 +189,7 @@ def main():
                     for j in range(h):
                         owner = used.setdefault((x + i, y + j), name)
                         assert owner == name, f"{name}.{face} overlaps {owner} at {(x + i, y + j)}"
-    print("ok:", assets / "geo/tenant.geo.json")
+    print("ok:", assets / "geo/entity/tenant.geo.json")
 
 
 if __name__ == "__main__":

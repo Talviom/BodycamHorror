@@ -52,5 +52,9 @@ public class BodycamHorror {
         // Цель раунда «Вынести кассету» и лобби.
         MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.objective.TapeEvents());
         MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.lobby.LobbyEvents());
+
+        // Монстр «Жилец» (GeckoLib).
+        com.talviom.bodycamhorror.tenant.ModEntities.register(FMLJavaModLoadingContext.get().getModEventBus());
+        MinecraftForge.EVENT_BUS.register(new com.talviom.bodycamhorror.tenant.TenantEvents());
     }
 }

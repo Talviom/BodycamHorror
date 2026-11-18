@@ -18,7 +18,7 @@ root = Path(sys.argv[sys.argv.index("--") + 1]).resolve()
 assets = root / "src/main/resources/assets/bodycamhorror"
 out = root / "docs/previews"
 out.mkdir(parents=True, exist_ok=True)
-geo = json.loads((assets / "geo/tenant.geo.json").read_text(encoding="utf-8"))["minecraft:geometry"][0]
+geo = json.loads((assets / "geo/entity/tenant.geo.json").read_text(encoding="utf-8"))["minecraft:geometry"][0]
 TW = geo["description"]["texture_width"]
 TH = geo["description"]["texture_height"]
 
