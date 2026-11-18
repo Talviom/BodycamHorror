@@ -37,6 +37,11 @@ public final class NoTutorial {
         if (e.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
-        SystemToast.forceHide(mc.getToasts(), SystemToast.SystemToastIds.UNSECURE_SERVER_WARNING);
+        // В 1.20.1 нет SystemToast.forceHide: если плашка про чат появилась, убираем всплывашки целиком
+        // (других всплывашек в нашей игре нет: рецепты и достижения в бодикаме не нужны).
+        if (mc.getToasts().getToast(SystemToast.class, SystemToast.SystemToastIds.UNSECURE_SERVER_WARNING) != null) {
+            mc.getToasts().clear();
+            BodycamHorror.LOGGER.info("[BH ui] chat verification toast hidden");
+        }
     }
 }
