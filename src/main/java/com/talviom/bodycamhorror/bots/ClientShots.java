@@ -39,6 +39,13 @@ final class ClientShots {
         mc.execute(() -> mc.setScreen(new net.minecraft.client.gui.screens.PauseScreen(true)));
     }
 
+    /** Ванильный экран смерти с причиной, как его открывает игра (наш MenuEvents заменит его на SIGNAL LOST). */
+    static void openDeath() {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> mc.setScreen(new net.minecraft.client.gui.screens.DeathScreen(
+                net.minecraft.network.chat.Component.literal("Dev was killed by something in the dark"), false)));
+    }
+
     /** Закрыть открытый экран. */
     static void closeScreen() {
         Minecraft mc = Minecraft.getInstance();

@@ -1,4 +1,5 @@
 # 0.6.4: меню паузы (Esc) в стиле плёнки. 0.6.5: тёмные кнопки, ползунки, флажки и панель предметов.
+# 0.6.6: экран смерти, заголовок и значок окна, свой щелчок кнопок, тёмная загрузка.
 # Запуск: gradlew runClient -PbhTest=tools/tests/screens.txt
 # Остальное проверяется руками при обычном запуске (gradlew runClient):
 #   главное меню -> OPTIONS и SINGLEPLAYER: вместо земли тёмное зерно;
@@ -6,7 +7,9 @@
 #   Esc в мире: наше меню паузы; SAVE AND QUIT возвращает в главное меню.
 # Мир сразу открывается для сети: в одиночной игре ванильные экраны (настройки, открытие для сети) ставят игру
 # на паузу, и сценарий, который идёт по тикам сервера, остановился бы. Открытый для сети мир на паузу не встаёт.
-# Результат: [bh-test] DONE failures=0, скриншоты run/screenshots/064_*.png.
+# 0.6.6 (руками): заголовок окна BODYCAM HORROR и значок-объектив на панели задач (в логе [BH window] icon set);
+#   щелчок кнопок свой (короткий щелчок камеры); при следующем запуске загрузка Forge на чёрном фоне, а не на красном.
+# Результат: [bh-test] DONE failures=0, скриншоты run/screenshots/064_*.png, 065_*.png, 066_death.png.
 
 bh stop
 bh bot remove all
@@ -63,6 +66,14 @@ wait 30
 shot 065_creative_hotbar
 gamemode adventure Dev
 clear Dev minecraft:torch
+wait 10
+
+# --- 0.6.6: экран смерти вне матча (SIGNAL LOST вместо красного «You Died!») ---
+# В логе: [BH menu] death screen replaced (cause: Dev was killed by something in the dark)
+screen death
+wait 40
+shot 066_death
+screen close
 wait 10
 
 # --- последним: SAVE AND QUIT (сервер останавливается, сценарий дальше не идёт) ---

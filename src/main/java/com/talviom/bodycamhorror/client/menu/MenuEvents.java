@@ -4,6 +4,7 @@ import com.talviom.bodycamhorror.BhConfig;
 import com.talviom.bodycamhorror.BodycamHorror;
 import com.talviom.bodycamhorror.client.Vhs;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.DeathScreen;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.ReceivingLevelScreen;
@@ -16,8 +17,8 @@ import net.minecraftforge.fml.common.Mod;
 
 /**
  * Клиент: ванильные экраны заменяются нашими (если это не выключено в настройках, hud.customMenu):
- * титульный экран нашим главным меню, меню паузы нашим, а при загрузке мира и входе на сервер
- * вместо разноцветной карты чанков и земляного фона тёмный кадр «LOADING THE TAPE».
+ * титульный экран нашим главным меню, меню паузы нашим, экран смерти вне матча кадром SIGNAL LOST,
+ * а при загрузке мира и входе на сервер вместо разноцветной карты чанков и земляного фона тёмный кадр «LOADING THE TAPE».
  * Земляной фон остальных ванильных экранов заменён текстурой (assets/minecraft/textures/gui/options_background.png).
  */
 @Mod.EventBusSubscriber(modid = BodycamHorror.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -30,14 +31,14 @@ public final class MenuEvents {
      * Пока открыта наша пауза или вызванные из неё экраны (настройки, открытие для сети и т. п.),
      * интерфейс игры (прицел, строка лобби над панелью, слоты, REC и сердце) не рисуется:
      * иначе он просвечивает сквозь затемнение и наезжает на пункты меню.
-     * Чат и инвентарь не трогаем: там интерфейс игры нужен.
+     * Чат и инвентарь не трогаем: там интерфейс игры нужен. Под ванильным экраном смерти тоже (если наше меню выключено).
      */
     @SubscribeEvent
     public static void onMenuPauseHideHud(net.minecraftforge.client.event.RenderGuiOverlayEvent.Pre e) {
         Screen s = net.minecraft.client.Minecraft.getInstance().screen;
         if (s == null || s instanceof net.minecraft.client.gui.screens.ChatScreen
                 || s instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>
-                || s instanceof net.minecraft.client.gui.screens.DeathScreen) return;
+                || (s instanceof DeathScreen && !(s instanceof BhDeathScreen))) return;
         e.setCanceled(true);
     }
 
@@ -53,6 +54,12 @@ public final class MenuEvents {
             }
         } else if (next instanceof PauseScreen) {
             e.setNewScreen(new BhPauseScreen());
+        } else if (next instanceof DeathScreen vanilla && !(next instanceof BhDeathScreen)) {
+            var mc = net.minecraft.client.Minecraft.getInstance();
+            boolean hardcore = mc.level != null && mc.level.getLevelData().isHardcore();
+            net.minecraft.network.chat.Component cause = BhDeathScreen.causeOf(vanilla);
+            e.setNewScreen(new BhDeathScreen(cause, hardcore));
+            BodycamHorror.LOGGER.info("[BH menu] death screen replaced (cause: {})", cause == null ? "none" : cause.getString());
         }
     }
 

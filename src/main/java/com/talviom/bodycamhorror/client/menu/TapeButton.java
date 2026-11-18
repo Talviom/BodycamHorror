@@ -59,6 +59,6 @@ public final class TapeButton extends Button {
     /** Глухой щелчок кассетной деки вместо звонкого ванильного. */
     @Override
     public void playDownSound(SoundManager sounds) {
-        sounds.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.55f));
+        sounds.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.8f));
     }
 }

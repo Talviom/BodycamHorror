@@ -172,6 +172,7 @@ public final class TestScript {
             case "chat" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openChat);
             case "menu" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openMenu);
             case "pause" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openPause);
+            case "death" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openDeath);
             case "options", "video", "packs", "worlds", "mods", "lan" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openVanilla(what));
             default -> {
                 host.closeContainer();

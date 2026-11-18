@@ -1,6 +1,6 @@
 """Synthesizes the mod's sounds (mono 44.1 kHz) and encodes them to Ogg Vorbis with ffmpeg.
 
-Usage: python -I tools/assets/make_sounds.py <repo root>
+Usage: python -I tools/assets/make_sounds.py <repo root> [sound names, to make only those]
 Every sound is procedural (numpy/scipy), with no samples taken from elsewhere.
 ffmpeg adds the short fades and encodes to libvorbis.
 """
@@ -329,6 +329,25 @@ def lamp_buzz(seed, sec):
     return x
 
 
+def ui_click():
+    """A camcorder button: a dry plastic tick, the latch a moment later, a faint body thump.
+    Replaces the vanilla button click (assets/minecraft/sounds.json)."""
+    rng = np.random.default_rng(71)
+    n = int(0.16 * SR)
+    x = np.zeros(n)
+    press = band(noise(int(0.012 * SR), rng), 1800, 7000) * env_ad(int(0.012 * SR), 0.0003, 0.0025)
+    place(x, press, 0.004 * SR)
+    place(x, damped_modes(int(0.08 * SR), [(2350, 0.012, 0.5), (3900, 0.008, 0.3), (1150, 0.02, 0.25)], rng), 0.004 * SR)
+    latch = band(noise(int(0.01 * SR), rng), 2500, 8000) * env_ad(int(0.01 * SR), 0.0003, 0.002)
+    place(x, latch * 0.45, 0.034 * SR)
+    place(x, damped_modes(int(0.06 * SR), [(2900, 0.008, 0.25), (1600, 0.012, 0.15)], rng), 0.034 * SR)
+    thump = np.sin(2 * np.pi * 110 * t_axis(0.07)) * env_ad(int(0.07 * SR), 0.001, 0.018)
+    place(x, thump * 0.35, 0.004 * SR)
+    # A breath of tape hiss under it, so it sounds recorded rather than clean.
+    x += lowpass(highpass(noise(n, rng), 1500), 7000) * 0.012 * env_ad(n, 0.002, 0.06)
+    return small_room(x, rng, length=0.12, decay=0.02, mix=0.12)
+
+
 SOUNDS = {
     "whisper1": lambda: whisper(1, 3.0, 4.5),
     "whisper2": lambda: whisper(2, 2.4, 6.0),
@@ -344,9 +363,10 @@ SOUNDS = {
     "knock2": lambda: knock(52, 205),
     "lamp_buzz1": lambda: lamp_buzz(61, 1.2),
     "lamp_buzz2": lambda: lamp_buzz(62, 1.45),
+    "ui_click": ui_click,
 }
-# 14 files, exactly what sounds.json lists.
-assert len(SOUNDS) == 14
+# 14 files listed in our sounds.json, plus ui_click used by assets/minecraft/sounds.json.
+assert len(SOUNDS) == 15
 
 
 def write(name, x, out_dir, tmp):
@@ -369,8 +389,11 @@ def main():
     out_dir = root / "src/main/resources/assets/bodycamhorror/sounds"
     out_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
+        # Names after the root make only those sounds: python -I tools/assets/make_sounds.py . ui_click
+        only = set(sys.argv[2:])
         for name, fn in SOUNDS.items():
-            print("made", write(name, fn(), out_dir, tmp).name)
+            if not only or name in only:
+                print("made", write(name, fn(), out_dir, tmp).name)
 
 
 if __name__ == "__main__":

@@ -30,6 +30,8 @@ if (Test-Path $hostOptions) {
         "fov" = "0.0"
         "soundCategory_master" = "1.0"
         "soundCategory_music" = "0.5"
+        # Чёрный экран загрузки Forge и Minecraft вместо красного (мод включает его и сам, но только со второго запуска).
+        "darkMojangStudiosBackground" = "true"
     }
     $lines = foreach ($line in [System.IO.File]::ReadAllLines($hostOptions)) {
         $key = ($line -split ":", 2)[0]
@@ -38,6 +40,7 @@ if (Test-Path $hostOptions) {
         if ($key -like "soundCategory_*") { "${key}:1.0"; continue }
         $line
     }
+    if (-not ($lines | Where-Object { $_ -like "darkMojangStudiosBackground:*" })) { $lines = @($lines) + "darkMojangStudiosBackground:true" }
     [System.IO.File]::WriteAllLines((Join-Path $stage "options.txt"), [string[]]$lines, (New-Object System.Text.UTF8Encoding $false))
     $staged += "options.txt"
 }
