@@ -32,8 +32,8 @@ if (Test-Path $hostOptions) {
         "soundCategory_music" = "0.5"
         # Чёрный экран загрузки Forge и Minecraft вместо красного (мод включает его и сам, но только со второго запуска).
         "darkMojangStudiosBackground" = "true"
-        # Меню голосового чата на B: V в этой сборке занята ударом прикладом TACZ.
-        "key_key.voice_chat" = "key.keyboard.b"
+        # Меню голосового чата на 0: V занята ударом прикладом TACZ, B рюкзаком ZeroContact, свободен только 0.
+        "key_key.voice_chat" = "key.keyboard.0"
     }
     $lines = foreach ($line in [System.IO.File]::ReadAllLines($hostOptions)) {
         $key = ($line -split ":", 2)[0]
@@ -43,7 +43,7 @@ if (Test-Path $hostOptions) {
         $line
     }
     if (-not ($lines | Where-Object { $_ -like "darkMojangStudiosBackground:*" })) { $lines = @($lines) + "darkMojangStudiosBackground:true" }
-    if (-not ($lines | Where-Object { $_ -like "key_key.voice_chat:*" })) { $lines = @($lines) + "key_key.voice_chat:key.keyboard.b" }
+    if (-not ($lines | Where-Object { $_ -like "key_key.voice_chat:*" })) { $lines = @($lines) + "key_key.voice_chat:key.keyboard.0" }
     [System.IO.File]::WriteAllLines((Join-Path $stage "options.txt"), [string[]]$lines, (New-Object System.Text.UTF8Encoding $false))
     $staged += "options.txt"
 }
