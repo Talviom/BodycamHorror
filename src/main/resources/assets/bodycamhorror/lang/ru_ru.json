@@ -97,6 +97,7 @@
   "bh.match.tape_out": "Команда %s вынесла кассету.",
   "bh.match.tape_lost": "Никто не вынес кассету.",
   "bh.match.not_running": "Матч не идёт",
+  "bh.thirdparty.blood_settings": "Кровь...",
   "bh.state.lobby": "лобби",
   "bh.state.prep": "подготовка",
   "bh.state.live": "раунд идёт",

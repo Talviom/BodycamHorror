@@ -102,6 +102,7 @@
   "bh.match.tape_out": "%s got the tape out.",
   "bh.match.tape_lost": "No one got the tape out.",
   "bh.match.not_running": "No match is running",
+  "bh.thirdparty.blood_settings": "Blood...",
   "bh.state.lobby": "lobby",
   "bh.state.prep": "prep",
   "bh.state.live": "live",

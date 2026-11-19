@@ -181,8 +181,12 @@ public final class TestScript {
             case "menu" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openMenu);
             case "pause" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openPause);
             case "death" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openDeath);
-            case "options", "video", "packs", "worlds", "mods", "lan" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openVanilla(what));
+            case "options", "video", "packs", "worlds", "mods", "lan", "controls" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openVanilla(what));
             default -> {
+                if (what.contains(".")) {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openVanilla(what));
+                    return;
+                }
                 host.closeContainer();
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::closeScreen);
             }
