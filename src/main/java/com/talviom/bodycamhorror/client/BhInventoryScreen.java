@@ -12,9 +12,11 @@ import net.minecraft.world.entity.player.Inventory;
 /**
  * Экран инвентаря в мрачном стиле «найденной плёнки»: слева модель персонажа в тени, справа 2 ряда по 10 слотов.
  * Крафта и брони нет. Предметы можно переставлять, Shift+клик переносит между рядами,
- * Q или перетаскивание за окно выбрасывает. Закрывается той же клавишей (Tab), Esc или E.
+ * Клавиша «выбросить» (в сборке G) или перетаскивание за окно выбрасывает. Закрывается той же клавишей (Tab), Esc или E.
  */
 public class BhInventoryScreen extends AbstractContainerScreen<BhInventoryMenu> {
+    /** Подсказка под сеткой, клавиши берутся из настроек один раз на открытие экрана. */
+    private String hint;
     private static final ResourceLocation TEX = Vhs.rl("textures/gui/inventory.png");
     private static final int W = 252;
     private static final int H = 150;
@@ -100,7 +102,12 @@ public class BhInventoryScreen extends AbstractContainerScreen<BhInventoryMenu> 
             int sx = BhInventoryMenu.GRID_X + c * BhInventoryMenu.PITCH + 9 - Vhs.width(n) / 2;
             Vhs.plain(g, n, sx, BhInventoryMenu.GRID_Y - 10, 0xFF000000 | Vhs.ASH);
         }
-        Vhs.plain(g, "SHIFT+CLICK: MOVE   Q: DROP", BhInventoryMenu.GRID_X,
+        if (hint == null) {
+            // Клавиша «выбросить» из настроек управления: в сборке это G (Q занята наклоном влево).
+            String drop = LobbyNotes.keyLabel("G", "key.drop");
+            hint = "SHIFT+CLICK: MOVE" + (drop == null ? "" : "   " + drop + ": DROP");
+        }
+        Vhs.plain(g, hint, BhInventoryMenu.GRID_X,
                 BhInventoryMenu.GRID_Y + 2 * BhInventoryMenu.PITCH + 8, 0xFF000000 | Vhs.SOOT);
     }
 
