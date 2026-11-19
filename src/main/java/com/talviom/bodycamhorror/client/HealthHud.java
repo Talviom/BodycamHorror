@@ -17,7 +17,7 @@ import net.minecraftforge.fml.common.Mod;
 /**
  * Клиент: здоровье и перевязка вместо ванильных сердечек.
  * <ul>
- *   <li>Полоска здоровья: кусок старой плёнки с перфорацией рядом с сердцем страха, без цифр. Засвеченные
+ *   <li>Полоска здоровья: кусок старой плёнки с перфорацией под сердцем страха, без цифр. Засвеченные
  *       кадры показывают, сколько здоровья осталось; при низком здоровье они темнеют до запёкшейся крови
  *       и неровно мерцают. Потерянный кусок ещё мгновение тлеет тёмно-красным, потом гаснет.</li>
  *   <li>Под прицелом, пока держишь ПКМ с бинтом: «ПЕРЕВЯЗКА» и тонкая полоска хода.</li>
@@ -27,14 +27,21 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = BodycamHorror.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class HealthHud {
     private static final ResourceLocation FILM = Vhs.rl("textures/gui/health_film.png");
-    /** Размер полоски на экране; текстура вдвое крупнее (128x24 на ряд). */
-    public static final int WIDTH = 64;
-    public static final int HEIGHT = 12;
-    /** Засвеченная полоса внутри плёнки, по высоте (в пикселях экрана). */
-    private static final int BAND_TOP = 3;
-    private static final int BAND_H = 6;
+    /** Текстура плёнки: 128x24 на ряд, два ряда. */
+    private static final int TEX_W = 128;
+    private static final int TEX_H = 24;
+    /**
+     * Размер полоски на экране (в пикселях интерфейса). С 0.8.2 крупнее: на 1920x1080 с масштабом
+     * интерфейса 2 прежние 64x12 были слишком мелкими. Пропорции текстуры сохранены.
+     */
+    public static final int WIDTH = 112;
+    public static final int HEIGHT = 21;
+    /** Засвеченная полоса внутри плёнки (строки 7..16 из 24), для запасного варианта без текстуры. */
+    private static final int BAND_TOP = Math.round(HEIGHT * 7f / TEX_H);
+    private static final int BAND_H = Math.round(HEIGHT * 10f / TEX_H);
 
     private static final float LOW = 0.35f;
+    private static final float BANDAGING_TEXT_SCALE = 1.6f;
 
     /** Что сейчас показано (плавно догоняет настоящее здоровье) и тлеющий след потери. */
     private static float shown = -1f;
@@ -72,7 +79,7 @@ public final class HealthHud {
         }
 
         if (Vhs.has(FILM)) {
-            Vhs.blitAlpha(g, FILM, x, y, WIDTH, HEIGHT, 0, 0, 128, 24, 128, 48, 1f);
+            Vhs.blitAlpha(g, FILM, x, y, WIDTH, HEIGHT, 0, 0, TEX_W, TEX_H, TEX_W, TEX_H * 2, 1f);
             int lostW = Math.round(WIDTH * lost);
             int fillW = Math.round(WIDTH * shown);
             if (lostAlpha > 0f && lostW > fillW) {
@@ -91,7 +98,8 @@ public final class HealthHud {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, alpha);
-        g.blit(FILM, x, y, w, HEIGHT, u * 2f, 24f, w * 2, 24, 128, 48);
+        float k = TEX_W / (float) WIDTH;
+        g.blit(FILM, x, y, w, HEIGHT, u * k, TEX_H, Math.round(w * k), TEX_H, TEX_W, TEX_H * 2);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.disableBlend();
     }
@@ -115,15 +123,17 @@ public final class HealthHud {
         int w = e.getWindow().getGuiScaledWidth();
         int h = e.getWindow().getGuiScaledHeight();
         int cx = w / 2;
-        int y = h / 2 + 16;
-        Vhs.ghostCentered(g, Vhs.title(Vhs.tr("bh.hud.bandaging")), cx, y, 0xD0000000 | Vhs.BONE, 1f, 0.15f);
-        int bw = 70;
+        int y = h / 2 + 18;
+        // С 0.8.2 крупнее: надпись в 1,6 раза, полоса хода 120x4 (на 1920x1080 прежние были еле видны).
+        Vhs.ghostCentered(g, Vhs.title(Vhs.tr("bh.hud.bandaging")), cx, y, 0xD8000000 | Vhs.BONE, BANDAGING_TEXT_SCALE, 0.2f);
+        int bw = 120;
+        int bh = 4;
         int bx = cx - bw / 2;
-        int by = y + 12;
-        g.fill(bx - 1, by - 1, bx + bw + 1, by + 3, 0x90000000 | 0x1C1A17);
-        g.fill(bx, by, bx + Math.round(bw * p), by + 2, 0xD0000000 | Vhs.BONE);
+        int by = y + Math.round(9 * BANDAGING_TEXT_SCALE) + 5;
+        g.fill(bx - 1, by - 1, bx + bw + 1, by + bh + 1, 0xA0000000 | 0x1C1A17);
+        g.fill(bx, by, bx + Math.round(bw * p), by + bh, 0xD8000000 | Vhs.BONE);
         // Тусклый двойник полоски, как у надписей: плёнка чуть «плывёт».
-        float gx = (float) Math.sin(System.currentTimeMillis() / 900.0) * 1.2f + 1f;
-        g.fill(bx + Math.round(gx), by + 1, bx + Math.round(gx) + Math.round(bw * p), by + 3, 0x30000000 | Vhs.BONE);
+        float gx = (float) Math.sin(System.currentTimeMillis() / 900.0) * 1.5f + 1.5f;
+        g.fill(bx + Math.round(gx), by + 2, bx + Math.round(gx) + Math.round(bw * p), by + bh + 2, 0x30000000 | Vhs.BONE);
     }
 }

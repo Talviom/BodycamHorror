@@ -37,6 +37,11 @@ minecraft {
                 property 'bh.testScript', project.file(project.property('bhTest')).absolutePath
                 args '--quickPlaySingleplayer', 'New World'
             }
+            // Размер окна как у игрока: gradlew runClient -PbhSize=1920x1080 (масштаб интерфейса берётся из run/options.txt).
+            if (project.hasProperty('bhSize')) {
+                def size = project.property('bhSize').toString().split('x')
+                args '--width', size[0], '--height', size[1]
+            }
             // Второе окно игры для проверки по сети: gradlew runClient -PbhJoin=localhost:25565 [-PbhName=Dev2]
             // Своя папка run2 (настройки, логи, скриншоты), само заходит на сервер хоста и снимает кадры (bots/RemoteShots.java).
             if (project.hasProperty('bhJoin')) {

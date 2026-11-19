@@ -29,14 +29,15 @@ public final class FearHud {
         int x = 10;
         int bottom = 10 + 36;
 
+        // Под сердцем и батарейкой полоска здоровья на плёнке (HealthHud), под ней реплики.
+        int healthY = bottom + 5;
+        HealthHud.drawHealth(g, x, healthY);
         if (ClientState.inMatch) {
             int size = drawHeart(g, x, bottom);
-            drawComment(g, x, bottom + 6 + 9);
+            drawComment(g, x, healthY + HealthHud.HEIGHT + 6 + 9);
             x += size + 6;
         }
-        // Справа от сердца: батарейка, под ней полоска здоровья на плёнке (HealthHud).
-        if (ClientState.hasFlashlight) drawBattery(g, x, bottom - HealthHud.HEIGHT - 3 - BATTERY_SIZE);
-        HealthHud.drawHealth(g, x, bottom - HealthHud.HEIGHT);
+        if (ClientState.hasFlashlight) drawBattery(g, x, bottom - BATTERY_SIZE);
     }
 
     /** @return сколько места заняло сердце по ширине */
