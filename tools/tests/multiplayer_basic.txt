@@ -37,7 +37,7 @@ expect B2(bot) team=bravo alive=true mode=adventure
 
 # --- раунд идёт ---
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 wait 20
 bh debug
 expect state=LIVE

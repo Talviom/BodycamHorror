@@ -42,7 +42,7 @@ bh start
 expect Match started
 wait 100
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 wait 60
 bh debug
 expect state=LIVE
@@ -69,7 +69,7 @@ expect score=0:1
 bh skip
 wait 40
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 wait 40
 kill Dev2
 wait 100

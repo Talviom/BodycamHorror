@@ -159,6 +159,7 @@ public final class MatchManager {
         MapData map = MapData.get(level);
 
         LootSpawner.clearGroundItems(level);
+        RoundCleanup.run(level);
         if (map.pairedLoot()) LootSpawner.spawnPaired(level, map.lootPoints());
         else LootSpawner.spawn(level, map.lootPoints());
 

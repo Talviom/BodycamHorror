@@ -19,7 +19,7 @@ execute positioned 1035 120 1035 run bh bot add bravo B1
 execute positioned 1036 120 1035 run bh bot add bravo B2
 bh start
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
 tp B2 1015.5 120 1035.5
 give B2 bodycamhorror:flashlight

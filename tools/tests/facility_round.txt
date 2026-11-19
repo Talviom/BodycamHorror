@@ -65,7 +65,7 @@ bh start
 expect Match started
 wait 20
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 wait 300
 execute unless entity @e[type=bodycamhorror:tenant]
 expect Test passed

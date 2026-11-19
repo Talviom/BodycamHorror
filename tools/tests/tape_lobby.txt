@@ -53,7 +53,7 @@ bh status
 expect Tape points: 4
 reject Lobby: none
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 wait 40
 
 # --- скины команд на арене ---
@@ -132,7 +132,7 @@ wait 20
 bh debug
 expect state=PREP round=2
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 wait 20
 give B1 bodycamhorror:tape
 wait 20

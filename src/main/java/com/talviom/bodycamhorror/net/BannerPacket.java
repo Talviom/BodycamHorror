@@ -48,7 +48,11 @@ public class BannerPacket {
     }
 
     public static void handle(BannerPacket m, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> Banners.show(m)));
+        ctx.get().enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+            // Новый раунд: следы прошлого (кровь, дырки от пуль, тела) у игрока стираются.
+            if (m.kind == Kind.ROUND_START) com.talviom.bodycamhorror.client.RoundCleanupClient.run();
+            Banners.show(m);
+        }));
         ctx.get().setPacketHandled(true);
     }
 }

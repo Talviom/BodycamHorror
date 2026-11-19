@@ -22,7 +22,7 @@ execute positioned 1036 120 1035 run bh bot add bravo B2
 bh start
 expect Match started
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
 wait 10
 bh debug
@@ -73,16 +73,16 @@ expect state=ROUND_END
 
 # --- 4. Следующий раунд: душит B1, раунд кончается по времени посреди удушья ---
 bh skip
-expect ROUND_END -> PREP
+expect round end -> prep
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
 wait 5
 execute at B1 positioned ~-1 ~ ~-4 run bh tenant spawn frozen
 bh tenant attack B1 strangle
 wait 60
 bh skip
-expect LIVE -> ROUND_END
+expect live -> round end
 wait 3
 bh tenant info
 expect last=round-end

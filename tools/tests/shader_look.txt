@@ -12,7 +12,7 @@ fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
 bh team alpha Dev
 bh start test
 bh skip
-expect PREP -> LIVE
+expect prep -> live
 give @p bodycamhorror:flashlight
 hud off
 tp @p 1003.5 120 1003.5 -45 8
