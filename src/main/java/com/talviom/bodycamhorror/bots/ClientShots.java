@@ -43,6 +43,19 @@ final class ClientShots {
         mc.execute(() -> mc.options.hideGui = !visible);
     }
 
+    /** Зажать или отпустить ПКМ (только окно сценария): игра сама начинает использовать предмет в руке. */
+    static void holdUse(boolean hold) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> mc.options.keyUse.setDown(hold));
+    }
+
+    /** Вид от первого лица или со спины (как F5). */
+    static void view(boolean third) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> mc.options.setCameraType(third ? net.minecraft.client.CameraType.THIRD_PERSON_FRONT
+                : net.minecraft.client.CameraType.FIRST_PERSON));
+    }
+
     /** Открыть чат (как T). */
     static void openChat() {
         Minecraft mc = Minecraft.getInstance();

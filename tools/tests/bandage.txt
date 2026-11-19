@@ -1,0 +1,82 @@
+# 0.9, пункт 4: бинт. Полоска здоровья на плёнке, «ПЕРЕВЯЗКА» с полоской хода, 3D-рулон и обматывание,
+# бинт снимает страх (-20), отпущенная кнопка отменяет перевязку и бинт не тратится.
+# Запуск: gradlew runClient -PbhTest=tools/tests/bandage.txt
+# Результат: [bh-test] DONE failures=0, скриншоты run/screenshots/090_bandage_*.png
+
+bh stop
+bh bot remove all
+wait 20
+publish false adventure 25566
+expect 25566
+gamemode adventure @p
+time set 6000
+weather clear
+effect clear @p
+clear @p
+item replace entity @p hotbar.0 with bodycamhorror:bandage 3
+item replace entity @p hotbar.1 with bodycamhorror:flashlight
+wait 20
+shot 090_bandage_hp_full
+
+# --- урон: плёнка теряет кадры, потерянный кусок тлеет кровью ---
+damage @p 12 minecraft:generic
+wait 6
+shot 090_bandage_hp_hit
+wait 40
+shot 090_bandage_hp_low
+execute as @p run bh horror fear 80
+expect Fear set to 80
+
+# --- перевязка целиком: 40 тиков ---
+use on
+wait 8
+shot 090_bandage_wrap_start
+wait 12
+shot 090_bandage_wrap_mid
+wait 14
+shot 090_bandage_wrap_tug
+wait 16
+use off
+wait 4
+execute as @p run bh horror fear
+expect Fear: 6
+clear @p bodycamhorror:bandage 0
+expect 2
+wait 30
+shot 090_bandage_healed
+
+# --- отмена: отпустил раньше, бинт цел, страх тот же ---
+execute as @p run bh horror fear 50
+use on
+wait 15
+use off
+wait 6
+clear @p bodycamhorror:bandage 0
+expect 2
+execute as @p run bh horror fear
+expect Fear: 50
+
+# --- критическое здоровье: кадры темнеют до крови и мерцают ---
+damage @p 15 minecraft:generic
+wait 30
+shot 090_bandage_hp_critical
+
+# --- вид со спины: обе руки перед грудью, рулон ходит кругами ---
+view third
+use on
+wait 16
+shot 090_bandage_third
+wait 30
+use off
+view first
+
+# --- по-русски: ПЕРЕВЯЗКА ---
+lang ru_ru
+wait 40
+damage @p 6 minecraft:generic
+use on
+wait 20
+shot 090_bandage_wrap_ru
+use off
+lang en_us
+wait 40

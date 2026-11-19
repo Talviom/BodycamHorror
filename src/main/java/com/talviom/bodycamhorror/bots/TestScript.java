@@ -33,6 +33,8 @@ import java.util.List;
  *   reject текст       в ответе на прошлую команду этого текста быть не должно
  *   shot имя           скриншот клиента в run/screenshots/имя.png (с шейдерами, как по F2)
  *   hud on|off         показать или спрятать интерфейс (как F1)
+ *   use on|off         зажать или отпустить ПКМ в окне сценария (перевязка бинтом и т. п.)
+ *   view first|third  вид от первого лица или со спины (как F5)
  *   screen chat|inventory|menu|pause|close   чат (как T), инвентарь мода (как Tab), главное меню мода, меню паузы (как Esc) или закрыть экран
  *   waitplayers 2 2400 ждать, пока на сервере будет 2 игрока (не дольше 2400 тиков, иначе FAIL);
  *                      так сценарий по сети ждёт второе окно игры (gradlew runClient -PbhJoin=localhost:25565)
@@ -148,6 +150,12 @@ public final class TestScript {
             } else if (line.startsWith("hud ")) {
                 boolean visible = line.substring(4).trim().equals("on");
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.hud(visible));
+            } else if (line.startsWith("use ")) {
+                boolean hold = line.substring(4).trim().equals("on");
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.holdUse(hold));
+            } else if (line.startsWith("view ")) {
+                boolean third = line.substring(5).trim().equals("third");
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.view(third));
             } else if (line.startsWith("press ")) {
                 String label = line.substring(6).trim();
                 BodycamHorror.LOGGER.info(PREFIX + "> " + line);
