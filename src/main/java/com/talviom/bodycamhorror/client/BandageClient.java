@@ -14,7 +14,7 @@ import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 
 /**
  * Клиент: как выглядит перевязка. В первом лице рулон поднимается к центру кадра и ходит кругами,
- * будто мотаешь бинт на другую руку, а сам рулон крутится, разматываясь; в конце рывок, затягиваешь узел.
+ * будто мотаешь бинт на другую руку, а кисть проворачивается, подавая бинт; в конце рывок, затягиваешь узел.
  * В третьем лице обе руки перед грудью, рука с рулоном описывает те же круги.
  * Один оборот занимает {@link #TURN_TICKS} тиков, в такт шороху ткани из BandageItem.
  */
@@ -67,10 +67,9 @@ public final class BandageClient {
         pose.translate(side * 0.05f * tug, -0.03f * tug, 0.04f * tug);
         pose.mulPose(Axis.YP.rotationDegrees(side * 18f * raise));
         pose.mulPose(Axis.ZP.rotationDegrees(side * (-12f * raise + 10f * tug)));
-        // Рулон крутится вокруг своей оси, разматываясь.
-        pose.translate(0f, 0.1f, 0f);
-        pose.mulPose(Axis.XP.rotationDegrees(-angle * Mth.RAD_TO_DEG * 0.5f * circle));
-        pose.translate(0f, -0.1f, 0f);
+        // Рулон покачивается в такт оборотам: кисть проворачивается, подавая бинт.
+        pose.mulPose(Axis.ZP.rotationDegrees(Mth.sin(angle) * 14f * circle));
+        pose.mulPose(Axis.XP.rotationDegrees(Mth.cos(angle) * 8f * circle));
     }
 
     /** Третье лицо: обе руки перед грудью, рука с рулоном ходит кругами. */

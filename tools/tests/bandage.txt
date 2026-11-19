@@ -6,20 +6,29 @@
 bh stop
 bh bot remove all
 wait 20
-publish false adventure 25566
-expect 25566
+publish false adventure 25571
+expect 25571
 gamemode adventure @p
+# Вне лобби: в лобби урон по игрокам выключен (LobbyEvents).
+fill 1990 99 1990 2010 99 2010 minecraft:stone
+fill 1990 100 2006 2010 103 2006 minecraft:stone_bricks
+tp @p 2000 100 2000 0 10
 time set 6000
+# Без самолечения, иначе за время проверки здоровье само доходит до полного.
+gamerule naturalRegeneration false
 weather clear
 effect clear @p
 clear @p
-item replace entity @p hotbar.0 with bodycamhorror:bandage 3
-item replace entity @p hotbar.1 with bodycamhorror:flashlight
+item replace entity @p hotbar.8 with bodycamhorror:flashlight
+item replace entity @p weapon.mainhand with bodycamhorror:bandage 3
 wait 20
 shot 090_bandage_hp_full
 
 # --- урон: плёнка теряет кадры, потерянный кусок тлеет кровью ---
-damage @p 12 minecraft:generic
+# Вне матча команда damage в тестовом мире не ранит (Target is invulnerable, даже out_of_world),
+# поэтому «рана» здесь это большее максимальное здоровье: 20 из 50 = 40 %.
+attribute @p minecraft:generic.max_health base set 50
+data get entity @p Health
 wait 6
 shot 090_bandage_hp_hit
 wait 40
@@ -57,7 +66,7 @@ execute as @p run bh horror fear
 expect Fear: 50
 
 # --- критическое здоровье: кадры темнеют до крови и мерцают ---
-damage @p 15 minecraft:generic
+attribute @p minecraft:generic.max_health base set 120
 wait 30
 shot 090_bandage_hp_critical
 
@@ -66,17 +75,26 @@ view third
 use on
 wait 16
 shot 090_bandage_third
-wait 30
 use off
 view first
 
 # --- по-русски: ПЕРЕВЯЗКА ---
 lang ru_ru
-wait 40
-damage @p 6 minecraft:generic
+# Перезагрузка ресурсов после смены языка занимает несколько секунд.
+wait 200
+attribute @p minecraft:generic.max_health base set 20
+wait 10
+attribute @p minecraft:generic.max_health base set 60
+wait 10
+data get entity @p Health
+clear @p bodycamhorror:bandage 0
+item replace entity @p weapon.mainhand with bodycamhorror:bandage 2
+wait 10
 use on
 wait 20
 shot 090_bandage_wrap_ru
 use off
 lang en_us
-wait 40
+wait 200
+attribute @p minecraft:generic.max_health base set 20
+gamerule naturalRegeneration true
