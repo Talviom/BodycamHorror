@@ -27,6 +27,7 @@ import java.util.Locale;
  * /bh bot add alpha|bravo [имя] — поставить бота туда, где вы стоите, и записать в команду
  * /bh bot remove <имя>|all       — убрать бота (как выход игрока с сервера)
  * /bh bot light <имя>            — бот щёлкает фонариком
+ * /bh bot sprint <имя> on|off    — бот бежит (флаг бега), чтобы проверить, что Жилец слышит бег
  * /bh debug                      — состояние каждого игрока: команда, жив ли, страх, фонарик, рация
  *
  * Остальное делается обычными командами: /tp, /kill, /damage,
@@ -37,6 +38,18 @@ public final class BotCommand {
             (c, b) -> SharedSuggestionProvider.suggest(BotPlayers.names(), b);
 
     private BotCommand() {}
+
+    private static int sprint(CommandContext<CommandSourceStack> c, boolean on) {
+        String name = StringArgumentType.getString(c, "name");
+        ServerPlayer bot = BotPlayers.get(name);
+        if (bot == null) {
+            c.getSource().sendFailure(Component.literal("No bot named " + name));
+            return 0;
+        }
+        bot.setSprinting(on);
+        c.getSource().sendSuccess(() -> Component.literal(name + " sprinting: " + (on ? "on" : "off")), false);
+        return 1;
+    }
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("add");
@@ -79,7 +92,13 @@ public final class BotCommand {
                                     c.getSource().sendSuccess(() -> Component.literal(name + " flashlight: "
                                             + (Flashlight.isOn(bot) ? "on" : "off")), false);
                                     return 1;
-                                }))))
+                                })))
+                        // Бег для проверки слуха Жильца: настоящий клиент из сценария не разогнать, а бот
+                        // просто держит флаг бега (сервер слышит бег по isSprinting, без движения тоже).
+                        .then(Commands.literal("sprint")
+                                .then(Commands.argument("name", StringArgumentType.word()).suggests(BOT_NAMES)
+                                        .then(Commands.literal("on").executes(c -> sprint(c, true)))
+                                        .then(Commands.literal("off").executes(c -> sprint(c, false))))))
                 .then(Commands.literal("debug").executes(BotCommand::debug)
                         .then(Commands.literal("forgetlights").executes(c -> {
                             Flashlight.debugForget();

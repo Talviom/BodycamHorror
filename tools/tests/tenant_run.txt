@@ -1,0 +1,30 @@
+# Жилец слышит бег: бот стоит в темноте тихо, и Жилец его не трогает; бот бежит, и Жилец идёт на него.
+# В настоящей игре бег не проверить: нажатия из Windows почти не двигают игрока (проверка 0.7.2).
+# Запуск: gradlew runClient -PbhTest=tools/tests/tenant_run.txt
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 1000 120 1000 run bh arena build
+expect Arena built
+time set midnight
+# Вся арена тёмная.
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+
+# Жилец в центре комнаты, бот в соседней комнате в 9 блоках, напротив проёма (z 1025), без фонарика.
+execute positioned 1025 120 1025 run bh tenant spawn
+execute positioned 1034 120 1025 run bh bot add bravo B1
+wait 200
+bh tenant info
+reject target=B1
+
+# Бот бежит: шум бега слышно на 12 блоков.
+bh bot sprint B1 on
+expect B1 sprinting: on
+wait 200
+bh tenant info
+expect target=B1
+
+bh bot sprint B1 off
+bh tenant remove
+bh bot remove all
