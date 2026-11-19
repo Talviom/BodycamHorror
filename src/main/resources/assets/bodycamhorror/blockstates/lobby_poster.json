@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "bodycamhorror:block/lobby_poster"
+    },
+    "facing=south": {
+      "model": "bodycamhorror:block/lobby_poster"
+    },
+    "facing=east": {
+      "model": "bodycamhorror:block/lobby_poster"
+    },
+    "facing=west": {
+      "model": "bodycamhorror:block/lobby_poster"
+    }
+  }
+}

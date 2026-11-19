@@ -146,6 +146,7 @@ public final class MatchManager {
         alive.clear();
         frozenAt.clear();
         TapeObjective.INSTANCE.onMatchEnd(server);
+        TenantSpawner.onRoundEnd(server);
         releaseAll(server);
         broadcastBanner(server, BannerPacket.Kind.STOPPED, 60);
         LobbyManager.INSTANCE.scheduleReturn(60);
@@ -158,7 +159,8 @@ public final class MatchManager {
         MapData map = MapData.get(level);
 
         LootSpawner.clearGroundItems(level);
-        LootSpawner.spawn(level, map.lootPoints());
+        if (map.pairedLoot()) LootSpawner.spawnPaired(level, map.lootPoints());
+        else LootSpawner.spawn(level, map.lootPoints());
 
         // Смена сторон: каждые N раундов команды меняются точками спавна.
         int swapAfter = BhConfig.SWAP_SIDES_AFTER_ROUNDS.get();
@@ -196,6 +198,7 @@ public final class MatchManager {
 
     private void goLive(MinecraftServer server) {
         state = MatchState.LIVE;
+        TenantSpawner.onGoLive(server);
         frozenAt.clear();
         ticksLeft = BhConfig.ROUND_SECONDS.get() * 20;
         broadcastBanner(server, BannerPacket.Kind.GO, 30);
@@ -211,6 +214,7 @@ public final class MatchManager {
 
     /** @param reason строка в чат всем игрокам, чем кончился раунд (null = без пояснения) */
     private void endRound(MinecraftServer server, BhTeam winner, String reason) {
+        TenantSpawner.onRoundEnd(server);
         // Для отчёта о матче: чем кончился раунд (до того, как ticksLeft перезапишется).
         String how = reason != null ? reason : ticksLeft <= 0 ? "Time ran out."
                 : winner == null ? "Both teams fell." : winner.other().displayName + " was wiped out.";
@@ -246,6 +250,7 @@ public final class MatchManager {
             MatchReport.matchEnd(server, winner.displayName + " won " + score(BhTeam.ALPHA) + ":" + score(BhTeam.BRAVO));
             state = MatchState.LOBBY;
             TapeObjective.INSTANCE.onMatchEnd(server);
+        TenantSpawner.onRoundEnd(server);
             releaseAll(server);
             // Итоги матча видны несколько секунд, потом все возвращаются в лобби.
             LobbyManager.INSTANCE.scheduleReturn(BhConfig.LOBBY_RETURN_SECONDS.get() * 20);
@@ -265,6 +270,7 @@ public final class MatchManager {
                 if (ticksLeft <= 0) goLive(server);
             }
             case LIVE -> {
+                TenantSpawner.tick(server);
                 BhTeam out = TapeObjective.INSTANCE.tick(server);
                 if (out != null) endRound(server, out, out.displayName + " got the tape out.");
                 else if (ticksLeft <= 0) endRound(server, timeoutWinner(), TapeObjective.INSTANCE.active() ? "No one got the tape out." : null);
@@ -443,7 +449,8 @@ public final class MatchManager {
         p.setRemainingFireTicks(0);
         p.fallDistance = 0;
         Flashlight.resetPlayer(p);
-        for (String spec : BhConfig.START_KIT.get()) {
+        BhTeam team = teams.get(p.getUUID());
+        for (String spec : (team == BhTeam.BRAVO ? BhConfig.START_KIT_BRAVO : BhConfig.START_KIT).get()) {
             ItemStack stack = ItemSpec.parse(spec);
             if (!stack.isEmpty()) p.getInventory().add(stack);
         }

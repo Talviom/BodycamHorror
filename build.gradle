@@ -48,10 +48,10 @@ minecraft {
             }
             // Клиент с шейдерами: gradlew runClient -PbhShaders (вместе с -PbhTest сам снимает скриншоты).
             // Embeddium и Oculus берутся из папки модов игры, см. dependencies.
-            if (project.hasProperty('bhShaders')) {
-                property 'mixin.env.remapRefMap', 'true'
-                property 'mixin.env.refMapRemappingFile', "${project.buildDir}/createSrgToMcp/output.srg"
-            }
+            // Чужие моды из jar (GeckoLib, а с -PbhShaders ещё Embeddium и Oculus) ждут имена SRG в своих миксинах:
+            // без пересчёта refmap dev-клиент падает при запуске (GeckoLib TextureManagerMixin).
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${project.buildDir}/createSrgToMcp/output.srg"
         }
         server {
             args '--nogui'

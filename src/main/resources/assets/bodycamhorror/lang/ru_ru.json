@@ -6,5 +6,8 @@
   "key.bodycamhorror.flashlight": "Фонарик",
   "key.categories.bodycamhorror": "Bodycam Horror",
   "key.bodycamhorror.inventory": "Инвентарь",
-  "container.bodycamhorror.inventory": "Inventory"
+  "container.bodycamhorror.inventory": "Inventory",
+  "item.bodycamhorror.bandage": "Бинт",
+  "item.bodycamhorror.battery": "Батарейка для фонарика",
+  "block.bodycamhorror.lobby_poster": "Плакат «Полевое руководство»"
 }

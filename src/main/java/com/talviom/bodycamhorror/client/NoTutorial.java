@@ -33,6 +33,18 @@ public final class NoTutorial {
     }
 
     /**
+     * Экран обвесов TACZ (клавиша Z: осмотр, прицелы, глушители) в игре не нужен: оружие выдаётся готовым,
+     * модифицировать его нельзя. Открыть его можно только в творческом режиме (для постройки карт).
+     */
+    @SubscribeEvent
+    public static void onNoGunRefitScreen(net.minecraftforge.client.event.ScreenEvent.Opening e) {
+        if (e.getNewScreen() == null || !e.getNewScreen().getClass().getName().equals("com.tacz.guns.client.gui.GunRefitScreen")) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null && mc.player.isCreative()) return;
+        e.setCanceled(true);
+    }
+
+    /**
      * Bleeding Mod при входе в мир пишет в чат «доступна новая версия» со ссылкой, и выключить это в его настройках нельзя,
      * а Yuushya пишет объявление про бесплатность своих модов. Такие строки до игрока не доходят.
      */

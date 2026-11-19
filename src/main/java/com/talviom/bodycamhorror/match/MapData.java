@@ -41,6 +41,18 @@ public class MapData extends SavedData {
         return spawns.get(team);
     }
 
+    /** Точки лута идут зеркальными парами (0-1, 2-3, ...): в обе точки пары кладётся одно и то же. */
+    private boolean pairedLoot;
+
+    public boolean pairedLoot() {
+        return pairedLoot;
+    }
+
+    public void setPairedLoot(boolean paired) {
+        pairedLoot = paired;
+        setDirty();
+    }
+
     public List<BlockPos> lootPoints() {
         return lootPoints;
     }
@@ -93,6 +105,7 @@ public class MapData extends SavedData {
             if (tag.contains("pad_" + t.id)) d.lobbyPads.put(t, NbtUtils.readBlockPos(tag.getCompound("pad_" + t.id)));
         }
         if (tag.contains("lobby")) d.lobby = NbtUtils.readBlockPos(tag.getCompound("lobby"));
+        d.pairedLoot = tag.getBoolean("paired_loot");
         return d;
     }
 
@@ -108,6 +121,7 @@ public class MapData extends SavedData {
             if (pad != null) tag.put("pad_" + t.id, NbtUtils.writeBlockPos(pad));
         }
         if (lobby != null) tag.put("lobby", NbtUtils.writeBlockPos(lobby));
+        tag.putBoolean("paired_loot", pairedLoot);
         return tag;
     }
 

@@ -11,5 +11,8 @@
   "item.bodycamhorror.tape": "VHS Tape",
   "entity.bodycamhorror.tenant": "The Tenant",
   "death.attack.bodycamhorror.tenant": "%1$s was taken by The Tenant",
-  "death.attack.bodycamhorror.tenant.player": "%1$s was taken by The Tenant"
+  "death.attack.bodycamhorror.tenant.player": "%1$s was taken by The Tenant",
+  "item.bodycamhorror.bandage": "Bandage",
+  "item.bodycamhorror.battery": "Flashlight Battery",
+  "block.bodycamhorror.lobby_poster": "Field Manual Poster"
 }

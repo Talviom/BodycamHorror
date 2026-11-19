@@ -54,6 +54,7 @@ public final class ModBlocks {
         BLOCKS.register(modBus);
         ITEMS.register(modBus);
         ModSounds.SOUNDS.register(modBus);
+        com.talviom.bodycamhorror.gear.ModGear.register(modBus);
         modBus.addListener(ModBlocks::addToTabs);
     }
 

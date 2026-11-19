@@ -33,6 +33,45 @@ public final class LootSpawner {
         toRemove.forEach(Entity::discard);
     }
 
+    /**
+     * Зеркальный лут: точки идут парами (0-1, 2-3, ...), одна в половине Alpha, другая в половине Bravo.
+     * Обе точки пары получают одно и то же, а каждое оружие выпадает не больше одного раза на сторону за раунд.
+     */
+    public static int spawnPaired(ServerLevel level, List<BlockPos> points) {
+        List<Entry> table = parseTable();
+        if (table.isEmpty()) return 0;
+        RandomSource rnd = level.getRandom();
+        double chance = BhConfig.LOOT_CHANCE.get();
+        int spawned = 0;
+        for (int i = 0; i + 1 < points.size(); i += 2) {
+            if (table.isEmpty()) break;
+            if (rnd.nextDouble() > chance) continue;
+            int total = table.stream().mapToInt(Entry::weight).sum();
+            Entry entry = pick(table, total, rnd);
+            if (entry.item() == GUN) table.remove(entry);
+            drop(level, points.get(i), entry);
+            drop(level, points.get(i + 1), entry);
+            spawned += 2;
+        }
+        return spawned;
+    }
+
+    private static final Item GUN = ForgeRegistries.ITEMS.getValue(new ResourceLocation("tacz", "modern_kinetic_gun"));
+
+    private static void drop(ServerLevel level, BlockPos p, Entry entry) {
+        ItemStack stack = new ItemStack(entry.item(), entry.count());
+        if (entry.nbt() != null) {
+            try {
+                stack.setTag(TagParser.parseTag(entry.nbt()));
+            } catch (CommandSyntaxException ex) {
+                BodycamHorror.LOGGER.warn("Bad loot nbt {}: {}", entry.nbt(), ex.getMessage());
+            }
+        }
+        ItemEntity item = new ItemEntity(level, p.getX() + 0.5, p.getY() + 0.2, p.getZ() + 0.5, stack, 0, 0, 0);
+        item.setDefaultPickUpDelay();
+        level.addFreshEntity(item);
+    }
+
     public static int spawn(ServerLevel level, List<BlockPos> points) {
         List<Entry> table = parseTable();
         if (table.isEmpty()) return 0;

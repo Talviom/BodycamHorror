@@ -35,7 +35,7 @@ public final class LobbyNotes {
             new Row(null, "GEAR", "key.bodycamhorror.inventory"),
             new Row("F", "BREAKER / GENERATOR", "tacz", "interact"),
             new Row("R", "RELOAD", "tacz", "reload"),
-            new Row("V", "VOICE SETUP", "key.voice_chat"),
+            new Row(null, "VOICE SETUP", "key.voice_chat"),
     };
     private static final String[] GOAL = {"FIND THE TAPE.", "BRING IT TO YOUR EXIT."};
 

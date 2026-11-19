@@ -9,7 +9,7 @@
 # на паузу, и сценарий, который идёт по тикам сервера, остановился бы. Открытый для сети мир на паузу не встаёт.
 # 0.6.6 (руками): заголовок окна BODYCAM HORROR и значок-объектив на панели задач (в логе [BH window] icon set);
 #   щелчок кнопок свой (короткий щелчок камеры); при следующем запуске загрузка Forge на чёрном фоне, а не на красном.
-# Результат: [bh-test] DONE failures=0, скриншоты run/screenshots/064_*.png, 065_*.png, 066_death.png, 067_field_notes.png.
+# Результат: [bh-test] DONE failures=0, скриншоты run/screenshots/064_*.png, 065_*.png, 066_death.png, 0700_no_field_notes.png.
 
 bh stop
 bh bot remove all
@@ -17,10 +17,9 @@ wait 20
 publish false adventure 25566
 expect 25566
 
-# --- 0.6.7: записка с управлением справа, пока матч не идёт ---
-# В логе: [BH lobby] field notes shown: O FLASHLIGHT, TAB GEAR, F BREAKER / GENERATOR, R RELOAD, V VOICE SETUP
+# --- 0.7.0: записки с управлением на экране больше нет (правила на плакате в лобби) ---
 wait 40
-shot 067_field_notes
+shot 0700_no_field_notes
 
 # --- меню паузы и его пункты ---
 screen pause

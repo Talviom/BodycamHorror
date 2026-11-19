@@ -136,6 +136,8 @@ expect PREP -> LIVE
 wait 20
 give B1 bodycamhorror:tape
 wait 20
+# B2 уводим, чтобы выпавшую кассету не подобрал стоящий рядом союзник.
+tp B2 1025.5 120 1035.5
 execute at B1 run summon marker ~ ~ ~ {Tags:["bh_b1_death"]}
 kill B1
 wait 20
