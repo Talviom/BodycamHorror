@@ -10,6 +10,9 @@ publish false adventure 25571
 expect 25571
 gamemode adventure @p
 # Вне лобби: в лобби урон по игрокам выключен (LobbyEvents).
+# Сначала телепорт и пауза: иначе fill пишет «That position is not loaded» и игрок падает в пустоту.
+tp @p 2000 100 2000 0 10
+wait 20
 fill 1990 99 1990 2010 99 2010 minecraft:stone
 fill 1990 100 2006 2010 103 2006 minecraft:stone_bricks
 tp @p 2000 100 2000 0 10
