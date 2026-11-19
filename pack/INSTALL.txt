@@ -1,6 +1,12 @@
 BodycamHorror: как установить сборку
 
 1. Установите Minecraft 1.20.1 с Forge 47.4.10 в своём лаунчере (например, TLauncher: версия "Forge 1.20.1").
+   Если такой версии в лаунчере нет: сначала один раз запустите обычную 1.20.1, потом скачайте установщик Forge
+   https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.1-47.4.10/forge-1.20.1-47.4.10-installer.jar
+   (официальная страница: https://files.minecraftforge.net/net/minecraftforge/forge/index_1.20.1.html, кнопка Show all versions),
+   запустите его, выберите Install client и папку игры своего лаунчера (обычно %appdata%\.minecraft).
+   Если установщик не открывается двойным щелчком, нужна Java 17: https://adoptium.net/temurin/releases/?version=17
+   После этого в лаунчере появится версия 1.20.1-forge-47.4.10.
    Один раз запустите игру и закройте, чтобы появилась папка игры.
 2. Лучше сделать для сборки отдельную папку игры, чтобы не смешивать её с другими модами.
 3. Распакуйте этот архив в папку игры с заменой файлов. Должны появиться папки mods, config, tacz, shaderpacks.
