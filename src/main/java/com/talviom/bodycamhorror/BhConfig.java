@@ -109,8 +109,9 @@ public final class BhConfig {
                 .define("forceSkins", true);
         CUSTOM_MENU = c.comment("Replace the vanilla title screen, pause menu and loading screens with the bodycam ones")
                 .define("customMenu", true);
-        LOBBY_NOTES = c.comment("Show the field notes with the controls while no match is running")
-                .define("lobbyNotes", true);
+        LOBBY_NOTES = c.comment("Show the field notes card with the controls on screen while no match is running.",
+                        "Off by default: the rules and controls are on the poster on the lobby wall (0.7.0).")
+                .define("lobbyNotesHud", false);
         c.pop();
         CLIENT_SPEC = c.build();
     }

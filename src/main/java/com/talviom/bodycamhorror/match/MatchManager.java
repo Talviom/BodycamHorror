@@ -146,6 +146,7 @@ public final class MatchManager {
         alive.clear();
         frozenAt.clear();
         TapeObjective.INSTANCE.onMatchEnd(server);
+        TenantSpawner.onRoundEnd(server);
         releaseAll(server);
         broadcastBanner(server, BannerPacket.Kind.STOPPED, 60);
         LobbyManager.INSTANCE.scheduleReturn(60);
@@ -197,6 +198,7 @@ public final class MatchManager {
 
     private void goLive(MinecraftServer server) {
         state = MatchState.LIVE;
+        TenantSpawner.onGoLive(server);
         frozenAt.clear();
         ticksLeft = BhConfig.ROUND_SECONDS.get() * 20;
         broadcastBanner(server, BannerPacket.Kind.GO, 30);
@@ -212,6 +214,7 @@ public final class MatchManager {
 
     /** @param reason строка в чат всем игрокам, чем кончился раунд (null = без пояснения) */
     private void endRound(MinecraftServer server, BhTeam winner, String reason) {
+        TenantSpawner.onRoundEnd(server);
         // Для отчёта о матче: чем кончился раунд (до того, как ticksLeft перезапишется).
         String how = reason != null ? reason : ticksLeft <= 0 ? "Time ran out."
                 : winner == null ? "Both teams fell." : winner.other().displayName + " was wiped out.";
@@ -247,6 +250,7 @@ public final class MatchManager {
             MatchReport.matchEnd(server, winner.displayName + " won " + score(BhTeam.ALPHA) + ":" + score(BhTeam.BRAVO));
             state = MatchState.LOBBY;
             TapeObjective.INSTANCE.onMatchEnd(server);
+        TenantSpawner.onRoundEnd(server);
             releaseAll(server);
             // Итоги матча видны несколько секунд, потом все возвращаются в лобби.
             LobbyManager.INSTANCE.scheduleReturn(BhConfig.LOBBY_RETURN_SECONDS.get() * 20);
@@ -266,6 +270,7 @@ public final class MatchManager {
                 if (ticksLeft <= 0) goLive(server);
             }
             case LIVE -> {
+                TenantSpawner.tick(server);
                 BhTeam out = TapeObjective.INSTANCE.tick(server);
                 if (out != null) endRound(server, out, out.displayName + " got the tape out.");
                 else if (ticksLeft <= 0) endRound(server, timeoutWinner(), TapeObjective.INSTANCE.active() ? "No one got the tape out." : null);

@@ -1,0 +1,85 @@
+# 0.7.0: карта «Комплекс», плакат в лобби, Жилец в матче (просыпается через 30 с), зеркальный лут.
+# Запуск: gradlew runClient -PbhTest=tools/tests/facility_round.txt
+# «bh arena build facility» в 2000 120 2000 ставит угол здания в 2002 120 2002:
+#   подвал y 115..118, первый этаж y 120..124, галерея y 126..129; лобби западнее, плакат на его западной стене.
+# Кадры: run/screenshots/0700_*.png. Результат: [bh-test] DONE failures=0.
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 2000 120 2000 run bh arena build facility
+expect Facility built
+expect mirrored pairs
+expect Lobby built
+time set midnight
+gamemode adventure Dev
+wait 40
+
+# --- плакат в лобби вблизи ---
+tp Dev 1987.5 120 2007.0 90 0
+wait 40
+hud off
+wait 3
+shot 0700_poster
+wait 3
+hud on
+
+# --- карта: каждый уровень, лестницы, спуск, центральный зал ---
+tp Dev 2006.5 120 2018.5 -90 5
+wait 30
+hud off
+wait 3
+shot 0700_ground_spawn
+tp Dev 2020.5 120 2018.5 -90 -25
+wait 30
+shot 0700_hall_ground
+tp Dev 2026.5 126 2010.5 0 35
+wait 30
+shot 0700_hall_from_gallery
+tp Dev 2018.5 126 2018.5 -90 40
+wait 30
+shot 0700_drop_into_hall
+tp Dev 2011.0 120 2005.5 -90 -12
+wait 30
+shot 0700_stairs_up
+tp Dev 2030.6 120 2005.5 -90 35
+wait 30
+shot 0700_stairs_down
+tp Dev 2028.5 126 2005.5 -90 5
+wait 30
+shot 0700_gallery_corridor
+tp Dev 2020.5 115 2018.5 -90 5
+wait 30
+shot 0700_basement_generator
+tp Dev 2010.5 115 2008.5 0 5
+wait 30
+shot 0700_basement_tunnel
+wait 3
+hud on
+
+# --- матч с ботами: Жилец просыпается через 30 с после старта ---
+execute positioned 2006 120 2015 run bh bot add alpha A1
+execute positioned 2044 120 2017 run bh bot add bravo B1
+bh team alpha Dev
+bh start
+expect Match started
+wait 20
+bh skip
+expect PREP -> LIVE
+wait 300
+execute unless entity @e[type=bodycamhorror:tenant]
+expect Test passed
+wait 380
+execute if entity @e[type=bodycamhorror:tenant]
+expect Test passed
+bh tenant info
+expect [tenant]
+execute as Dev at @e[type=bodycamhorror:tenant,limit=1] run tp Dev ^ ^ ^5 facing entity @e[type=bodycamhorror:tenant,limit=1] eyes
+wait 20
+shot 0700_tenant_awake
+bh stop
+wait 20
+execute unless entity @e[type=bodycamhorror:tenant]
+expect Test passed
+
+bh bot remove all
