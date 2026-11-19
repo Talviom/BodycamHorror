@@ -50,7 +50,7 @@ public final class FacilityBuilder {
         return new FacilityBuilder(level, base).run();
     }
 
-    private String run() {
+    private Component run() {
         shell();
         ground();
         upper();
