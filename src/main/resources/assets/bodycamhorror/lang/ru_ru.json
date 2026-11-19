@@ -97,6 +97,10 @@
   "bh.match.tape_out": "Команда %s вынесла кассету.",
   "bh.match.tape_lost": "Никто не вынес кассету.",
   "bh.match.not_running": "Матч не идёт",
+  "bh.state.lobby": "лобби",
+  "bh.state.prep": "подготовка",
+  "bh.state.live": "раунд идёт",
+  "bh.state.round_end": "конец раунда",
   "bh.match.skipped": "Пропущено: %s -> %s",
   "bh.report.title": "BODYCAM HORROR - ОТЧЁТ О МАТЧЕ",
   "bh.report.test": " (ТЕСТОВЫЙ МАТЧ)",
@@ -170,8 +174,8 @@
   "block.bodycamhorror.exit_marker": "Метка выхода",
   "item.bodycamhorror.tape": "Видеокассета",
   "entity.bodycamhorror.tenant": "Жилец",
-  "death.attack.bodycamhorror.tenant": "%1$s забрал Жилец",
-  "death.attack.bodycamhorror.tenant.player": "%1$s забрал Жилец",
+  "death.attack.bodycamhorror.tenant": "Жилец забрал %1$s",
+  "death.attack.bodycamhorror.tenant.player": "Жилец забрал %1$s",
   "bh.pack.overrides": "Bodycam Horror: оформление",
   "bh.poster": "poster_ru"
 }

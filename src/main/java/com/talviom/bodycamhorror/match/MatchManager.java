@@ -346,7 +346,7 @@ public final class MatchManager {
         MatchState before = state;
         ticksLeft = 1;
         tick(server);
-        return Component.translatable("bh.match.skipped", before.toString(), state.toString());
+        return Component.translatable("bh.match.skipped", before.label(), state.label());
     }
 
     public boolean testMode() {

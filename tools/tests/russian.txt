@@ -35,7 +35,7 @@ setblock 1990 121 2006 air
 # --- ответы команд на языке игры ---
 bh status
 expect Состояние
-bh horror fear
+execute as Dev run bh horror fear
 expect Страх
 
 # --- заставка раунда (заморозка), старт, HUD камеры, страх ---
@@ -50,7 +50,7 @@ wait 12
 shot ru_go
 wait 80
 shot ru_live_hud
-bh horror fear 80
+execute as Dev run bh horror fear 80
 wait 40
 shot ru_fear_comment
 screen inventory

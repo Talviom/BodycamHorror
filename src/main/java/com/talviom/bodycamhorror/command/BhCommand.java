@@ -251,7 +251,7 @@ public final class BhCommand {
     private static int status(CommandContext<CommandSourceStack> c) {
         MatchManager m = MatchManager.INSTANCE;
         MapData map = MapData.get(c.getSource().getServer().overworld());
-        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.status", m.state().toString(), m.round(), m.secondsLeft(),
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.status", m.state().label(), m.round(), m.secondsLeft(),
                 map.spawns(BhTeam.ALPHA).size(), map.spawns(BhTeam.BRAVO).size(), map.lootPoints().size(),
                 Component.translatable(map.exit(BhTeam.ALPHA) != null ? "bh.cmd.yes" : "bh.cmd.no"),
                 Component.translatable(map.exit(BhTeam.BRAVO) != null ? "bh.cmd.yes" : "bh.cmd.no"),
