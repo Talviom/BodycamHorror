@@ -16,7 +16,8 @@ import java.util.List;
 /**
  * Жилец в матче (выбор пользователя): один на раунд, просыпается через tenantWakeSeconds (30 с) после старта
  * в самом тёмном месте карты, подальше от обоих спавнов. Когда свет выключен (щиток, генератор), лампы его
- * не держат, поэтому без света он смелее (см. TenantRules.litNear). В конце раунда и матча исчезает.
+ * не держат, поэтому без света он смелее (см. TenantRules.litNear). В конце раунда и матча исчезает
+ * (только тот, кого поставил матч).
  */
 public final class TenantSpawner {
     /** Не ближе этого к любому спавну (если на карте есть такие точки). */
@@ -24,6 +25,8 @@ public final class TenantSpawner {
 
     private static long wakeAt = -1;
     private static boolean spawned;
+    /** Только тех Жильцов, что поставил матч: поставленных командой /bh tenant spawn (проверки, съёмка) не трогаем. */
+    private static final java.util.Set<java.util.UUID> OURS = new java.util.HashSet<>();
 
     private TenantSpawner() {}
 
@@ -49,6 +52,7 @@ public final class TenantSpawner {
         t.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.getRandom().nextFloat() * 360f, 0);
         t.setHome(at);
         level.addFreshEntity(t);
+        OURS.add(t.getUUID());
         BodycamHorror.LOGGER.info("[BH tenant] the Tenant woke at {} (block light {})", at.toShortString(),
                 level.getBrightness(LightLayer.BLOCK, at));
     }
@@ -61,7 +65,8 @@ public final class TenantSpawner {
 
     public static void removeAll(MinecraftServer server) {
         ServerLevel level = server.overworld();
-        for (TenantEntity t : new ArrayList<>(level.getEntities(ModEntities.TENANT.get(), e -> true))) t.discard();
+        for (TenantEntity t : new ArrayList<>(level.getEntities(ModEntities.TENANT.get(), e -> OURS.contains(e.getUUID())))) t.discard();
+        OURS.clear();
     }
 
     /** Из точек лута и кассеты: подальше от спавнов, среди таких самая тёмная, при равенстве самая далёкая. */
