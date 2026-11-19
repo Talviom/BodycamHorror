@@ -34,7 +34,9 @@ public final class FearHud {
             drawComment(g, x, bottom + 6 + 9);
             x += size + 6;
         }
-        if (ClientState.hasFlashlight) drawBattery(g, x, bottom - BATTERY_SIZE);
+        // Справа от сердца: батарейка, под ней полоска здоровья на плёнке (HealthHud).
+        if (ClientState.hasFlashlight) drawBattery(g, x, bottom - HealthHud.HEIGHT - 3 - BATTERY_SIZE);
+        HealthHud.drawHealth(g, x, bottom - HealthHud.HEIGHT);
     }
 
     /** @return сколько места заняло сердце по ширине */

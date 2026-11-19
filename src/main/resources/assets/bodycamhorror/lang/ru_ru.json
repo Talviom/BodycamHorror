@@ -30,6 +30,7 @@
   "bh.osd.date": "%2$s %1$s 1998",
   "bh.osd.clock24": "true",
   "bh.hud.cam": "КАМ-%s",
+  "bh.hud.bandaging": "ПЕРЕВЯЗКА",
   "bh.inv.title": "ЛИЧНЫЕ ВЕЩИ",
   "bh.inv.items": "НАЙДЕНО ПРИ ТЕЛЕ",
   "bh.inv.subject": "СУБЪЕКТ",

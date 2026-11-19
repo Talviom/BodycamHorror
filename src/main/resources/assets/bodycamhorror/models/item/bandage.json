@@ -1,1 +1,14 @@
-{"parent": "minecraft:item/generated", "textures": {"layer0": "bodycamhorror:item/bandage"}}
+{
+ "loader": "forge:separate_transforms",
+ "base": {
+  "parent": "bodycamhorror:item/bandage_roll"
+ },
+ "perspectives": {
+  "gui": {
+   "parent": "minecraft:item/generated",
+   "textures": {
+    "layer0": "bodycamhorror:item/bandage"
+   }
+  }
+ }
+}

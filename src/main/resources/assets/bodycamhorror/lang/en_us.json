@@ -35,6 +35,7 @@
   "bh.osd.date": "%1$s %2$s 1998",
   "bh.osd.clock24": "false",
   "bh.hud.cam": "CAM-%s",
+  "bh.hud.bandaging": "BANDAGING",
   "bh.inv.title": "PERSONAL EFFECTS",
   "bh.inv.items": "ITEMS ON THE BODY",
   "bh.inv.subject": "SUBJECT",
