@@ -37,7 +37,7 @@ voicechat 2.6.24, sound-physics-remastered 1.5.1, PresenceFootsteps 1.9.1-beta.1
 
 ## Эффекты
 
-ragdollified 1.1.1, bleedingmod 1.6, betterbloodoverlay 2.2.0,
+ragdollified 1.1.1, betterbloodoverlay 2.2.0,
 ItemPhysicLite 1.6.11, itemphysicguns 1.0.3.
 
 ## Строительство карты
