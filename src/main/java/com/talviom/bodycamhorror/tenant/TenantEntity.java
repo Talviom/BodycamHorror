@@ -192,10 +192,17 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
             attackTick(level, now);
             return;
         }
-        // На свету ему нельзя: уходит.
-        if (s != State.RETREAT && TenantRules.litNear(level, position(), TenantRules.LIGHT_ZONE)) {
-            retreat(20 * 20);
-            return;
+        // На свету ему нельзя: уходит в ближайшее тёмное место карты и живёт там.
+        // Если тёмного места нет (весь свет горит), остаётся где есть и слушает: иначе он бесконечно
+        // «отступал» бы к той же освещённой точке и весь раунд стоял на месте (было в 0.7.1).
+        if (s != State.RETREAT && tickCount % 20 == 0 && TenantRules.litNear(level, position(), TenantRules.LIGHT_ZONE)) {
+            BlockPos dark = TenantRules.darkSpot(level, position());
+            if (dark != null && !dark.equals(home)) {
+                home = dark;
+                lastOutcome = "light->" + dark.toShortString();
+                retreat(15 * 20);
+                return;
+            }
         }
 
         switch (s) {

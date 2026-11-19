@@ -1,0 +1,40 @@
+# Жилец проснулся у горящей лампы: уходит в тёмное место и оттуда охотится (в 0.7.1 весь раунд стоял в retreat).
+# Запуск: gradlew runClient -PbhTest=tools/tests/tenant_wake.txt
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 1000 120 1000 run bh arena build
+expect Arena built
+time set midnight
+# Свет горит только в западной половине (x < 1022), восточная тёмная.
+fill 1022 123 1000 1042 123 1042 air replace bodycamhorror:lamp
+
+# Проснулся прямо под лампой.
+execute positioned 1007 120 1007 run bh tenant spawn
+wait 60
+bh tenant info
+expect last=light->
+wait 360
+bh tenant info
+expect state=wait
+reject home=1007, 120, 1007
+
+# Бот с фонариком в тёмной комнате рядом: Жилец выходит на охоту и нападает.
+execute positioned 1031 120 1010 run bh bot add bravo B1
+give B1 bodycamhorror:flashlight
+bh bot light B1
+wait 240
+bh tenant info
+expect target=B1
+reject last=light->
+
+# Всё освещено, тёмных мест нет: не уходит в бесконечное отступление, а ждёт и слушает.
+bh tenant remove
+bh bot remove all
+execute positioned 1000 120 1000 run bh arena build
+execute positioned 1007 120 1007 run bh tenant spawn
+wait 500
+bh tenant info
+expect state=wait
+bh tenant remove

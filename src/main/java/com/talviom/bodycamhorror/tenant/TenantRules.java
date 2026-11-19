@@ -43,6 +43,25 @@ public final class TenantRules {
         return false;
     }
 
+    /** Ближайшая тёмная точка карты (из точек лута и кассеты), вне зоны света. null, если тёмных нет. */
+    @javax.annotation.Nullable
+    public static BlockPos darkSpot(ServerLevel level, Vec3 from) {
+        com.talviom.bodycamhorror.match.MapData map = com.talviom.bodycamhorror.match.MapData.get(level);
+        java.util.List<BlockPos> pts = new java.util.ArrayList<>(map.lootPoints());
+        pts.addAll(map.tapePoints());
+        BlockPos best = null;
+        double bestD = Double.MAX_VALUE;
+        for (BlockPos p : pts) {
+            if (litNear(level, Vec3.atCenterOf(p), LIGHT_ZONE)) continue;
+            double d = Vec3.atBottomCenterOf(p).distanceToSqr(from);
+            if (d < bestD) {
+                bestD = d;
+                best = p;
+            }
+        }
+        return best;
+    }
+
     /** Союзники: одна команда. Вне матча союзником считается любой другой игрок. */
     public static boolean sameSide(ServerPlayer a, ServerPlayer b) {
         MatchManager m = MatchManager.INSTANCE;
