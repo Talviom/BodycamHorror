@@ -65,7 +65,18 @@ final class ClientShots {
     static void openDeath() {
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> mc.setScreen(new net.minecraft.client.gui.screens.DeathScreen(
-                net.minecraft.network.chat.Component.literal("Dev was killed by something in the dark"), false)));
+                net.minecraft.network.chat.Component.translatable("death.attack.bodycamhorror.tenant", "Dev"), false)));
+    }
+
+    /** Сменить язык игры, как на экране «Язык»: ресурсы перезагружаются, lang-файлы читаются заново. */
+    static void lang(String code) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> {
+            mc.getLanguageManager().setSelected(code);
+            mc.options.languageCode = code;
+            mc.reloadResourcePacks();
+            BodycamHorror.LOGGER.info("[bh-test] language " + code);
+        });
     }
 
     /** Закрыть открытый экран. */

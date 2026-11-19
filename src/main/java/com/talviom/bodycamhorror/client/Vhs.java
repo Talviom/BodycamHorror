@@ -44,6 +44,21 @@ public final class Vhs {
         return PRESENT.computeIfAbsent(res, r -> Minecraft.getInstance().getResourceManager().getResource(r).isPresent());
     }
 
+    /** Строка из lang-файла мода (ru_ru, en_us) по ключу, с подстановкой %s. */
+    public static String tr(String key, Object... args) {
+        return net.minecraft.client.resources.language.I18n.get(key, args);
+    }
+
+    /** Список строк из lang-файла: одна строка, элементы через «|». */
+    public static String[] trList(String key) {
+        return tr(key).split("\\|");
+    }
+
+    /** Название команды по id из пакета (ALPHA, BRAVO) на языке игры, заглавными. */
+    public static String teamName(String id) {
+        return tr("bh.team." + id.toLowerCase(java.util.Locale.ROOT)).toUpperCase(java.util.Locale.ROOT);
+    }
+
     public static boolean hasFont() {
         return has(rl("font/vhs.json"));
     }

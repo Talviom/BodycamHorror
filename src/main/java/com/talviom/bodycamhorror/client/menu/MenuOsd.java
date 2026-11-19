@@ -8,8 +8,6 @@ import java.time.LocalDateTime;
 
 /** Клиент: служебные надписи камеры по углам экранов меню, как на старой кассете (CAM, REC, дата, время). */
 public final class MenuOsd {
-    private static final String[] MONTHS = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
-
     private MenuOsd() {}
 
     /**
@@ -20,7 +18,7 @@ public final class MenuOsd {
     public static int draw(GuiGraphics g, int width, int height, float alpha, String tape) {
         if (alpha <= 0.01f) return 0;
         int dim = a(170, alpha) | Vhs.ASH;
-        Vhs.plain(g, "CAM 01", 12, 12, dim);
+        Vhs.plain(g, Vhs.tr("bh.osd.cam"), 12, 12, dim);
         if (tape != null) Vhs.plain(g, tape, 12, 23, a(120, alpha) | Vhs.SOOT);
         String rec = "REC";
         int rx = width - 12 - Vhs.width(rec);
@@ -38,11 +36,17 @@ public final class MenuOsd {
     /** Дата из прошлого: сегодняшние месяц и число, но 1998 год. */
     public static String date() {
         LocalDateTime t = LocalDateTime.now();
-        return MONTHS[t.getMonthValue() - 1] + " " + String.format("%02d", t.getDayOfMonth()) + " 1998";
+        String[] months = Vhs.trList("bh.osd.months");
+        String month = months.length == 12 ? months[t.getMonthValue() - 1] : String.valueOf(t.getMonthValue());
+        return Vhs.tr("bh.osd.date", month, String.format("%02d", t.getDayOfMonth()));
     }
 
     public static String time() {
         LocalDateTime t = LocalDateTime.now();
+        // На русской камере часы 24-часовые, на английской с AM и PM.
+        if ("true".equals(Vhs.tr("bh.osd.clock24"))) {
+            return String.format("%d:%02d:%02d", t.getHour(), t.getMinute(), t.getSecond());
+        }
         int hour = t.getHour() % 12 == 0 ? 12 : t.getHour() % 12;
         return String.format("%d:%02d:%02d %s", hour, t.getMinute(), t.getSecond(), t.getHour() < 12 ? "AM" : "PM");
     }

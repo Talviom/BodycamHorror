@@ -154,6 +154,11 @@ public final class TestScript {
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.press(label));
             } else if (line.startsWith("screen ")) {
                 screen(server, line.substring(7).trim());
+            } else if (line.startsWith("lang ")) {
+                // Язык игры (ru_ru, en_us): перезагружает ресурсы, после этой строки нужен wait 100.
+                String code = line.substring(5).trim();
+                BodycamHorror.LOGGER.info(PREFIX + "> " + line);
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.lang(code));
             } else {
                 run(server, line);
             }

@@ -50,13 +50,11 @@ public final class ClientState {
     }
 
     private static void say(int tier) {
-        String[] lines = switch (tier) {
-            case 0 -> dark
-                    ? new String[]{"I can't see a thing.", "Too dark..."}
-                    : new String[]{"Did you hear that?", "Something's here..."};
-            case 1 -> new String[]{"I'm scared.", "I don't like this."};
-            default -> new String[]{"Keep it together.", "I need to get out of here."};
-        };
+        String[] lines = Vhs.trList(switch (tier) {
+            case 0 -> dark ? "bh.fear.dark" : "bh.fear.uneasy";
+            case 1 -> "bh.fear.scared";
+            default -> "bh.fear.panic";
+        });
         comment = lines[RND.nextInt(lines.length)];
         commentAt = System.currentTimeMillis();
     }

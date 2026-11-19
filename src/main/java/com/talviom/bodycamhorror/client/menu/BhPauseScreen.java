@@ -44,24 +44,24 @@ public final class BhPauseScreen extends Screen {
         int rows = 3 + (canShare ? 1 : 0) + (canStart ? 1 : 0);
         int y = Math.max(height / 2 - 4, height - 40 - (rows * step + 6));
 
-        addRenderableWidget(new TapeButton(cx, y, "RESUME", this::textAlpha, b -> onClose()));
+        addRenderableWidget(new TapeButton(cx, y, Vhs.tr("bh.pause.resume"), this::textAlpha, b -> onClose()));
         int next = y + step;
         if (canStart) {
             // Хост в лобби запускает матч отсюда, а не командой /bh start.
-            addRenderableWidget(new TapeButton(cx, next, "START THE MATCH", this::textAlpha, b -> {
+            addRenderableWidget(new TapeButton(cx, next, Vhs.tr("bh.pause.start"), this::textAlpha, b -> {
                 minecraft.player.connection.sendCommand("bh start");
                 onClose();
             }));
             next += step;
         }
-        addRenderableWidget(new TapeButton(cx, next, "OPTIONS", this::textAlpha,
+        addRenderableWidget(new TapeButton(cx, next, Vhs.tr("bh.menu.options"), this::textAlpha,
                 b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
         next += step;
         if (canShare) {
-            addRenderableWidget(new TapeButton(cx, next, "OPEN TO FRIENDS", this::textAlpha, b -> openToFriends(host)));
+            addRenderableWidget(new TapeButton(cx, next, Vhs.tr("bh.pause.share"), this::textAlpha, b -> openToFriends(host)));
             next += step;
         }
-        TapeButton quit = new TapeButton(cx, next + 6, local ? "SAVE AND QUIT" : "DISCONNECT", this::textAlpha, b -> {
+        TapeButton quit = new TapeButton(cx, next + 6, Vhs.tr(local ? "bh.pause.save_quit" : "bh.pause.disconnect"), this::textAlpha, b -> {
             b.active = false;
             leave();
         });
@@ -117,9 +117,9 @@ public final class BhPauseScreen extends Screen {
 
         int cx = width / 2;
         int titleY = Math.max(24, height / 2 - 62);
-        Vhs.ghostCentered(g, Vhs.title("STANDBY"), cx, titleY, MenuOsd.a(230, in) | Vhs.BONE, 2.5f, 0.3f);
+        Vhs.ghostCentered(g, Vhs.title(Vhs.tr("bh.pause.title")), cx, titleY, MenuOsd.a(230, in) | Vhs.BONE, 2.5f, 0.3f);
         boolean paused = isPauseScreen() && minecraft.hasSingleplayerServer() && !minecraft.getSingleplayerServer().isPublished();
-        String sub = paused ? "THE TAPE IS PAUSED." : "THE TAPE IS STILL RUNNING.";
+        String sub = Vhs.tr(paused ? "bh.pause.paused" : "bh.pause.running");
         Vhs.ghostCentered(g, Vhs.title(sub), cx, titleY + 28, MenuOsd.a(paused ? 150 : 210, in) | (paused ? Vhs.ASH : Vhs.DRIED_BLOOD), 1f, 0.2f);
 
         MenuOsd.draw(g, width, height, in, null);

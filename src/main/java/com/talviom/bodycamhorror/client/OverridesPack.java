@@ -28,7 +28,7 @@ public final class OverridesPack {
     public static void onBhAddOverridesPack(AddPackFindersEvent e) {
         if (e.getPackType() != PackType.CLIENT_RESOURCES) return;
         Path path = ModList.get().getModFileById(BodycamHorror.MOD_ID).getFile().findResource("overrides");
-        Pack pack = Pack.readMetaAndCreate("bodycamhorror_overrides", Component.literal("Bodycam Horror overrides"), true,
+        Pack pack = Pack.readMetaAndCreate("bodycamhorror_overrides", Component.translatable("bh.pack.overrides"), true,
                 id -> new PathPackResources(id, path, true), PackType.CLIENT_RESOURCES, Pack.Position.TOP, PackSource.BUILT_IN);
         if (pack == null) {
             BodycamHorror.LOGGER.warn("[BH ui] overrides pack not found at {}", path);

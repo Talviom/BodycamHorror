@@ -96,13 +96,13 @@ public final class Flashlight {
 
     public static void toggle(ServerPlayer p) {
         if (!hasFlashlight(p)) {
-            p.displayClientMessage(Component.literal("No flashlight"), true);
+            p.displayClientMessage(Component.translatable("bh.flashlight.none"), true);
             return;
         }
         UUID id = p.getUUID();
         boolean on = !ON.contains(id);
         if (on && charge(p) < MIN_TO_TURN_ON) {
-            p.displayClientMessage(Component.literal("Battery is dead"), true);
+            p.displayClientMessage(Component.translatable("bh.flashlight.dead"), true);
             click(p, 0.9f);
             return;
         }
@@ -157,7 +157,7 @@ public final class Flashlight {
             if (c <= 0f) {
                 c = 0f;
                 ON.remove(id);
-                p.displayClientMessage(Component.literal("Battery is dead"), true);
+                p.displayClientMessage(Component.translatable("bh.flashlight.dead"), true);
                 click(p, 0.8f);
             }
         } else if (c < 1f) {

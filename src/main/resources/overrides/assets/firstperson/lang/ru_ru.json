@@ -1,0 +1,9 @@
+{
+  "key.category.firstperson.keybind": "Мод FirstPerson",
+  "text.firstperson.tab.settings": "Настройки",
+  "text.firstperson.tab.autovanillahands": "Обычные руки с предметами",
+  "text.firstperson.tab.autovanillahands.tooltip": "Сам переключается на обычные руки, когда в руках предметы",
+  "text.firstperson.tab.disableitems": "Отключать для предметов",
+  "text.firstperson.tab.disableitems.tooltip": "Отключает мод FirstPerson, пока в руках указанные предметы",
+  "text.firstperson.tab.layers": "Показывать слои"
+}

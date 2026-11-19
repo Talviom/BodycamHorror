@@ -87,10 +87,9 @@ public final class TapeObjective {
         int seconds = BhConfig.TAPE_DELIVER_SECONDS.get();
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             if (!MatchManager.INSTANCE.isAlive(p)) continue;
-            p.displayClientMessage(text("FIND THE TAPE. GET IT OUT THROUGH YOUR EXIT.", BONE), true);
+            p.displayClientMessage(text(Component.translatable("bh.tape.find"), BONE), true);
             if (firstRound) {
-                p.sendSystemMessage(text("The tape is somewhere in the dark. Listen for the hiss. Carry it to the exit"
-                        + " behind your spawn and stay there " + seconds + " s. Or leave no one alive.", ASH));
+                p.sendSystemMessage(text(Component.translatable("bh.tape.intro", seconds), ASH));
             }
         }
     }
@@ -164,12 +163,12 @@ public final class TapeObjective {
                 onRoundEnd();
                 return team;
             }
-            holder.displayClientMessage(bar("GETTING THE TAPE OUT", deliverTicks, need), true);
+            holder.displayClientMessage(bar(Component.translatable("bh.tape.getting_out"), deliverTicks, need), true);
         } else {
             deliverTicks = 0;
             if (ticks % 20 == 0) {
                 int dist = (int) Math.round(Math.sqrt(dx * dx + dz * dz));
-                holder.displayClientMessage(text("YOU HAVE THE TAPE  ·  EXIT " + dist + " M", BONE), true);
+                holder.displayClientMessage(text(Component.translatable("bh.tape.carrying", dist), BONE), true);
             }
         }
         return null;
@@ -186,7 +185,7 @@ public final class TapeObjective {
         // Только ему: кассета будто что-то шепчет.
         p.playNotifySound(ModSounds.WHISPER.get(), SoundSource.AMBIENT, 0.5f, 0.85f);
         FearSystem.INSTANCE.add(p, 8f);
-        p.displayClientMessage(text("YOU HAVE THE TAPE. GET IT OUT.", BONE), true);
+        p.displayClientMessage(text(Component.translatable("bh.tape.picked"), BONE), true);
     }
 
     /** Игрок вышел с сервера: кассета остаётся лежать там, где он стоял. */
@@ -269,8 +268,13 @@ public final class TapeObjective {
         return Component.literal(s).withStyle(st -> st.withColor(TextColor.fromRgb(rgb)));
     }
 
-    private static Component bar(String label, int value, int max) {
+    /** Строка из lang-файла (Component.translatable) тем же цветом. */
+    public static Component text(Component c, int rgb) {
+        return c.copy().withStyle(st -> st.withColor(TextColor.fromRgb(rgb)));
+    }
+
+    private static Component bar(Component label, int value, int max) {
         int filled = Math.min(10, value * 10 / max);
-        return text(label + "  " + "■".repeat(filled) + "□".repeat(10 - filled), BONE);
+        return text(label.copy().append("  " + "■".repeat(filled) + "□".repeat(10 - filled)), BONE);
     }
 }

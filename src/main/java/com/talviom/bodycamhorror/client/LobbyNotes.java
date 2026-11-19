@@ -31,13 +31,12 @@ public final class LobbyNotes {
     private record Row(String fallback, String action, String... nameParts) {}
 
     private static final Row[] ROWS = {
-            new Row(null, "FLASHLIGHT", "key.bodycamhorror.flashlight"),
-            new Row(null, "GEAR", "key.bodycamhorror.inventory"),
-            new Row("F", "BREAKER / GENERATOR", "tacz", "interact"),
-            new Row("R", "RELOAD", "tacz", "reload"),
-            new Row(null, "VOICE SETUP", "key.voice_chat"),
+            new Row(null, "bh.notes.flashlight", "key.bodycamhorror.flashlight"),
+            new Row(null, "bh.notes.gear", "key.bodycamhorror.inventory"),
+            new Row("F", "bh.notes.interact", "tacz", "interact"),
+            new Row("R", "bh.notes.reload", "tacz", "reload"),
+            new Row(null, "bh.notes.voice", "key.voice_chat"),
     };
-    private static final String[] GOAL = {"FIND THE TAPE.", "BRING IT TO YOUR EXIT."};
 
     private static KeyMapping[] found;
     private static long visibleSince;
@@ -78,7 +77,7 @@ public final class LobbyNotes {
         List<String[]> rows = new ArrayList<>();
         for (int i = 0; i < ROWS.length; i++) {
             String key = label(found[i], ROWS[i].fallback());
-            if (key != null) rows.add(new String[]{key, ROWS[i].action()});
+            if (key != null) rows.add(new String[]{key, Vhs.tr(ROWS[i].action())});
         }
         if (!logged) {
             logged = true;
@@ -92,15 +91,16 @@ public final class LobbyNotes {
             keyW = Math.max(keyW, Vhs.width(Vhs.title("[" + r[0] + "]")));
             actW = Math.max(actW, Vhs.width(Vhs.title(r[1])));
         }
-        for (String s : GOAL) goalW = Math.max(goalW, Vhs.width(Vhs.title(s)));
+        String[] goal = Vhs.trList("bh.notes.goal");
+        for (String s : goal) goalW = Math.max(goalW, Vhs.width(Vhs.title(s)));
         int blockW = Math.max(keyW + 6 + actW, goalW);
-        int blockH = LINE * (rows.size() + GOAL.length) + 18;
+        int blockH = LINE * (rows.size() + goal.length) + 18;
         int x = w - 10 - blockW;
         int y = Math.max(46, h / 2 - blockH / 2 - 10);
 
         // Тусклая подложка, чтобы текст читался и на светлом полу лобби.
         g.fill(x - 6, y - 5, w - 4, y + blockH + 1, ((int) (0x70 * in)) << 24);
-        Vhs.ghost(g, Vhs.title("FIELD NOTES"), x, y, a(220, in) | Vhs.BONE, 1f, 0.15f);
+        Vhs.ghost(g, Vhs.title(Vhs.tr("bh.notes.title")), x, y, a(220, in) | Vhs.BONE, 1f, 0.15f);
         y += LINE + 5;
         for (String[] r : rows) {
             g.drawString(mc.font, Vhs.title("[" + r[0] + "]"), x, y, a(220, in) | Vhs.BONE, false);
@@ -108,7 +108,7 @@ public final class LobbyNotes {
             y += LINE;
         }
         y += 6;
-        for (String s : GOAL) {
+        for (String s : goal) {
             g.drawString(mc.font, Vhs.title(s), x, y, a(170, in) | Vhs.ASH, false);
             y += LINE;
         }

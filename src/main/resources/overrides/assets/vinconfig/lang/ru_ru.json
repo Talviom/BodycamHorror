@@ -1,0 +1,10 @@
+{
+  "vinconfig.button.reset_page": "Сбросить страницу",
+  "vinconfig.button.reset_all": "Сбросить всё",
+  "vinconfig.button.close": "Закрыть",
+  "vinconfig.button.save": "Сохранить",
+  "vinconfig.label.preview": "Предпросмотр",
+  "vinconfig.label.no_preview": "Предпросмотра нет",
+  "vinconfig.label.no_preview.desc": "Положите картинку в assets/<modid>/configpic, чтобы она появилась здесь.",
+  "vinconfig.label.saved": "Сохранено"
+}

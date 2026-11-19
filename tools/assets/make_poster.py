@@ -3,6 +3,7 @@
 Usage: python -I tools/assets/make_poster.py <repo root>
 Writes:
   textures/gui/poster.png         1536x768, drawn 6x3 blocks on the lobby wall (PosterRenderer)
+  textures/gui/poster_ru.png      the same in Russian (lang key bh.poster picks the texture)
   textures/item/bandage.png       16x16
   textures/item/battery.png       16x16
   textures/item/lobby_poster.png  16x16 (creative item icon)
@@ -19,15 +20,6 @@ BONE = (196, 188, 170)
 ASH = (120, 114, 102)
 BLOOD = (122, 22, 18)
 PAPER = (28, 26, 23)
-
-CHARS = [
-    " !\"#$%&'()*+,-./",
-    "0123456789:;<=>?",
-    "@ABCDEFGHIJKLMNO",
-    "PQRSTUVWXYZ[\\]^_",
-    "`abcdefghijklmno",
-    "pqrstuvwxyz{|}~\u0000",
-]
 
 TITLE = "FIELD MANUAL"
 SUBTITLE = "RECOVERED FROM TAPE 07  -  READ BEFORE THE LIGHTS GO"
@@ -63,17 +55,59 @@ RIGHT = [
     ("t", "SHOOT IT TO DRIVE IT OFF. IT COMES BACK."),
 ]
 
+# Russian poster (0.8.0): textures/gui/poster_ru.png, chosen by the lang key bh.poster.
+RU = (
+    "ПОЛЕВОЕ РУКОВОДСТВО",
+    "СНЯТО С КАССЕТЫ 07  -  ПРОЧТИ, ПОКА НЕ ПОГАС СВЕТ",
+    [
+        ("h", "ЗАДАЧА"),
+        ("t", "НАЙДИ ВИДЕОКАССЕТУ. СЛУШАЙ ШИПЕНИЕ."),
+        ("t", "ОТНЕСИ ЕЁ К ВЫХОДУ ЗА СВОИМ СПАВНОМ"),
+        ("t", "И ПРОСТОЙ НА МЕСТЕ 3 СЕКУНДЫ."),
+        ("t", "ИЛИ НЕ ОСТАВЬ НИКОГО В ЖИВЫХ."),
+        ("g", ""),
+        ("h", "УПРАВЛЕНИЕ"),
+        ("k", "O|ФОНАРИК"),
+        ("k", "TAB|СНАРЯЖЕНИЕ"),
+        ("k", "F|ЩИТОК / ГЕНЕРАТОР"),
+        ("k", "R|ПЕРЕЗАРЯДКА"),
+        ("k", "V|УДАР ВБЛИЗИ"),
+        ("k", "0|НАСТРОЙКА ГОЛОСОВОГО ЧАТА"),
+        ("k", "ПКМ|БИНТ (ДЕРЖАТЬ) / БАТАРЕЙКА"),
+    ],
+    [
+        ("h", "ОПАСНОСТИ"),
+        ("t", "ТЕМНОТА КОРМИТ СТРАХ. ДЕРЖИ СВЕТ."),
+        ("t", "СИЛЬНЫЙ СТРАХ: ДРОЖЬ В РУКАХ, ГОЛОСА."),
+        ("t", "ЩИТКИ И ГЕНЕРАТОР ГАСЯТ СВЕТ."),
+        ("t", "КАССЕТА ШИПИТ. ЕЁ СЛЫШАТ ВСЕ."),
+        ("g", ""),
+        ("h", "ЖИЛЕЦ"),
+        ("t", "ПРОСЫПАЕТСЯ НА 30-Й СЕКУНДЕ РАУНДА."),
+        ("t", "ОН СЛЕП. ОН СЛЫШИТ СВЕТ, БЕГ, ВЫСТРЕЛЫ И СТРАХ."),
+        ("t", "ЛАМПЫ ЕГО ОТГОНЯЮТ. ВО ТЬМЕ ОН ОХОТИТСЯ."),
+        ("t", "ЛУЧ В ЛИЦО ВПЛОТНУЮ: ОН ЗАМИРАЕТ."),
+        ("t", "НЕ ХОДИ ОДИН. ОДИНОЧЕК ОН ЗАБИРАЕТ."),
+        ("t", "СТРЕЛЯЙ, ЧТОБЫ ОТОГНАТЬ. ОН ВЕРНЁТСЯ."),
+    ],
+)
+
 
 def load_font(path):
+    """Glyphs from the font sheet; the character layout comes from the font's json (Cyrillic since 0.8.0)."""
+    import json
+    chars = json.loads((path.parent.parent.parent / "font" / (path.stem + ".json")).read_text(encoding="utf-8"))
+    chars = next(p["chars"] for p in chars["providers"] if p["type"] == "bitmap")
     img = np.array(Image.open(path).convert("RGBA"))
-    cw, ch = img.shape[1] // 16, img.shape[0] // 7
+    cw, ch = img.shape[1] // 16, img.shape[0] // len(chars)
     glyphs = {}
-    for row, line in enumerate(CHARS):
+    for row, line in enumerate(chars):
         for col, c in enumerate(line):
             g = img[row * ch:(row + 1) * ch, col * cw:(col + 1) * cw, 3] > 0
             cols = np.where(g.any(axis=0))[0]
             width = (cols.max() + 1) if len(cols) else 3
-            glyphs[c] = (g, width)
+            if c != "\u0000":
+                glyphs[c] = (g, width)
     return glyphs, ch
 
 
@@ -96,7 +130,8 @@ def width(glyphs, text, scale):
     return sum(4 * scale if c == " " else (glyphs.get(c, glyphs["?"])[1] + 1) * scale for c in text)
 
 
-def poster(root):
+def poster(root, texts=None, name="poster"):
+    title, subtitle, left, right = texts or (TITLE, SUBTITLE, LEFT, RIGHT)
     rng = np.random.default_rng(707)
     a = root / "src/main/resources/assets/bodycamhorror/textures/font"
     horror, _ = load_font(a / "horror.png")
@@ -124,11 +159,11 @@ def poster(root):
 
     # Title and subtitle (horror font, centred).
     s = 8
-    tw = width(horror, TITLE, s)
-    draw(img, horror, TITLE, (W - tw) // 2 + 4, 52 + 4, s, (10, 10, 10), 0.6)
-    draw(img, horror, TITLE, (W - tw) // 2, 52, s, BONE)
-    sw = width(vhs, SUBTITLE, 3)
-    draw(img, vhs, SUBTITLE, (W - sw) // 2, 140, 3, BLOOD)
+    tw = width(horror, title, s)
+    draw(img, horror, title, (W - tw) // 2 + 4, 52 + 4, s, (10, 10, 10), 0.6)
+    draw(img, horror, title, (W - tw) // 2, 52, s, BONE)
+    sw = width(vhs, subtitle, 3)
+    draw(img, vhs, subtitle, (W - sw) // 2, 140, 3, BLOOD)
     img[184:188, 80:W - 80, :3] = ASH
 
     col_w = W // 2 - 110
@@ -159,17 +194,20 @@ def poster(root):
                 key, action = text.split("|")
                 draw(img, vhs, "[" + key + "]", x0, y, 3, ASH)
                 draw(img, vhs, action, x0 + 130, y, 3, BONE)
+                assert 130 + width(vhs, action, 3) <= col_w + 40, f"{name}: key line too wide: {action}"
                 y += 31
             else:
                 for part in wrap(text, 3):
                     draw(img, vhs, part, x0, y, 3, BONE)
                     y += 31
+        # The last line (21 px high, 31 px step) must end above the bottom frame line area (H - 60).
+        assert y - 10 <= H - 60, f"{name}: column runs to y={y - 10}"
 
-    column(LEFT, 72)
+    column(left, 72)
     img[214:H - 60, W // 2 - 6:W // 2 - 2, :3] = ASH
-    column(RIGHT, W // 2 + 30)
+    column(right, W // 2 + 30)
 
-    out = root / "src/main/resources/assets/bodycamhorror/textures/gui/poster.png"
+    out = root / f"src/main/resources/assets/bodycamhorror/textures/gui/{name}.png"
     Image.fromarray(np.clip(img, 0, 255).astype(np.uint8), "RGBA").save(out, optimize=True)
     return out
 
@@ -228,13 +266,15 @@ def poster_icon(img, rng):
 def main():
     root = Path(sys.argv[1]).resolve()
     out = poster(root)
+    out_ru = poster(root, RU, "poster_ru")
     items = root / "src/main/resources/assets/bodycamhorror/textures/item"
     for name, fn, seed in (("bandage", bandage, 1), ("battery", battery, 2), ("lobby_poster", poster_icon, 3)):
         Image.fromarray(icon(fn, seed), "RGBA").save(items / f"{name}.png", optimize=True)
     prev = root / "docs/previews"
     prev.mkdir(parents=True, exist_ok=True)
     Image.open(out).convert("RGB").save(prev / "poster.png")
-    print("poster", out)
+    Image.open(out_ru).convert("RGB").save(prev / "poster_ru.png")
+    print("poster", out, out_ru)
 
 
 if __name__ == "__main__":

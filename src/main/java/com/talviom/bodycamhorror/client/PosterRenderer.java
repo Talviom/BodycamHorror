@@ -22,11 +22,24 @@ import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 /**
- * Рисует плакат 6x3 блока вплотную к стене: текстура textures/gui/poster.png (tools/assets/make_poster.py).
+ * Рисует плакат 6x3 блока вплотную к стене: текстура textures/gui/poster.png или poster_ru.png
+ * по языку игры (tools/assets/make_poster.py).
  * Свет чуть приподнят, чтобы в тёмном лобби текст читался, но плакат не светился.
  */
 public class PosterRenderer implements BlockEntityRenderer<PosterBlockEntity> {
-    private static final ResourceLocation TEX = new ResourceLocation(BodycamHorror.MOD_ID, "textures/gui/poster.png");
+    /** Текстура плаката на языке игры: lang-ключ bh.poster (poster или poster_ru). */
+    private static String texName;
+    private static ResourceLocation tex;
+
+    private static ResourceLocation texture() {
+        String name = Vhs.tr("bh.poster");
+        if (!name.matches("[a-z0-9_]+")) name = "poster";
+        if (!name.equals(texName)) {
+            texName = name;
+            tex = new ResourceLocation(BodycamHorror.MOD_ID, "textures/gui/" + name + ".png");
+        }
+        return tex;
+    }
     private static final int MIN_LIGHT = 9;
 
     public PosterRenderer(BlockEntityRendererProvider.Context ctx) {}
@@ -45,7 +58,7 @@ public class PosterRenderer implements BlockEntityRenderer<PosterBlockEntity> {
         float rz = right.getStepZ() * PosterBlock.WIDTH;
         float h = PosterBlock.HEIGHT;
 
-        VertexConsumer vc = buffers.getBuffer(RenderType.entityCutoutNoCull(TEX));
+        VertexConsumer vc = buffers.getBuffer(RenderType.entityCutoutNoCull(texture()));
         Matrix4f m = pose.last().pose();
         Matrix3f n = pose.last().normal();
         float nx = facing.getStepX();

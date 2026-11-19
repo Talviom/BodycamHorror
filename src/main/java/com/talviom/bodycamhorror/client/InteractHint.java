@@ -33,8 +33,8 @@ public final class InteractHint {
         boolean breaker = state.is(ModBlocks.BREAKER.get());
         if (!breaker && !state.is(ModBlocks.GENERATOR.get())) return;
         boolean on = !state.hasProperty(PowerSwitchBlock.POWERED) || state.getValue(PowerSwitchBlock.POWERED);
-        String action = breaker ? (on ? "CUT THE POWER" : "RESTORE POWER")
-                : (on ? "SHUT DOWN THE GENERATOR" : "START THE GENERATOR");
+        String action = Vhs.tr(breaker ? (on ? "bh.hint.breaker_off" : "bh.hint.breaker_on")
+                : (on ? "bh.hint.generator_off" : "bh.hint.generator_on"));
         String key = LobbyNotes.keyLabel("F", "tacz", "interact");
         if (key == null) return;
         int w = e.getWindow().getGuiScaledWidth();

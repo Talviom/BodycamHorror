@@ -80,13 +80,13 @@ public class BhInventoryScreen extends AbstractContainerScreen<BhInventoryMenu> 
     @Override
     protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
         // В текстуре надписей нет, все подписи рисует код.
-        Vhs.ghost(g, Vhs.title("PERSONAL EFFECTS"), 8, 5, 0xFF000000 | Vhs.BONE, 1f, 0f);
-        Vhs.plain(g, "ITEMS ON THE BODY", BhInventoryMenu.GRID_X, 18, 0xFF000000 | Vhs.SOOT);
+        Vhs.ghost(g, Vhs.title(Vhs.tr("bh.inv.title")), 8, 5, 0xFF000000 | Vhs.BONE, 1f, 0f);
+        Vhs.plain(g, Vhs.tr("bh.inv.items"), BhInventoryMenu.GRID_X, 18, 0xFF000000 | Vhs.SOOT);
         // Подпись под «фотографией» персонажа.
-        String subject = "SUBJECT";
+        String subject = Vhs.tr("bh.inv.subject");
         Vhs.plain(g, subject, (MODEL_X0 + MODEL_X1) / 2 - Vhs.width(subject) / 2, MODEL_Y1 + 4, 0xFF000000 | Vhs.ASH);
         // Строка запёкшейся кровью внизу.
-        String omen = "THEY WILL FIND WHAT YOU LEAVE.";
+        String omen = Vhs.tr("bh.inv.omen");
         Vhs.ghost(g, Vhs.title(omen), imageWidth - 8 - Vhs.width(Vhs.title(omen)), imageHeight - 14,
                 0xFF000000 | Vhs.DRIED_BLOOD, 1f, 0f);
 
@@ -105,7 +105,7 @@ public class BhInventoryScreen extends AbstractContainerScreen<BhInventoryMenu> 
         if (hint == null) {
             // Клавиша «выбросить» из настроек управления: в сборке это G (Q занята наклоном влево).
             String drop = LobbyNotes.keyLabel("G", "key.drop");
-            hint = "SHIFT+CLICK: MOVE" + (drop == null ? "" : "   " + drop + ": DROP");
+            hint = Vhs.tr("bh.inv.move") + (drop == null ? "" : "   " + Vhs.tr("bh.inv.drop", drop));
         }
         Vhs.plain(g, hint, BhInventoryMenu.GRID_X,
                 BhInventoryMenu.GRID_Y + 2 * BhInventoryMenu.PITCH + 8, 0xFF000000 | Vhs.SOOT);

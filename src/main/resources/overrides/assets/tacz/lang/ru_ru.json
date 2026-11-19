@@ -1,0 +1,4 @@
+{
+  "config.tacz.client.sound.first_person_animation_sound_tracking": "Привязка звуков анимаций от первого лица",
+  "config.tacz.client.sound.first_person_animation_sound_tracking.desc": "Звуки ключевых кадров анимаций от первого лица идут из мирового источника, привязанного к игроку. Это лучше сочетается с модами физики звука, но при движении стереокартинка может слегка плыть."
+}

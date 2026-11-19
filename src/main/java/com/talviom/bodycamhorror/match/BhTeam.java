@@ -1,6 +1,7 @@
 package com.talviom.bodycamhorror.match;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 
 public enum BhTeam {
     ALPHA("alpha", "Alpha", ChatFormatting.BLUE),
@@ -14,6 +15,11 @@ public enum BhTeam {
         this.id = id;
         this.displayName = displayName;
         this.color = color;
+    }
+
+    /** Название команды на языке игрока (lang bh.team.alpha / bh.team.bravo). */
+    public Component title() {
+        return Component.translatable("bh.team." + id);
     }
 
     public String scoreboardName() {

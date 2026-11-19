@@ -80,8 +80,8 @@ public final class MenuEvents {
         e.setCanceled(true);
         boolean saving = message && s.getTitle().getContents() instanceof TranslatableContents tc
                 && tc.getKey().toLowerCase(java.util.Locale.ROOT).contains("sav");
-        if (saving) drawLoading(e.getGuiGraphics(), s.width, s.height, "SAVING THE TAPE", "DON'T TURN IT OFF.");
-        else drawLoading(e.getGuiGraphics(), s.width, s.height, "LOADING THE TAPE", "DON'T LOOK AWAY.");
+        if (saving) drawLoading(e.getGuiGraphics(), s.width, s.height, Vhs.tr("bh.loading.saving"), Vhs.tr("bh.loading.saving_omen"));
+        else drawLoading(e.getGuiGraphics(), s.width, s.height, Vhs.tr("bh.loading.loading"), Vhs.tr("bh.loading.loading_omen"));
     }
 
     private static void drawLoading(GuiGraphics g, int w, int h, String what, String omen) {

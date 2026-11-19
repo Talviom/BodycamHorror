@@ -5,6 +5,7 @@ import com.talviom.bodycamhorror.match.BhTeam;
 import com.talviom.bodycamhorror.match.MapData;
 import com.talviom.bodycamhorror.sabotage.PowerSwitchBlock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -26,7 +27,7 @@ public final class ArenaBuilder {
     private ArenaBuilder() {}
 
     /** @param base угол арены на уровне пола (блок, на котором стоят игроки, находится под ним) */
-    public static String build(ServerLevel level, BlockPos base) {
+    public static Component build(ServerLevel level, BlockPos base) {
         BlockState floor = Blocks.SMOOTH_STONE.defaultBlockState();
         BlockState wall = Blocks.STONE_BRICKS.defaultBlockState();
         BlockState ceiling = Blocks.DEEPSLATE_TILES.defaultBlockState();
@@ -91,10 +92,9 @@ public final class ArenaBuilder {
         map.setPairedLoot(false);
         map.setDirty();
 
-        String lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 15), 0, 0));
+        Component lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 15), 0, 0));
 
-        return "Arena built: " + lamps + " lamps, 2 breakers, 1 generator, 3 spawns per team, "
-                + map.lootPoints().size() + " loot points, 2 exits, " + map.tapePoints().size() + " tape points. " + lobby;
+        return Component.translatable("bh.cmd.arena_built", lamps, map.lootPoints().size(), map.tapePoints().size(), lobby);
     }
 
     /** Проёмы шириной 3 блока посередине каждой внутренней стены. */

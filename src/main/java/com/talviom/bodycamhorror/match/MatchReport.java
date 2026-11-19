@@ -43,6 +43,11 @@ public final class MatchReport {
 
     private MatchReport() {}
 
+    /** Строка отчёта на языке хозяина мира (на выделенном сервере английский). */
+    private static String tr(String key, Object... args) {
+        return net.minecraft.network.chat.Component.translatable(key, args).getString();
+    }
+
     public static void matchStart(MinecraftServer server, boolean testMatch) {
         lines.clear();
         stats.clear();
@@ -59,7 +64,7 @@ public final class MatchReport {
                     stats.putIfAbsent(name(p), new int[4]);
                 }
             }
-            lines.add(t.displayName + ": " + (names.isEmpty() ? "-" : String.join(", ", names)));
+            lines.add(t.title().getString() + ": " + (names.isEmpty() ? "-" : String.join(", ", names)));
         }
     }
 
@@ -67,7 +72,7 @@ public final class MatchReport {
         if (!active) return;
         roundStartTick = server.getTickCount();
         lines.add("");
-        lines.add("ROUND " + round);
+        lines.add(tr("bh.report.round", round));
     }
 
     /** Конец заморозки: время раунда в отчёте считается отсюда. */
@@ -83,27 +88,27 @@ public final class MatchReport {
             by = name(kp);
             if (kp != victim) stat(kp, 0);
             ItemStack held = kp.getMainHandItem();
-            if (!held.isEmpty()) by += " with " + held.getHoverName().getString();
+            if (!held.isEmpty()) by = tr("bh.report.with", by, held.getHoverName().getString());
         } else if (killer instanceof LivingEntity le) {
             by = le.getType().getDescription().getString();
         } else {
             by = cause(src.getMsgId());
         }
         stat(victim, 1);
-        event(server, name(victim) + (by.startsWith("(") ? " died " + by : " killed by " + by));
+        event(server, by.startsWith("(") ? tr("bh.report.died", name(victim), by) : tr("bh.report.killed", name(victim), by));
     }
 
     /** Причина смерти без убийцы человеческими словами (в скобках: это не «убит кем-то»). */
     private static String cause(String msgId) {
         return switch (msgId) {
-            case "genericKill", "outOfWorld" -> "(removed by a command)";
-            case "fall" -> "(fell)";
-            case "inFire", "onFire", "lava" -> "(burned)";
-            case "drown" -> "(drowned)";
-            case "inWall" -> "(suffocated in a wall)";
-            case "explosion", "explosion.player" -> "(in an explosion)";
-            case "starve" -> "(starved)";
-            case "magic", "indirectMagic" -> "(magic)";
+            case "genericKill", "outOfWorld" -> tr("bh.report.cause.command");
+            case "fall" -> tr("bh.report.cause.fall");
+            case "inFire", "onFire", "lava" -> tr("bh.report.cause.fire");
+            case "drown" -> tr("bh.report.cause.drown");
+            case "inWall" -> tr("bh.report.cause.wall");
+            case "explosion", "explosion.player" -> tr("bh.report.cause.explosion");
+            case "starve" -> tr("bh.report.cause.starve");
+            case "magic", "indirectMagic" -> tr("bh.report.cause.magic");
             default -> "(" + msgId + ")";
         };
     }
@@ -111,13 +116,15 @@ public final class MatchReport {
     public static void tapePickedUp(MinecraftServer server, ServerPlayer p) {
         if (!active) return;
         stat(p, 2);
-        event(server, name(p) + " picked up the tape");
+        event(server, tr("bh.report.tape", name(p)));
     }
 
-    public static void switchUsed(MinecraftServer server, ServerPlayer p, String result) {
-        if (!active || !(result.startsWith("Power") || result.startsWith("Generator"))) return;
+    public static void switchUsed(MinecraftServer server, ServerPlayer p, net.minecraft.network.chat.Component result) {
+        // В отчёт идут только настоящие переключения (bh.switch.power_* и generator_*), не «подожди».
+        if (!active || !(result.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents tc)
+                || !(tc.getKey().startsWith("bh.switch.power") || tc.getKey().startsWith("bh.switch.generator"))) return;
         stat(p, 3);
-        event(server, name(p) + ": " + result.toLowerCase());
+        event(server, name(p) + ": " + result.getString().toLowerCase(java.util.Locale.ROOT));
     }
 
     /** Раз в секунду: пик страха у живых игроков. */
@@ -129,25 +136,26 @@ public final class MatchReport {
         }
     }
 
-    public static void roundEnd(MinecraftServer server, BhTeam winner, String how, int alpha, int bravo) {
+    public static void roundEnd(MinecraftServer server, BhTeam winner, net.minecraft.network.chat.Component how, int alpha, int bravo) {
         if (!active) return;
         int sec = (server.getTickCount() - roundStartTick) / 20;
-        lines.add(String.format("  %s  %s %s  Score %d:%d", clock(sec),
-                winner == null ? "Draw." : winner.displayName + " won.", how, alpha, bravo));
+        lines.add(tr("bh.report.round_line", clock(sec),
+                winner == null ? tr("bh.report.draw") : tr("bh.report.round_won", winner.title().getString()),
+                how.getString(), alpha, bravo));
     }
 
     /** Конец матча: пишем файл. */
-    public static void matchEnd(MinecraftServer server, String result) {
+    public static void matchEnd(MinecraftServer server, net.minecraft.network.chat.Component result) {
         if (!active) return;
         active = false;
         List<String> out = new ArrayList<>();
-        out.add("BODYCAM HORROR - MATCH REPORT" + (test ? " (TEST MATCH)" : ""));
-        out.add(startedAt.format(HUMAN) + ", " + clock((server.getTickCount() - matchStartTick) / 20) + " long");
-        out.add("Result: " + result);
+        out.add(tr("bh.report.title") + (test ? tr("bh.report.test") : ""));
+        out.add(tr("bh.report.length", startedAt.format(HUMAN), clock((server.getTickCount() - matchStartTick) / 20)));
+        out.add(tr("bh.report.result", result.getString()));
         out.add("");
         out.addAll(lines);
         out.add("");
-        out.add("PLAYERS (kills / deaths / tape pickups / switches / peak fear)");
+        out.add(tr("bh.report.players"));
         for (Map.Entry<String, int[]> e : stats.entrySet()) {
             int[] s = e.getValue();
             out.add(String.format("  %-16s %d / %d / %d / %d / %.0f", e.getKey(), s[0], s[1], s[2], s[3],

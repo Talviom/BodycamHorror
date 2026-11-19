@@ -38,7 +38,7 @@ public class BhInventoryMenu extends AbstractContainerMenu {
         if (p.isCreative() || p.isSpectator() || !p.isAlive()) return;
         if (p.containerMenu != p.inventoryMenu) return;
         NetworkHooks.openScreen(p, new SimpleMenuProvider((id, inv, pl) -> new BhInventoryMenu(id, inv),
-                Component.literal("INVENTORY")));
+                Component.translatable("container.bodycamhorror.inventory")));
     }
 
     /** Shift+клик переносит предмет между верхним и нижним рядом. */
