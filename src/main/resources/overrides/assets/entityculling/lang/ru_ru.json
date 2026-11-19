@@ -1,0 +1,9 @@
+{
+  "key.category.minecraft.text.entityculling.title": "EntityCulling",
+  "text.entityculling.blockEntityFrustumCulling": "Отсечение блок-сущностей вне обзора",
+  "text.entityculling.blockEntityFrustumCulling.tooltip": "Если включено, блок-сущности вне поля зрения камеры не обрабатываются. Помогает производительности, если загрузчик модов или другой мод этого не делает.",
+  "text.entityculling.forceDisplayCulling": "Принудительное отсечение экранных сущностей",
+  "text.entityculling.forceDisplayCulling.tooltip": "Если включено, экранным сущностям без рамки выдаётся рамка по умолчанию для отсечения. Помогает на картах и серверах с неправильно настроенными сущностями, но возможны графические ошибки.",
+  "text.entityculling.solidLeaves": "Плотная листва",
+  "text.entityculling.solidLeaves.tooltip": "Если включено, листва считается сплошной для отсечения. Помогает в лесах, но возможны графические ошибки. Полезно, если «Прозрачная листва» выключена или стоит ресурспак с пышной листвой."
+}

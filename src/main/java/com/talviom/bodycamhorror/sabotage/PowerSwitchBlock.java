@@ -85,11 +85,11 @@ public class PowerSwitchBlock extends Block {
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (level.isClientSide) return InteractionResult.SUCCESS;
-        String message = Sabotage.tryToggle((ServerLevel) level, pos, state, this);
+        Component message = Sabotage.tryToggle((ServerLevel) level, pos, state, this);
         if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
             com.talviom.bodycamhorror.match.MatchReport.switchUsed(sp.server, sp, message);
         }
-        player.displayClientMessage(Component.literal(message), true);
+        player.displayClientMessage(message, true);
         return InteractionResult.CONSUME;
     }
 

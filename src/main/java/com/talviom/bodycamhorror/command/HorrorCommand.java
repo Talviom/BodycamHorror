@@ -27,7 +27,7 @@ public final class HorrorCommand {
             test.then(Commands.literal(ev.id).executes(c -> {
                 ServerPlayer p = c.getSource().getPlayerOrException();
                 HorrorDirector.INSTANCE.fire(ev, p);
-                c.getSource().sendSuccess(() -> Component.literal("Event: " + ev.id), false);
+                c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.event", ev.id), false);
                 return 1;
             }));
         }
@@ -38,19 +38,19 @@ public final class HorrorCommand {
                                 .executes(c -> {
                                     ServerPlayer p = c.getSource().getPlayerOrException();
                                     int f = Math.round(FearSystem.INSTANCE.fear(p));
-                                    c.getSource().sendSuccess(() -> Component.literal("Fear: " + f), false);
+                                    c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.fear", f), false);
                                     return f;
                                 })
                                 .then(Commands.argument("value", IntegerArgumentType.integer(0, 100)).executes(c -> {
                                     ServerPlayer p = c.getSource().getPlayerOrException();
                                     int v = IntegerArgumentType.getInteger(c, "value");
                                     FearSystem.INSTANCE.setFear(p, v);
-                                    c.getSource().sendSuccess(() -> Component.literal("Fear set to " + v), false);
+                                    c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.fear_set", v), false);
                                     return v;
                                 }))))
                 .then(Commands.literal("power").then(Commands.literal("reset").executes(c -> {
                     Sabotage.resetAll(c.getSource().getServer().overworld());
-                    c.getSource().sendSuccess(() -> Component.literal("Power restored"), true);
+                    c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.power_reset"), true);
                     return 1;
                 }))));
     }

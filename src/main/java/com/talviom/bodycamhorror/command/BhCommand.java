@@ -89,14 +89,14 @@ public final class BhCommand {
                 .then(padSet)
                 .then(Commands.literal("return").executes(c -> {
                     LobbyManager.INSTANCE.sendAllToLobby(c.getSource().getServer());
-                    c.getSource().sendSuccess(() -> Component.literal("Everyone sent to the lobby"), true);
+                    c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.lobby_return"), true);
                     return 1;
                 })));
 
         root.then(Commands.literal("start").executes(c -> start(c, false))
                 .then(Commands.literal("test").executes(c -> start(c, true))));
         root.then(Commands.literal("skip").executes(c -> {
-            c.getSource().sendSuccess(() -> Component.literal(MatchManager.INSTANCE.skip(c.getSource().getServer())), false);
+            c.getSource().sendSuccess(() -> MatchManager.INSTANCE.skip(c.getSource().getServer()), false);
             return 1;
         }));
         root.then(Commands.literal("stop").executes(c -> {
@@ -114,8 +114,9 @@ public final class BhCommand {
             if (t == null) MatchManager.INSTANCE.removeFromTeam(c.getSource().getServer(), p);
             else MatchManager.INSTANCE.setTeam(c.getSource().getServer(), p, t);
         }
-        String where = t == null ? "removed from teams" : "now in " + t.displayName;
-        c.getSource().sendSuccess(() -> Component.literal(players.size() + " player(s) " + where), true);
+        Component msg = t == null ? Component.translatable("bh.cmd.team_removed", players.size())
+                : Component.translatable("bh.cmd.team_set", players.size(), t.title());
+        c.getSource().sendSuccess(() -> msg, true);
         return players.size();
     }
 
@@ -125,7 +126,7 @@ public final class BhCommand {
         BlockPos pos = BlockPos.containing(c.getSource().getPosition());
         map.spawns(t).add(pos);
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal(t.displayName + " spawn #" + map.spawns(t).size() + " at " + pos.toShortString()), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.spawn_added", t.title(), map.spawns(t).size(), pos.toShortString()), true);
         return 1;
     }
 
@@ -133,7 +134,7 @@ public final class BhCommand {
         MapData map = MapData.get(c.getSource().getServer().overworld());
         map.spawns(t).clear();
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal(t.displayName + " spawns cleared"), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.spawns_cleared", t.title()), true);
         return 1;
     }
 
@@ -142,7 +143,7 @@ public final class BhCommand {
         BlockPos pos = BlockPos.containing(c.getSource().getPosition());
         map.lootPoints().add(pos);
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal("Loot point #" + map.lootPoints().size() + " at " + pos.toShortString()), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.loot_added", map.lootPoints().size(), pos.toShortString()), true);
         return 1;
     }
 
@@ -150,7 +151,7 @@ public final class BhCommand {
         MapData map = MapData.get(c.getSource().getServer().overworld());
         map.lootPoints().clear();
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal("Loot points cleared"), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.loot_cleared"), true);
         return 1;
     }
 
@@ -158,7 +159,7 @@ public final class BhCommand {
         ServerLevel level = c.getSource().getServer().overworld();
         LootSpawner.clearGroundItems(level);
         int n = LootSpawner.spawn(level, MapData.get(level).lootPoints());
-        c.getSource().sendSuccess(() -> Component.literal("Items spawned: " + n), false);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.loot_spawned", n), false);
         return n;
     }
 
@@ -167,14 +168,13 @@ public final class BhCommand {
         BlockPos pos = BlockPos.containing(c.getSource().getPosition());
         MapData.get(level).setExit(side, pos);
         if (level.getBlockState(pos).isAir()) level.setBlock(pos, ModBlocks.EXIT_MARKER.get().defaultBlockState(), 3);
-        c.getSource().sendSuccess(() -> Component.literal(side.displayName + " side exit at " + pos.toShortString()
-                + ". The team spawning on this side carries the tape here."), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.exit_set", side.title(), pos.toShortString()), true);
         return 1;
     }
 
     private static int clearExit(CommandContext<CommandSourceStack> c, BhTeam side) {
         MapData.get(c.getSource().getServer().overworld()).setExit(side, null);
-        c.getSource().sendSuccess(() -> Component.literal(side.displayName + " side exit cleared"), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.exit_cleared", side.title()), true);
         return 1;
     }
 
@@ -183,7 +183,7 @@ public final class BhCommand {
         BlockPos pos = BlockPos.containing(c.getSource().getPosition());
         map.tapePoints().add(pos);
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal("Tape point #" + map.tapePoints().size() + " at " + pos.toShortString()), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.tape_added", map.tapePoints().size(), pos.toShortString()), true);
         return 1;
     }
 
@@ -191,7 +191,7 @@ public final class BhCommand {
         MapData map = MapData.get(c.getSource().getServer().overworld());
         map.tapePoints().clear();
         map.setDirty();
-        c.getSource().sendSuccess(() -> Component.literal("Tape points cleared"), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.tape_cleared"), true);
         return 1;
     }
 
@@ -199,20 +199,22 @@ public final class BhCommand {
         ServerLevel level = c.getSource().getServer().overworld();
         MapData map = MapData.get(level);
         if (map.tapePoints().isEmpty()) {
-            c.getSource().sendFailure(Component.literal("No tape points (/bh tape add)"));
+            c.getSource().sendFailure(Component.translatable("bh.cmd.tape_none"));
             return 0;
         }
         BlockPos p = map.tapePoints().get(level.getRandom().nextInt(map.tapePoints().size()));
         TapeObjective.spawnTape(level, net.minecraft.world.phys.Vec3.atBottomCenterOf(p));
-        c.getSource().sendSuccess(() -> Component.literal("Tape dropped at " + p.toShortString()
-                + (TapeObjective.mapReady(level) ? "" : ". Note: the tape mode also needs both exits (/bh exit set alpha|bravo)")), false);
+        Component dropped = Component.translatable("bh.cmd.tape_dropped", p.toShortString());
+        if (!TapeObjective.mapReady(level)) dropped = dropped.copy().append(Component.translatable("bh.cmd.tape_needs_exits"));
+        Component msg = dropped;
+        c.getSource().sendSuccess(() -> msg, false);
         return 1;
     }
 
     private static int buildLobby(CommandContext<CommandSourceStack> c) {
         ServerLevel level = c.getSource().getServer().overworld();
-        String msg = LobbyBuilder.build(level, BlockPos.containing(c.getSource().getPosition()));
-        c.getSource().sendSuccess(() -> Component.literal(msg), true);
+        Component msg = LobbyBuilder.build(level, BlockPos.containing(c.getSource().getPosition()));
+        c.getSource().sendSuccess(() -> msg, true);
         return 1;
     }
 
@@ -221,14 +223,14 @@ public final class BhCommand {
         BlockPos pos = BlockPos.containing(c.getSource().getPosition());
         MapData.get(level).setLobby(pos);
         level.setDefaultSpawnPos(pos, 0f);
-        c.getSource().sendSuccess(() -> Component.literal("Lobby at " + pos.toShortString() + " (also the world spawn)"), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.lobby_set", pos.toShortString()), true);
         return 1;
     }
 
     private static int setPad(CommandContext<CommandSourceStack> c, BhTeam t) {
         BlockPos pos = BlockPos.containing(c.getSource().getPosition());
         MapData.get(c.getSource().getServer().overworld()).setLobbyPad(t, pos);
-        c.getSource().sendSuccess(() -> Component.literal(t.displayName + " pad at " + pos.toShortString()), true);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.pad_set", t.title(), pos.toShortString()), true);
         return 1;
     }
 
@@ -237,25 +239,24 @@ public final class BhCommand {
         ServerPlayer self = c.getSource().getPlayer();
         // В тестовом режиме тот, кто запускает и ещё без команды, сам встаёт в «Альфу».
         if (test && self != null && m.teamOf(self) == null) m.setTeam(c.getSource().getServer(), self, BhTeam.ALPHA);
-        String err = m.start(c.getSource().getServer(), test);
+        Component err = m.start(c.getSource().getServer(), test);
         if (err != null) {
-            c.getSource().sendFailure(Component.literal(err));
+            c.getSource().sendFailure(err);
             return 0;
         }
-        c.getSource().sendSuccess(() -> Component.literal(test
-                ? "Test match started. /bh skip skips a phase, /bh stop stops, /bh horror fear 80 sets your fear"
-                : "Match started"), true);
+        c.getSource().sendSuccess(() -> Component.translatable(test ? "bh.cmd.test_started" : "bh.cmd.started"), true);
         return 1;
     }
 
     private static int status(CommandContext<CommandSourceStack> c) {
         MatchManager m = MatchManager.INSTANCE;
         MapData map = MapData.get(c.getSource().getServer().overworld());
-        c.getSource().sendSuccess(() -> Component.literal("State: " + m.state() + ", round " + m.round()
-                + ", " + m.secondsLeft() + " s left. Spawns: alpha " + map.spawns(BhTeam.ALPHA).size()
-                + ", bravo " + map.spawns(BhTeam.BRAVO).size() + ". Loot points: " + map.lootPoints().size()
-                + ". Exits: alpha " + (map.exit(BhTeam.ALPHA) != null ? "yes" : "no") + ", bravo " + (map.exit(BhTeam.BRAVO) != null ? "yes" : "no")
-                + ". Tape points: " + map.tapePoints().size() + ". Lobby: " + (map.lobby() != null ? map.lobby().toShortString() : "none")), false);
+        c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.status", m.state().label(), m.round(), m.secondsLeft(),
+                map.spawns(BhTeam.ALPHA).size(), map.spawns(BhTeam.BRAVO).size(), map.lootPoints().size(),
+                Component.translatable(map.exit(BhTeam.ALPHA) != null ? "bh.cmd.yes" : "bh.cmd.no"),
+                Component.translatable(map.exit(BhTeam.BRAVO) != null ? "bh.cmd.yes" : "bh.cmd.no"),
+                map.tapePoints().size(),
+                map.lobby() != null ? Component.literal(map.lobby().toShortString()) : Component.translatable("bh.cmd.none")), false);
         c.getSource().sendSuccess(m::scoreLine, false);
         return 1;
     }

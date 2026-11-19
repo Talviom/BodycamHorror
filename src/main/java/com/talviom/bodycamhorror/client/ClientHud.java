@@ -159,7 +159,7 @@ public final class ClientHud {
     /** Надписи камеры в правом верхнем углу: REC, время, имя. */
     private static void drawCameraText(GuiGraphics g, Minecraft mc, int width) {
         boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
-        String cam = "CAM-" + mc.player.getGameProfile().getName().toUpperCase();
+        String cam = Vhs.tr("bh.hud.cam", mc.player.getGameProfile().getName().toUpperCase(java.util.Locale.ROOT));
         String time = LocalDateTime.now().format(TIMECODE);
         int x = width - 8;
         int y = 8;

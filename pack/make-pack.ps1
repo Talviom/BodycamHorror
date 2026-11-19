@@ -36,6 +36,8 @@ if (Test-Path $hostOptions) {
         "key_key.voice_chat" = "key.keyboard.0"
         # Z (TACZ: осмотр и обвесы) в матче не нужен: оружие выдаётся готовым. Экран обвесов мод и так не открывает.
         "key_key.tacz.refit.desc" = "key.keyboard.unknown"
+        # Игра на русском (0.8.0): меню, HUD, плакат и сообщения мода переведены.
+        "lang" = "ru_ru"
     }
     $lines = foreach ($line in [System.IO.File]::ReadAllLines($hostOptions)) {
         $key = ($line -split ":", 2)[0]
@@ -46,6 +48,7 @@ if (Test-Path $hostOptions) {
     }
     if (-not ($lines | Where-Object { $_ -like "darkMojangStudiosBackground:*" })) { $lines = @($lines) + "darkMojangStudiosBackground:true" }
     if (-not ($lines | Where-Object { $_ -like "key_key.voice_chat:*" })) { $lines = @($lines) + "key_key.voice_chat:key.keyboard.0" }
+    if (-not ($lines | Where-Object { $_ -like "lang:*" })) { $lines = @($lines) + "lang:ru_ru" }
     [System.IO.File]::WriteAllLines((Join-Path $stage "options.txt"), [string[]]$lines, (New-Object System.Text.UTF8Encoding $false))
     $staged += "options.txt"
 }

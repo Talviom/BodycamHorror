@@ -28,7 +28,7 @@ public final class LobbyBuilder {
     private LobbyBuilder() {}
 
     /** @param base угол лобби на уровне пола (блок, на котором стоят игроки, находится под ним) */
-    public static String build(ServerLevel level, BlockPos base) {
+    public static Component build(ServerLevel level, BlockPos base) {
         BlockState floor = Blocks.POLISHED_DEEPSLATE.defaultBlockState();
         BlockState wall = Blocks.GRAY_CONCRETE.defaultBlockState();
         BlockState ceiling = Blocks.DEEPSLATE_TILES.defaultBlockState();
@@ -68,9 +68,11 @@ public final class LobbyBuilder {
                 .setValue(com.talviom.bodycamhorror.lobby.PosterBlock.FACING, net.minecraft.core.Direction.EAST), 3);
 
         // Таблички на дальней стене над площадками.
-        sign(level, base.offset(10, 2, D - 1), "ALPHA", "stand here");
-        sign(level, base.offset(4, 2, D - 1), "BRAVO", "stand here");
-        sign(level, base.offset(W / 2, 2, D - 1), "THE HOST", "starts the tape", "/bh start");
+        // Строки табличек из lang-файла: каждый видит их на своём языке.
+        sign(level, base.offset(10, 2, D - 1), Component.translatable("bh.sign.alpha"), Component.translatable("bh.sign.stand_here"));
+        sign(level, base.offset(4, 2, D - 1), Component.translatable("bh.sign.bravo"), Component.translatable("bh.sign.stand_here"));
+        sign(level, base.offset(W / 2, 2, D - 1), Component.translatable("bh.sign.host"),
+                Component.translatable("bh.sign.host_starts"), Component.literal("/bh start"));
 
         BlockPos spawn = base.offset(W / 2, 0, 2);
         MapData map = MapData.get(level);
@@ -79,7 +81,7 @@ public final class LobbyBuilder {
         map.setLobbyPad(BhTeam.BRAVO, bravoPad);
         level.setDefaultSpawnPos(spawn, 0f);
 
-        return "Lobby built at " + spawn.toShortString() + " (team pads, world spawn moved here)";
+        return Component.translatable("bh.cmd.lobby_built", spawn.toShortString());
     }
 
     private static void pad(ServerLevel level, BlockPos center, BlockState block) {
@@ -88,12 +90,12 @@ public final class LobbyBuilder {
         }
     }
 
-    private static void sign(ServerLevel level, BlockPos pos, String... lines) {
+    private static void sign(ServerLevel level, BlockPos pos, Component... lines) {
         BlockState state = Blocks.DARK_OAK_WALL_SIGN.defaultBlockState().setValue(WallSignBlock.FACING, Direction.NORTH);
         level.setBlock(pos, state, 3);
         if (level.getBlockEntity(pos) instanceof SignBlockEntity sign) {
             SignText text = new SignText().setColor(DyeColor.LIGHT_GRAY).setHasGlowingText(true);
-            for (int i = 0; i < lines.length && i < 4; i++) text = text.setMessage(i + (lines.length < 3 ? 1 : 0), Component.literal(lines[i]));
+            for (int i = 0; i < lines.length && i < 4; i++) text = text.setMessage(i + (lines.length < 3 ? 1 : 0), lines[i]);
             sign.setText(text, true);
             sign.setWaxed(true);
             sign.setChanged();

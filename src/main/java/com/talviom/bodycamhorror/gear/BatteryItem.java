@@ -23,12 +23,12 @@ public class BatteryItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (level.isClientSide || !(player instanceof ServerPlayer p)) return InteractionResultHolder.success(stack);
         if (!Flashlight.hasFlashlight(p)) {
-            p.displayClientMessage(Component.literal("No flashlight to put it in"), true);
+            p.displayClientMessage(Component.translatable("bh.battery.no_flashlight"), true);
             return InteractionResultHolder.fail(stack);
         }
         Flashlight.refill(p);
         level.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.LEVER_CLICK, SoundSource.PLAYERS, 0.6f, 1.6f);
-        p.displayClientMessage(Component.literal("Fresh battery"), true);
+        p.displayClientMessage(Component.translatable("bh.battery.fresh"), true);
         if (!p.isCreative()) stack.shrink(1);
         return InteractionResultHolder.consume(stack);
     }

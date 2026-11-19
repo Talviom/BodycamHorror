@@ -1,0 +1,92 @@
+# 0.8.0: игра на русском. Переключает язык на ru_ru и снимает все экраны мода: плакат, лобби, подсказку у щитка,
+# заставки раунда, HUD камеры, страх, инвентарь, главное меню, паузу, смерть, чат, ответы команд.
+# Запуск: gradlew runClient -PbhTest=tools/tests/russian.txt
+# Кадры: run/screenshots/ru_*.png. Смотреть, что кириллица рисуется шрифтом камеры и машинки (без квадратов),
+# и что текст не вылезает за рамки (инвентарь 252x150, кнопки меню, заставки). Результат: [bh-test] DONE failures=0.
+
+lang ru_ru
+wait 100
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 2000 120 2000 run bh arena build facility
+expect Комплекс построен
+expect Лобби построено
+time set midnight
+gamemode adventure Dev
+wait 40
+
+# --- плакат в лобби (poster_ru.png) и строка состояния лобби ---
+tp Dev 1987.5 120 2007.0 90 0
+wait 60
+shot ru_poster
+tp Dev 1988.5 120 2004.5 0 0
+wait 60
+shot ru_lobby_status
+
+# --- подсказка у щитка ---
+setblock 1990 121 2006 bodycamhorror:breaker[facing=north,powered=true]
+tp Dev 1990.5 120 2004.5 0 5
+wait 30
+shot ru_breaker_hint
+setblock 1990 121 2006 air
+
+# --- ответы команд на языке игры ---
+bh status
+expect Состояние
+execute as Dev run bh horror fear
+expect Страх
+
+# --- заставка раунда (заморозка), старт, HUD камеры, страх ---
+bh team alpha Dev
+bh start test
+expect Тестовый матч начат
+wait 50
+shot ru_round_banner
+bh skip
+expect Пропущено
+wait 12
+shot ru_go
+wait 80
+shot ru_live_hud
+execute as Dev run bh horror fear 80
+wait 40
+shot ru_fear_comment
+screen inventory
+wait 20
+shot ru_inventory
+screen close
+wait 10
+screen chat
+wait 10
+shot ru_chat
+screen close
+bh skip
+wait 20
+shot ru_round_end
+bh stop
+wait 10
+shot ru_stopped
+
+# --- экраны меню ---
+wait 60
+screen menu
+wait 80
+shot ru_menu
+screen close
+wait 10
+screen pause
+wait 30
+shot ru_pause
+screen close
+wait 10
+screen death
+wait 30
+shot ru_death
+screen close
+wait 10
+
+# --- вернуть английский для остальных сценариев ---
+lang en_us
+wait 100

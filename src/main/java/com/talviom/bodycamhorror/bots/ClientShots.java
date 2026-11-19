@@ -65,7 +65,18 @@ final class ClientShots {
     static void openDeath() {
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> mc.setScreen(new net.minecraft.client.gui.screens.DeathScreen(
-                net.minecraft.network.chat.Component.literal("Dev was killed by something in the dark"), false)));
+                net.minecraft.network.chat.Component.translatable("death.attack.bodycamhorror.tenant", "Dev"), false)));
+    }
+
+    /** Сменить язык игры, как на экране «Язык»: ресурсы перезагружаются, lang-файлы читаются заново. */
+    static void lang(String code) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> {
+            mc.getLanguageManager().setSelected(code);
+            mc.options.languageCode = code;
+            mc.reloadResourcePacks();
+            BodycamHorror.LOGGER.info("[bh-test] language " + code);
+        });
     }
 
     /** Закрыть открытый экран. */
@@ -86,10 +97,31 @@ final class ClientShots {
                         r -> {}, mc.getResourcePackDirectory(), net.minecraft.network.chat.Component.literal("Resource Packs"));
                 case "worlds" -> new net.minecraft.client.gui.screens.worldselection.SelectWorldScreen(parent);
                 case "lan" -> new net.minecraft.client.gui.screens.ShareToLanScreen(parent);
-                default -> new net.minecraftforge.client.gui.ModListScreen(parent);
+                case "controls" -> new net.minecraft.client.gui.screens.controls.ControlsScreen(parent, mc.options);
+                case "mods" -> new net.minecraftforge.client.gui.ModListScreen(parent);
+                // Экран чужого мода по имени класса (Embeddium, голосовой чат): конструктор (Screen) или без аргументов.
+                default -> byClassName(what, parent);
             };
+            if (next == null) return;
             mc.setScreen(next);
         });
+    }
+
+    private static net.minecraft.client.gui.screens.Screen byClassName(String name, net.minecraft.client.gui.screens.Screen parent) {
+        for (String cls : name.split("[|]")) {
+            try {
+                Class<?> c = Class.forName(cls.trim());
+                try {
+                    return (net.minecraft.client.gui.screens.Screen) c.getConstructor(net.minecraft.client.gui.screens.Screen.class).newInstance(parent);
+                } catch (NoSuchMethodException ignored) {
+                    return (net.minecraft.client.gui.screens.Screen) c.getConstructor().newInstance();
+                }
+            } catch (ReflectiveOperationException | ClassCastException | LinkageError ex) {
+                BodycamHorror.LOGGER.info("[bh-test] screen " + cls + ": " + ex);
+            }
+        }
+        BodycamHorror.LOGGER.error("[bh-test] screen " + name + ": no such screen");
+        return null;
     }
 
     /** Нажать кнопку на открытом экране по надписи (как щелчок мышью). */

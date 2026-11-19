@@ -1,0 +1,85 @@
+# 0.8.0: проверка русского языка в настоящей игре (D:\Minecraft\game, все моды, язык ru_ru), без мыши и клавиатуры.
+# Игра запускается напрямую с -Dbh.testScript=<этот файл> и --quickPlaySingleplayer "BH smoke test" (тестовая копия мира).
+# Кадры: D:\Minecraft\game\screenshots\real_ru_*.png. Результат: [bh-test] DONE failures=0.
+
+wait 100
+# Мир открывается для сети: иначе экран настроек ставит одиночную игру на паузу и сценарий (по тикам сервера) встаёт.
+publish false adventure 25566
+expect 25566
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 2000 120 2000 run bh arena build facility
+expect Комплекс построен
+time set midnight
+gamemode adventure Talviom
+wait 60
+
+# --- плакат в лобби вблизи ---
+tp Talviom 1987.0 120 2007.0 90 0
+wait 60
+shot real_ru_poster
+tp Talviom 1986.3 120 2007.0 90 5
+wait 40
+shot real_ru_poster_close
+tp Talviom 1988.5 120 2004.5 0 0
+wait 40
+shot real_ru_lobby
+
+# --- HUD матча ---
+bh team alpha Talviom
+bh start test
+expect Тестовый матч начат
+wait 50
+shot real_ru_round_banner
+bh skip
+wait 80
+shot real_ru_live_hud
+screen inventory
+wait 20
+shot real_ru_inventory
+screen close
+wait 10
+bh stop
+wait 40
+
+# --- меню ---
+screen menu
+wait 80
+shot real_ru_menu
+screen close
+wait 10
+screen pause
+wait 30
+shot real_ru_pause
+screen close
+wait 10
+screen options
+wait 20
+shot real_ru_options
+screen controls
+wait 20
+shot real_ru_controls
+screen close
+wait 10
+# Ванильный экран «Настройки графики» в полной сборке подменяет Embeddium: открываем его экран напрямую.
+screen org.embeddedt.embeddium.gui.EmbeddiumVideoOptionsScreen|me.jellysquid.mods.sodium.client.gui.SodiumOptionsGUI
+wait 30
+shot real_ru_embeddium
+screen close
+wait 10
+screen de.maxhenkel.voicechat.gui.VoiceChatScreen
+wait 30
+shot real_ru_voice
+screen close
+wait 10
+screen de.maxhenkel.voicechat.gui.VoiceChatSettingsScreen
+wait 30
+shot real_ru_voice_settings
+screen close
+wait 10
+screen death
+wait 30
+shot real_ru_death
+screen close
+wait 10

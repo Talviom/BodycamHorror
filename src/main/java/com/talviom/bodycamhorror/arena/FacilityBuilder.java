@@ -5,6 +5,7 @@ import com.talviom.bodycamhorror.match.BhTeam;
 import com.talviom.bodycamhorror.match.MapData;
 import com.talviom.bodycamhorror.sabotage.PowerSwitchBlock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -45,11 +46,11 @@ public final class FacilityBuilder {
         this.base = base;
     }
 
-    public static String build(ServerLevel level, BlockPos base) {
+    public static Component build(ServerLevel level, BlockPos base) {
         return new FacilityBuilder(level, base).run();
     }
 
-    private String run() {
+    private Component run() {
         shell();
         ground();
         upper();
@@ -57,9 +58,8 @@ public final class FacilityBuilder {
         stairs();
         int lamps = lamps();
         MapData map = points();
-        String lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 15), 0, 0));
-        return "Facility built: 3 levels, 4 stairways, " + lamps + " lamps, 2 breakers, 1 generator, 3 spawns per team, "
-                + map.lootPoints().size() + " loot points (mirrored pairs), 2 exits, " + map.tapePoints().size() + " tape points. " + lobby;
+        Component lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 15), 0, 0));
+        return Component.translatable("bh.cmd.facility_built", lamps, map.lootPoints().size(), map.tapePoints().size(), lobby);
     }
 
     // ---------- коробка и этажи ----------

@@ -1,0 +1,9 @@
+{
+  "embeddium.conflicting_mod": "Embeddium нашёл моды, которые вызывают ошибки отрисовки и вылеты. Их лучше удалить. Список ниже.",
+  "embeddium.conflicting_mod_list": "[{2}]",
+  "embeddium.search_bar_empty": "Поиск настроек...",
+  "embeddium.options.added_by_mod_string": "Добавлено модом: %s",
+  "embeddium.options.fullscreen.resolution.tooltip": "Разрешение игры в полноэкранном режиме.",
+  "embeddium.options.use_quad_normals_for_lighting.name": "Точное затенение граней",
+  "embeddium.options.use_quad_normals_for_lighting.tooltip": "Если включено, Embeddium затеняет грани немодельных блоков по их настоящему направлению, а не по ближайшей оси. Улучшает освещение, когда экспериментальный конвейер освещения Forge выключен (так быстрее всего).\n\nПри включённом экспериментальном конвейере ни на что не влияет."
+}

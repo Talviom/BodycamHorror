@@ -1,0 +1,7 @@
+{
+  "iris.load.failure.shader": "Шейдерпак не загрузился! Сообщите об ошибке автору шейдера. ",
+  "iris.load.failure.generic": "Oculus не смог загрузить шейдер; сообщите об этом разработчикам Oculus. ",
+  "iris.keybind.wireframe": "Каркас (только в одиночной игре)",
+  "options.iris.colorSpace": "Цветовое пространство",
+  "options.iris.colorSpace.sodium_tooltip": "В какое цветовое пространство переводится картинка. Работает поверх шейдеров. Если не уверены, выберите SRGB."
+}

@@ -110,7 +110,7 @@ public final class MatchManager {
     // ---------- жизненный цикл матча ----------
 
     /** @return текст ошибки или null, если матч запущен */
-    public String start(MinecraftServer server) {
+    public Component start(MinecraftServer server) {
         return start(server, false);
     }
 
@@ -119,18 +119,18 @@ public final class MatchManager {
      *             Раунд тогда заканчивается по таймеру, по смерти или командой /bh skip.
      * @return текст ошибки или null, если матч запущен
      */
-    public String start(MinecraftServer server, boolean test) {
-        if (running()) return "A match is already running";
+    public Component start(MinecraftServer server, boolean test) {
+        if (running()) return Component.translatable("bh.match.already_running");
         ServerLevel level = server.overworld();
         MapData map = MapData.get(level);
         int players = 0;
         for (BhTeam t : BhTeam.values()) {
-            if (map.spawns(t).isEmpty()) return "No spawn points for " + t.displayName + " (/bh spawn add " + t.id + ")";
+            if (map.spawns(t).isEmpty()) return Component.translatable("bh.match.no_spawns", t.title(), t.id);
             int n = onlineMembers(server, t).size();
-            if (n == 0 && !test) return t.displayName + " has no players (/bh team " + t.id + " <player>). To test alone: /bh start test";
+            if (n == 0 && !test) return Component.translatable("bh.match.no_players", t.title(), t.id);
             players += n;
         }
-        if (players == 0) return "No players in any team (/bh team alpha <player>)";
+        if (players == 0) return Component.translatable("bh.match.nobody");
         testMode = test;
         resetScore();
         round = 0;
@@ -141,7 +141,7 @@ public final class MatchManager {
 
     public void stop(MinecraftServer server) {
         if (!running()) return;
-        MatchReport.matchEnd(server, "Stopped (/bh stop) at " + score(BhTeam.ALPHA) + ":" + score(BhTeam.BRAVO));
+        MatchReport.matchEnd(server, Component.translatable("bh.match.stopped", score(BhTeam.ALPHA), score(BhTeam.BRAVO)));
         state = MatchState.LOBBY;
         alive.clear();
         frozenAt.clear();
@@ -213,11 +213,12 @@ public final class MatchManager {
     }
 
     /** @param reason строка в чат всем игрокам, чем кончился раунд (null = без пояснения) */
-    private void endRound(MinecraftServer server, BhTeam winner, String reason) {
+    private void endRound(MinecraftServer server, BhTeam winner, Component reason) {
         TenantSpawner.onRoundEnd(server);
         // Для отчёта о матче: чем кончился раунд (до того, как ticksLeft перезапишется).
-        String how = reason != null ? reason : ticksLeft <= 0 ? "Time ran out."
-                : winner == null ? "Both teams fell." : winner.other().displayName + " was wiped out.";
+        Component how = reason != null ? reason : ticksLeft <= 0 ? Component.translatable("bh.match.time_out")
+                : winner == null ? Component.translatable("bh.match.both_fell")
+                : Component.translatable("bh.match.wiped", winner.other().title());
         state = MatchState.ROUND_END;
         TapeObjective.INSTANCE.onRoundEnd();
         ticksLeft = BhConfig.ROUND_END_SECONDS.get() * 20;
@@ -247,7 +248,7 @@ public final class MatchManager {
         }
 
         if (matchOver) {
-            MatchReport.matchEnd(server, winner.displayName + " won " + score(BhTeam.ALPHA) + ":" + score(BhTeam.BRAVO));
+            MatchReport.matchEnd(server, Component.translatable("bh.match.won", winner.title(), score(BhTeam.ALPHA), score(BhTeam.BRAVO)));
             state = MatchState.LOBBY;
             TapeObjective.INSTANCE.onMatchEnd(server);
         TenantSpawner.onRoundEnd(server);
@@ -272,8 +273,9 @@ public final class MatchManager {
             case LIVE -> {
                 TenantSpawner.tick(server);
                 BhTeam out = TapeObjective.INSTANCE.tick(server);
-                if (out != null) endRound(server, out, out.displayName + " got the tape out.");
-                else if (ticksLeft <= 0) endRound(server, timeoutWinner(), TapeObjective.INSTANCE.active() ? "No one got the tape out." : null);
+                if (out != null) endRound(server, out, Component.translatable("bh.match.tape_out", out.title()));
+                else if (ticksLeft <= 0) endRound(server, timeoutWinner(),
+                        TapeObjective.INSTANCE.active() ? Component.translatable("bh.match.tape_lost") : null);
             }
             case ROUND_END -> {
                 if (ticksLeft <= 0) startRound(server);
@@ -339,12 +341,12 @@ public final class MatchManager {
     }
 
     /** Перемотать текущую фазу: заморозка → раунд → пауза → следующий раунд. Для проверки. */
-    public String skip(MinecraftServer server) {
-        if (!running()) return "No match is running";
+    public Component skip(MinecraftServer server) {
+        if (!running()) return Component.translatable("bh.match.not_running");
         MatchState before = state;
         ticksLeft = 1;
         tick(server);
-        return "Skipped: " + before + " -> " + state;
+        return Component.translatable("bh.match.skipped", before.label(), state.label());
     }
 
     public boolean testMode() {
@@ -477,9 +479,9 @@ public final class MatchManager {
     }
 
     public Component scoreLine() {
-        return Component.literal(BhTeam.ALPHA.displayName + " " + score.get(BhTeam.ALPHA)).withStyle(BhTeam.ALPHA.color)
+        return BhTeam.ALPHA.title().copy().append(" " + score.get(BhTeam.ALPHA)).withStyle(BhTeam.ALPHA.color)
                 .append(Component.literal("  :  ").withStyle(net.minecraft.ChatFormatting.GRAY))
-                .append(Component.literal(score.get(BhTeam.BRAVO) + " " + BhTeam.BRAVO.displayName).withStyle(BhTeam.BRAVO.color));
+                .append(Component.literal(score.get(BhTeam.BRAVO) + " ").append(BhTeam.BRAVO.title()).withStyle(BhTeam.BRAVO.color));
     }
 
     /** Заставка с точки зрения команды {@code team} (null = зритель). */

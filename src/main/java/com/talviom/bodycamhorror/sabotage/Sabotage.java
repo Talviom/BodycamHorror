@@ -58,14 +58,14 @@ public final class Sabotage {
 
     // ---------- переключение ----------
 
-    /** @return сообщение для игрока, который нажал на выключатель */
-    public static String tryToggle(ServerLevel level, BlockPos pos, BlockState state, PowerSwitchBlock block) {
+    /** @return сообщение для игрока, который нажал на выключатель (ключ bh.switch.*) */
+    public static net.minecraft.network.chat.Component tryToggle(ServerLevel level, BlockPos pos, BlockState state, PowerSwitchBlock block) {
         MatchState st = MatchManager.INSTANCE.state();
-        if (st == MatchState.PREP || st == MatchState.ROUND_END) return "Not now";
+        if (st == MatchState.PREP || st == MatchState.ROUND_END) return net.minecraft.network.chat.Component.translatable("bh.switch.not_now");
 
         long now = level.getGameTime();
         Long until = COOLDOWN_UNTIL.get(pos);
-        if (until != null && now < until) return "Wait " + ((until - now) / 20 + 1) + " s";
+        if (until != null && now < until) return net.minecraft.network.chat.Component.translatable("bh.switch.wait", (until - now) / 20 + 1);
 
         boolean on = !state.getValue(PowerSwitchBlock.POWERED);
         level.setBlock(pos, state.setValue(PowerSwitchBlock.POWERED, on), 3);
@@ -81,8 +81,9 @@ public final class Sabotage {
             play(level, pos, on ? "bodycamhorror:breaker_on" : "bodycamhorror:breaker_off", 2.0f, 1.0f);
         }
 
-        if (block.global) return on ? "Generator started" : "Generator stopped";
-        return on ? "Power on" : "Power off";
+        String key = block.global ? (on ? "bh.switch.generator_on" : "bh.switch.generator_off")
+                : (on ? "bh.switch.power_on" : "bh.switch.power_off");
+        return net.minecraft.network.chat.Component.translatable(key);
     }
 
     /** Перед каждым раундом: всё включено, кулдауны и мигания сброшены. */

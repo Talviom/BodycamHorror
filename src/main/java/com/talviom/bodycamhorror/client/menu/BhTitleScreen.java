@@ -40,11 +40,6 @@ public final class BhTitleScreen extends Screen {
     private static final int BG_W = 960;
     private static final int BG_H = 540;
 
-    private static final String[] OMENS = {
-            "NO ONE CAME BACK.", "THIS TAPE WAS FOUND.", "DON'T WATCH IT ALONE.",
-            "IT'S STILL RECORDING.", "IT HEARD US FIRST.", "COUNT YOUR FRIENDS."
-    };
-
     /** Первое открытие после запуска игры: долгий выход из черноты. Потом короткий. */
     private static boolean firstOpen = true;
 
@@ -78,7 +73,8 @@ public final class BhTitleScreen extends Screen {
         super(Component.translatable("narrator.screen.title"));
         fadeMs = firstOpen ? 2600 : 700;
         firstOpen = false;
-        omen = OMENS[rnd.nextInt(OMENS.length)];
+        String[] omens = Vhs.trList("bh.menu.omens");
+        omen = omens[rnd.nextInt(omens.length)];
     }
 
     @Override
@@ -86,14 +82,14 @@ public final class BhTitleScreen extends Screen {
         int cx = width / 2;
         int y = menuTop();
         int step = step();
-        addRenderableWidget(new TapeButton(cx, y, "SINGLEPLAYER", this::textAlpha, b -> minecraft.setScreen(new SelectWorldScreen(this))));
-        TapeButton mp = new TapeButton(cx, y + step, "MULTIPLAYER", this::textAlpha, b -> minecraft.setScreen(
+        addRenderableWidget(new TapeButton(cx, y, Vhs.tr("bh.menu.singleplayer"), this::textAlpha, b -> minecraft.setScreen(new SelectWorldScreen(this))));
+        TapeButton mp = new TapeButton(cx, y + step, Vhs.tr("bh.menu.multiplayer"), this::textAlpha, b -> minecraft.setScreen(
                 minecraft.options.skipMultiplayerWarning ? new JoinMultiplayerScreen(this) : new SafetyScreen(this)));
         mp.active = minecraft.allowsMultiplayer();
         addRenderableWidget(mp);
-        addRenderableWidget(new TapeButton(cx, y + step * 2, "OPTIONS", this::textAlpha, b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
-        addRenderableWidget(new TapeButton(cx, y + step * 3, "MODS", this::textAlpha, b -> minecraft.setScreen(new ModListScreen(this))));
-        addRenderableWidget(new TapeButton(cx, y + step * 4 + 6, "QUIT", this::textAlpha, b -> minecraft.stop()));
+        addRenderableWidget(new TapeButton(cx, y + step * 2, Vhs.tr("bh.menu.options"), this::textAlpha, b -> minecraft.setScreen(new OptionsScreen(this, minecraft.options))));
+        addRenderableWidget(new TapeButton(cx, y + step * 3, Vhs.tr("bh.menu.mods"), this::textAlpha, b -> minecraft.setScreen(new ModListScreen(this))));
+        addRenderableWidget(new TapeButton(cx, y + step * 4 + 6, Vhs.tr("bh.menu.quit"), this::textAlpha, b -> minecraft.stop()));
     }
 
     @Override
@@ -200,7 +196,7 @@ public final class BhTitleScreen extends Screen {
         int cx = width / 2;
         int y = titleY();
         float scale = titleScale();
-        Vhs.ghostCentered(g, Vhs.title("RECOVERED FOOTAGE"), cx, y - 14, alpha(150) | Vhs.ASH, 1f, 0f);
+        Vhs.ghostCentered(g, Vhs.title(Vhs.tr("bh.menu.recovered")), cx, y - 14, alpha(150) | Vhs.ASH, 1f, 0f);
         Vhs.ghostCentered(g, titleText(), cx, y, alpha(235) | Vhs.BONE, scale, 0.35f);
         Vhs.ghostCentered(g, Vhs.title(omen), cx, y + Math.round(9 * scale) + 6, alpha(220) | Vhs.DRIED_BLOOD, 1f, 0.25f);
     }
@@ -208,11 +204,12 @@ public final class BhTitleScreen extends Screen {
     /** Служебные надписи камеры по углам и строка версии внизу. */
     private void drawOsd(GuiGraphics g, long now) {
         if (textAlpha <= 0.01f) return;
-        int corner = MenuOsd.draw(g, width, height, textAlpha, "TAPE 07");
+        int corner = MenuOsd.draw(g, width, height, textAlpha, Vhs.tr("bh.menu.tape"));
 
         String version = "BODYCAM HORROR " + modVersion() + "  FORGE " + ForgeVersion.getVersion()
                 + "  MC " + SharedConstants.getCurrentVersion().getName();
-        String copyright = "COPYRIGHT MOJANG AB. DO NOT DISTRIBUTE!";
+        // Ванильная строка об авторских правах на языке игры.
+        String copyright = Vhs.tr("title.credits").toUpperCase(java.util.Locale.ROOT);
         int room = width - 2 * (12 + corner + 12);
         int soot = alpha(150) | Vhs.SOOT;
         int menuBottom = menuTop() + menuHeight();

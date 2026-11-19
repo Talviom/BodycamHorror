@@ -89,12 +89,56 @@ G = {
     "■": ["     ", "#####", "#####", "#####", "#####", "#####", "     "],  # stop
     "♥": ["     ", " # # ", "#####", "#####", " ### ", "  #  ", "     "],  # heart
 }
+# Cyrillic (Russian translation, 0.8.0). Same 5x7 grid. A glyph may have 8 rows: the 8th goes into
+# the descender row (Д, Ц, Щ). TOP holds a mark drawn in the top padding row (Ё, Й).
+G.update({
+    "А": G["A"], "В": G["B"], "Е": G["E"], "К": G["K"], "М": G["M"], "Н": G["H"], "О": G["O"],
+    "Р": G["P"], "С": G["C"], "Т": G["T"], "Х": G["X"], "Ё": G["E"],
+    "И": ["#   #", "#   #", "#  ##", "# # #", "##  #", "#   #", "#   #"],
+    "Б": ["#####", "#    ", "#    ", "#### ", "#   #", "#   #", "#### "],
+    "Г": ["#####", "#    ", "#    ", "#    ", "#    ", "#    ", "#    "],
+    "Д": [" ### ", " # # ", " # # ", " # # ", " # # ", " # # ", "#####", "#   #"],
+    "Ж": ["# # #", "# # #", " ### ", "  #  ", " ### ", "# # #", "# # #"],
+    "З": [" ### ", "#   #", "    #", "  ## ", "    #", "#   #", " ### "],
+    "Й": ["#   #", "#   #", "#  ##", "# # #", "##  #", "#   #", "#   #"],
+    "Л": ["  ###", " #  #", " #  #", " #  #", " #  #", " #  #", "#   #"],
+    "П": ["#####", "#   #", "#   #", "#   #", "#   #", "#   #", "#   #"],
+    "У": ["#   #", "#   #", "#   #", " ####", "    #", "#   #", " ### "],
+    "Ф": ["  #  ", " ### ", "# # #", "# # #", "# # #", " ### ", "  #  "],
+    "Ц": ["#  # ", "#  # ", "#  # ", "#  # ", "#  # ", "#  # ", "#####", "    #"],
+    "Ч": ["#   #", "#   #", "#   #", " ####", "    #", "    #", "    #"],
+    "Ш": ["# # #", "# # #", "# # #", "# # #", "# # #", "# # #", "#####"],
+    "Щ": ["# # #", "# # #", "# # #", "# # #", "# # #", "# # #", "#####", "    #"],
+    "Ъ": ["##   ", " #   ", " #   ", " ### ", " #  #", " #  #", " ### "],
+    "Ы": ["#   #", "#   #", "#   #", "##  #", "# # #", "# # #", "##  #"],
+    "Ь": ["#    ", "#    ", "#    ", "#### ", "#   #", "#   #", "#### "],
+    "Э": [" ### ", "#   #", "    #", " ####", "    #", "#   #", " ### "],
+    "Ю": ["#  # ", "# # #", "# # #", "### #", "# # #", "# # #", "#  # "],
+    "Я": [" ####", "#   #", "#   #", " ####", "  # #", " #  #", "#   #"],
+    "«": ["     ", "  # #", " # # ", "# #  ", " # # ", "  # #", "     "],
+    "»": ["     ", "# #  ", " # # ", "  # #", " # # ", "# #  ", "     "],
+    "—": ["     ", "     ", "     ", "#####", "     ", "     ", "     "],
+    "·": ["     ", "     ", "     ", "  #  ", "     ", "     ", "     "],
+    "□": ["     ", "#####", "#   #", "#   #", "#   #", "#####", "     "],
+    "№": ["#  # ", "## # ", "# ## ", "#  # ", "#  ##", "#  # ", "#  ##"],
+})
+TOP = {"Ё": " # # ", "Й": " ### "}
+CYR_UP = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
 for ch in "abcdefghijklmnopqrstuvwxyz":
     G[ch] = G[ch.upper()]
+for ch in CYR_UP + "Ё":
+    G[ch.lower()] = G[ch]
+    if ch in TOP:
+        TOP[ch.lower()] = TOP[ch]
 
 CELL_W, CELL_H = 6, 9   # 5x7 glyph + 1 px spacing right, 1 px top padding, 1 px descender row
 ROWS = [[chr(c) for c in range(r * 16 + 0x20, r * 16 + 0x30)] for r in range(6)]
-ROWS.append(["▶", "●", "■", "♥"] + ["\u0000"] * 12)
+# New symbols go after the old ones, so the worn typewriter keeps the same random ink on old glyphs.
+ROWS.append(["▶", "●", "■", "♥", "«", "»", "—", "·", "□", "№", "Ё", "ё"] + ["\u0000"] * 4)
+ROWS.append(list(CYR_UP[:16]))
+ROWS.append(list(CYR_UP[16:]))
+ROWS.append(list(CYR_UP[:16].lower()))
+ROWS.append(list(CYR_UP[16:].lower()))
 
 
 def font_sheet():
@@ -104,10 +148,11 @@ def font_sheet():
             g = G.get(ch)
             if not g:
                 continue
-            for y, line in enumerate(g):
+            for y, line in enumerate(([TOP[ch]] if ch in TOP else []) + g):
+                yo = 0 if ch in TOP else 1
                 for x, px in enumerate(line):
                     if px == "#":
-                        img[r * CELL_H + 1 + y, c * CELL_W + x] = (255, 255, 255, 255)
+                        img[r * CELL_H + yo + y, c * CELL_W + x] = (255, 255, 255, 255)
     # Space and unused cells must stay empty; Minecraft measures glyph width from the pixels.
     return img
 
@@ -119,6 +164,8 @@ def font_json():
     return {"providers": [
         {"type": "space", "advances": {" ": 4}},
         {"type": "bitmap", "file": "bodycamhorror:font/vhs.png", "height": 9, "ascent": 7, "chars": chars},
+        # Anything the sheet lacks falls back to the vanilla font instead of empty boxes.
+        {"type": "reference", "id": "minecraft:default"},
     ]}
 
 
@@ -552,7 +599,9 @@ def horror_font_sheet():
                 continue
             dy = 1 if r.random() < 0.22 else 0          # misaligned key
             ink = r.uniform(0.72, 1.0)                  # this key's ink strength
-            for y, line in enumerate(g):
+            if ch in TOP or len(g) > 7:
+                dy = 0                                  # no room to drop a key with marks or a tail
+            for y, line in enumerate(([TOP[ch]] if ch in TOP else []) + g):
                 for x, px in enumerate(line):
                     if px != "#":
                         continue

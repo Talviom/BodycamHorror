@@ -35,7 +35,7 @@ public final class TenantCommand {
                         .then(Commands.literal("remove").executes(c -> {
                             List<TenantEntity> all = all(c.getSource().getLevel());
                             all.forEach(Entity::discard);
-                            c.getSource().sendSuccess(() -> Component.literal("Tenants removed: " + all.size()), true);
+                            c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.tenant_removed", all.size()), true);
                             return all.size();
                         }))
                         .then(pose())
@@ -60,7 +60,7 @@ public final class TenantCommand {
             pose.then(Commands.literal(s.name().toLowerCase()).executes(c -> {
                 List<TenantEntity> all = all(c.getSource().getLevel());
                 all.forEach(t -> t.pose(s));
-                c.getSource().sendSuccess(() -> Component.literal("Tenant pose: " + s.name().toLowerCase()), false);
+                c.getSource().sendSuccess(() -> Component.translatable("bh.cmd.tenant_pose", s.name().toLowerCase()), false);
                 return all.size();
             }));
         }
@@ -83,15 +83,15 @@ public final class TenantCommand {
         t.setHome(BlockPos.containing(pos));
         t.setFrozen(frozen);
         level.addFreshEntity(t);
-        c.getSource().sendSuccess(() -> Component.literal("Tenant spawned at " + BlockPos.containing(pos).toShortString()
-                + (frozen ? " (frozen)" : "")), true);
+        c.getSource().sendSuccess(() -> Component.translatable(frozen ? "bh.cmd.tenant_spawned_frozen" : "bh.cmd.tenant_spawned",
+                BlockPos.containing(pos).toShortString()), true);
         return 1;
     }
 
     private static int freeze(CommandContext<CommandSourceStack> c, boolean frozen) {
         List<TenantEntity> all = all(c.getSource().getLevel());
         all.forEach(t -> t.setFrozen(frozen));
-        c.getSource().sendSuccess(() -> Component.literal("Tenants " + (frozen ? "frozen" : "released") + ": " + all.size()), false);
+        c.getSource().sendSuccess(() -> Component.translatable(frozen ? "bh.cmd.tenant_frozen" : "bh.cmd.tenant_released", all.size()), false);
         return all.size();
     }
 
@@ -107,14 +107,15 @@ public final class TenantCommand {
         ServerPlayer p = EntityArgument.getPlayer(c, "player");
         List<TenantEntity> all = all(c.getSource().getLevel());
         if (all.isEmpty()) {
-            c.getSource().sendFailure(Component.literal("No tenant"));
+            c.getSource().sendFailure(Component.translatable("bh.cmd.tenant_none"));
             return 0;
         }
         TenantEntity t = all.get(0);
         t.setFrozen(false);
         t.startAttack(p, c.getSource().getLevel().getGameTime(), ending);
-        c.getSource().sendSuccess(() -> Component.literal("Tenant attacks " + p.getGameProfile().getName()
-                + (ending == null ? "" : " (" + ending.name().toLowerCase() + ")")), false);
+        c.getSource().sendSuccess(() -> ending == null
+                ? Component.translatable("bh.cmd.tenant_attacks", p.getGameProfile().getName())
+                : Component.translatable("bh.cmd.tenant_attacks_how", p.getGameProfile().getName(), ending.name().toLowerCase()), false);
         return 1;
     }
 }

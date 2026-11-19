@@ -18,20 +18,15 @@ import java.lang.reflect.Modifier;
  * хардкор), только нарисованы поверх нашего кадра; сами кнопки тёмные из widgets.png.
  */
 public final class BhDeathScreen extends DeathScreen {
-    private static final String[] OMENS = {
-            "THE CAMERA KEPT RECORDING.",
-            "SOMEONE PICKED IT UP.",
-            "THE FOOTAGE ENDS HERE.",
-            "IT DIDN'T STOP WATCHING.",
-    };
-
     private final long openedAt = System.currentTimeMillis();
     private final String cause;
-    private final String omen = OMENS[(int) (Math.random() * OMENS.length)];
+    private final String omen;
 
     public BhDeathScreen(@Nullable Component causeOfDeath, boolean hardcore) {
         super(causeOfDeath, hardcore);
         this.cause = causeOfDeath == null ? "" : causeOfDeath.getString();
+        String[] omens = Vhs.trList("bh.death.omens");
+        this.omen = omens[(int) (Math.random() * omens.length)];
     }
 
     /**
@@ -65,10 +60,10 @@ public final class BhDeathScreen extends DeathScreen {
 
         int cx = width / 2;
         int top = Math.max(16, height / 4 - 34);
-        Vhs.ghostCentered(g, Vhs.title("SIGNAL LOST"), cx, top, MenuOsd.a(235, in) | Vhs.BONE, 3f, 0.45f);
+        Vhs.ghostCentered(g, Vhs.title(Vhs.tr("bh.signal_lost")), cx, top, MenuOsd.a(235, in) | Vhs.BONE, 3f, 0.45f);
         int y = top + 36;
         if (!cause.isEmpty()) {
-            Vhs.ghostCentered(g, Vhs.title(cause.toUpperCase()), cx, y, MenuOsd.a(190, in) | Vhs.ASH, 1f, 0.15f);
+            Vhs.ghostCentered(g, Vhs.title(cause.toUpperCase(java.util.Locale.ROOT)), cx, y, MenuOsd.a(190, in) | Vhs.ASH, 1f, 0.15f);
             y += 14;
         }
         Vhs.ghostCentered(g, Vhs.title(omen), cx, y, MenuOsd.a(200, in) | Vhs.DRIED_BLOOD, 1f, 0.2f);

@@ -105,7 +105,7 @@ public final class LobbyManager {
                 if (pad == null || !onPad(p, pad)) continue;
                 if (match.teamOf(p) != t) {
                     match.setTeam(server, p, t);
-                    p.displayClientMessage(TapeObjective.text("YOU ARE " + t.displayName.toUpperCase(), TapeObjective.BONE), true);
+                    p.displayClientMessage(TapeObjective.text(Component.translatable("bh.lobby.you_are", t.title()), TapeObjective.BONE), true);
                 }
             }
             if (tick % 40 == 0 && !onAnyPad(p, map)) {
@@ -129,7 +129,7 @@ public final class LobbyManager {
         return false;
     }
 
-    private static String status(MinecraftServer server) {
+    private static Component status(MinecraftServer server) {
         int a = 0;
         int b = 0;
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
@@ -137,6 +137,6 @@ public final class LobbyManager {
             if (t == BhTeam.ALPHA) a++;
             else if (t == BhTeam.BRAVO) b++;
         }
-        return "ALPHA " + a + "  ·  BRAVO " + b + "  ·  STEP ON A PAD. THE HOST STARTS WITH /BH START";
+        return Component.translatable("bh.lobby.status", a, b);
     }
 }

@@ -154,6 +154,11 @@ public final class TestScript {
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.press(label));
             } else if (line.startsWith("screen ")) {
                 screen(server, line.substring(7).trim());
+            } else if (line.startsWith("lang ")) {
+                // Язык игры (ru_ru, en_us): перезагружает ресурсы, после этой строки нужен wait 100.
+                String code = line.substring(5).trim();
+                BodycamHorror.LOGGER.info(PREFIX + "> " + line);
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.lang(code));
             } else {
                 run(server, line);
             }
@@ -176,8 +181,12 @@ public final class TestScript {
             case "menu" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openMenu);
             case "pause" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openPause);
             case "death" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openDeath);
-            case "options", "video", "packs", "worlds", "mods", "lan" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openVanilla(what));
+            case "options", "video", "packs", "worlds", "mods", "lan", "controls" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openVanilla(what));
             default -> {
+                if (what.contains(".")) {
+                    DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openVanilla(what));
+                    return;
+                }
                 host.closeContainer();
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::closeScreen);
             }

@@ -1,0 +1,7 @@
+{
+  "key.leaningornot.lean_left": "Наклон влево",
+  "key.leaningornot.lean_right": "Наклон вправо",
+  "key.leaningornot.left_alt": "Плавный наклон",
+  "key.leaningornot.increment_left": "Наклон влево по шагам",
+  "key.leaningornot.increment_right": "Наклон вправо по шагам"
+}
