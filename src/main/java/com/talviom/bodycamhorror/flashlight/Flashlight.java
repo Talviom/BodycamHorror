@@ -36,7 +36,10 @@ import java.util.UUID;
  * и чем дальше стена, тем пятно тусклее. Луч обрывается на первой стене, сквозь стены не светит.
  * Такой свет видят все игроки, поэтому включённый фонарик выдаёт владельца.
  *
- * Батарейка садится, пока фонарик включён, и заряжается, пока выключен.
+ * С 0.9 свет блоков нарочно слабый (вдоль луча 3..5, пятно 4..7): видимый узкий конус рисует шейдер FOOTAGE_bh
+ * (uniform bhFlashlight), а блоки нужны, чтобы луч видели другие игроки и чтобы он подсвечивал мир без шейдера.
+ *
+ * Батарейка садится, пока фонарик включён (75 с), а выключенный сам заряжается только до 15 % (за 50 с).
  * Ниже 15 % луч мигает, на нуле фонарик выключается сам.
  */
 public final class Flashlight {
@@ -160,8 +163,11 @@ public final class Flashlight {
                 p.displayClientMessage(Component.translatable("bh.flashlight.dead"), true);
                 click(p, 0.8f);
             }
-        } else if (c < 1f) {
-            c = Math.min(1f, c + 1f / (HorrorConfig.RECHARGE_SECONDS.get() * 20f));
+        } else {
+            // 0.9: самозаряд только до 15 % (с нуля за 50 с), чтобы совсем без света не остаться.
+            // Выше заряжает лишь батарейка из лута, поэтому свет стал ресурсом.
+            float cap = HorrorConfig.RECHARGE_CAP.get().floatValue();
+            if (c < cap) c = Math.min(cap, c + cap / (HorrorConfig.RECHARGE_SECONDS.get() * 20f));
         }
         CHARGE.put(id, c);
     }
@@ -205,14 +211,14 @@ public final class Flashlight {
         double dist = hitWall ? hit.getLocation().distanceTo(origin) : range;
         boolean weak = charge(p) < LOW_BATTERY;
 
-        // Вдоль луча: слабая подсветка, гаснет к концу.
-        for (double d = 2.0; d < dist - 1.0; d += 2.5) {
-            int lvl = Math.round(Mth.lerp((float) (d / range), 8f, 5f));
+        // Вдоль луча: слабая подсветка, гаснет к концу (0.9: было 8..5 через 2,5 блока, шейдер обводил каждый блок ореолом).
+        for (double d = 2.5; d < dist - 1.0; d += 3.0) {
+            int lvl = Math.round(Mth.lerp((float) (d / range), 5f, 3f));
             put(out, level, origin.add(look.scale(d)), look, weak ? lvl - 2 : lvl);
         }
-        // Пятно у стены: близко ярче, далеко тусклее. В пустоте луч просто растворяется.
-        int spot = hitWall ? Mth.clamp((int) Math.round(12 - dist * 0.5), 7, 12) : 5;
-        put(out, level, origin.add(look.scale(Math.max(0.8, dist - 0.4))), look, weak ? spot - 3 : spot);
+        // Пятно у стены: близко ярче, далеко тусклее (0.9: 4..7 вместо 7..12). В пустоте луч просто растворяется.
+        int spot = hitWall ? Mth.clamp((int) Math.round(7.5 - dist * 0.5), 4, 7) : 3;
+        put(out, level, origin.add(look.scale(Math.max(0.8, dist - 0.4))), look, weak ? spot - 2 : spot);
     }
 
     private static void put(Map<Spot, Integer> out, ServerLevel level, Vec3 at, Vec3 look, int lvl) {

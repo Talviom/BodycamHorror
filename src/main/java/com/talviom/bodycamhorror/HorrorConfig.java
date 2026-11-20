@@ -20,6 +20,7 @@ public final class HorrorConfig {
 
     public static final ForgeConfigSpec.IntValue BATTERY_SECONDS;
     public static final ForgeConfigSpec.IntValue RECHARGE_SECONDS;
+    public static final ForgeConfigSpec.DoubleValue RECHARGE_CAP;
     public static final ForgeConfigSpec.IntValue BEAM_RANGE;
 
     public static final ForgeConfigSpec.IntValue BREAKER_RADIUS;
@@ -49,9 +50,14 @@ public final class HorrorConfig {
         COMBAT_SECONDS = b.comment("No horror events for this long after a player hits or gets hit").defineInRange("combatSeconds", 8, 0, 120);
         b.pop();
         b.push("flashlight");
-        BATTERY_SECONDS = b.comment("Seconds a full battery lasts").defineInRange("batterySeconds", 90, 5, 3600);
-        RECHARGE_SECONDS = b.comment("Seconds to recharge an empty battery while the flashlight is off").defineInRange("rechargeSeconds", 45, 1, 3600);
-        BEAM_RANGE = b.comment("Beam length in blocks").defineInRange("beamRange", 10, 3, 24);
+        // 0.9: ключи с новыми именами, чтобы у всех подхватились 75 с, самозаряд до 15 % за 50 с и луч 8 блоков.
+        BATTERY_SECONDS = b.comment("Seconds a full battery lasts").defineInRange("batterySeconds09", 75, 5, 3600);
+        RECHARGE_SECONDS = b.comment("Seconds for the flashlight to recharge itself from empty up to rechargeCap while off")
+                .defineInRange("rechargeSeconds09", 50, 1, 3600);
+        RECHARGE_CAP = b.comment("Self-recharge stops at this charge (0..1); only a battery from loot fills it higher")
+                .defineInRange("rechargeCap09", 0.15, 0.0, 1.0);
+        BEAM_RANGE = b.comment("Beam length in blocks (block light; with the FOOTAGE_bh shader the visible cone is drawn by the shader)")
+                .defineInRange("beamRange09", 8, 3, 24);
         b.pop();
         b.push("sabotage");
         BREAKER_RADIUS = b.comment("Radius (blocks) of lamps controlled by one breaker box").defineInRange("breakerRadius", 24, 4, 128);

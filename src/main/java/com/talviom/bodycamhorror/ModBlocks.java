@@ -28,6 +28,11 @@ public final class ModBlocks {
     public static final RegistryObject<Block> GENERATOR = BLOCKS.register("generator", () -> new PowerSwitchBlock(
             BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0f).sound(SoundType.METAL).noLootTable().noOcclusion(), true));
 
+    /** 0.9: аварийная лампа, тускло-красная при выключенном генераторе, неразбиваемая (см. EmergencyLampBlock). */
+    public static final RegistryObject<Block> EMERGENCY_LAMP = BLOCKS.register("emergency_lamp", () -> new com.talviom.bodycamhorror.sabotage.EmergencyLampBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_RED).strength(-1f, 3600000f).sound(SoundType.METAL).noLootTable().noOcclusion()
+                    .lightLevel(s -> s.getValue(com.talviom.bodycamhorror.sabotage.EmergencyLampBlock.LIT) ? 5 : 0)));
+
     /** Невидимый свет фонарика (убирает себя сам, см. BeamLightBlock). */
     public static final RegistryObject<Block> BEAM_LIGHT = BLOCKS.register("beam_light", () -> new com.talviom.bodycamhorror.flashlight.BeamLightBlock(
             BlockBehaviour.Properties.of().replaceable().noCollission().noLootTable().noOcclusion()
@@ -41,6 +46,7 @@ public final class ModBlocks {
     public static final RegistryObject<Item> LAMP_ITEM = ITEMS.register("lamp", () -> new BlockItem(LAMP.get(), new Item.Properties()));
     public static final RegistryObject<Item> BREAKER_ITEM = ITEMS.register("breaker", () -> new BlockItem(BREAKER.get(), new Item.Properties()));
     public static final RegistryObject<Item> GENERATOR_ITEM = ITEMS.register("generator", () -> new BlockItem(GENERATOR.get(), new Item.Properties()));
+    public static final RegistryObject<Item> EMERGENCY_LAMP_ITEM = ITEMS.register("emergency_lamp", () -> new BlockItem(EMERGENCY_LAMP.get(), new Item.Properties()));
 
     public static final RegistryObject<Item> FLASHLIGHT = ITEMS.register("flashlight", () -> new FlashlightItem(new Item.Properties().stacksTo(1)));
 
@@ -63,6 +69,7 @@ public final class ModBlocks {
             e.accept(LAMP_ITEM);
             e.accept(BREAKER_ITEM);
             e.accept(GENERATOR_ITEM);
+            e.accept(EMERGENCY_LAMP_ITEM);
             e.accept(EXIT_MARKER_ITEM);
         }
         if (e.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {

@@ -26,8 +26,46 @@ public final class ShaderState {
     private static float fear;
     private static float fearPrev;
     private static int dropTicks;
+    private static float emergency;
+    private static float emergencyPrev;
+    private static float emergencyTarget;
+    private static int scanTicks;
+    private static final int EMERGENCY_RADIUS = 9;
 
     private ShaderState() {}
+
+    /** 0.9: 0..1, насколько близко горящая аварийная лампа (в прямой видимости). Шейдер красит ею тени в красный. */
+    public static float emergency() {
+        return Mth.lerp(partial(), emergencyPrev, emergency);
+    }
+
+    private static float scanEmergency(Minecraft mc) {
+        net.minecraft.world.level.Level level = mc.level;
+        net.minecraft.world.phys.Vec3 eye = mc.player.getEyePosition();
+        net.minecraft.core.BlockPos c = mc.player.blockPosition();
+        float best = 0f;
+        net.minecraft.core.BlockPos.MutableBlockPos p = new net.minecraft.core.BlockPos.MutableBlockPos();
+        for (int dx = -EMERGENCY_RADIUS; dx <= EMERGENCY_RADIUS; dx++) {
+            for (int dy = -EMERGENCY_RADIUS; dy <= EMERGENCY_RADIUS; dy++) {
+                for (int dz = -EMERGENCY_RADIUS; dz <= EMERGENCY_RADIUS; dz++) {
+                    p.set(c.getX() + dx, c.getY() + dy, c.getZ() + dz);
+                    net.minecraft.world.level.block.state.BlockState s = level.getBlockState(p);
+                    if (!(s.getBlock() instanceof com.talviom.bodycamhorror.sabotage.EmergencyLampBlock)
+                            || !s.getValue(com.talviom.bodycamhorror.sabotage.EmergencyLampBlock.LIT)) continue;
+                    net.minecraft.world.phys.Vec3 lamp = net.minecraft.world.phys.Vec3.atCenterOf(p);
+                    float k = 1f - (float) (lamp.distanceTo(eye) / (EMERGENCY_RADIUS + 1));
+                    if (k <= best) continue;
+                    // За стеной красного не видно: луч от глаз до лампы не должен упираться в блок раньше неё.
+                    net.minecraft.world.phys.BlockHitResult hit = level.clip(new net.minecraft.world.level.ClipContext(
+                            eye, lamp, net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                            net.minecraft.world.level.ClipContext.Fluid.NONE, mc.player));
+                    if (hit.getType() != net.minecraft.world.phys.HitResult.Type.MISS && !hit.getBlockPos().equals(p)) continue;
+                    best = k;
+                }
+            }
+        }
+        return Mth.clamp(best * 1.4f, 0f, 1f);
+    }
 
     /** Значения для текущего кадра, сглаженные между тиками. */
     public static float flashlight() {
@@ -70,6 +108,15 @@ public final class ShaderState {
 
         float fearTarget = self && ClientState.inMatch ? Mth.clamp(ClientState.fear / 100f, 0f, 1f) : 0f;
         fear += (fearTarget - fear) * 0.08f;
+
+        emergencyPrev = emergency;
+        if (mc.player == null || mc.level == null) {
+            emergencyTarget = 0f;
+        } else if (--scanTicks <= 0) {
+            scanTicks = 10;
+            emergencyTarget = scanEmergency(mc);
+        }
+        emergency += (emergencyTarget - emergency) * 0.12f;
     }
 
     @Mod.EventBusSubscriber(modid = BodycamHorror.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)

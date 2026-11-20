@@ -27,6 +27,8 @@ public final class Sabotage {
     private static final List<Pulse> PULSES = new ArrayList<>();
     private static boolean needsRecompute;
     private static int lastActivePulses;
+    /** 0.9: миры, где генератор сейчас выключен (для аварийных ламп, EmergencyLampBlock). */
+    private static final java.util.Set<net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level>> GENERATOR_OFF = new java.util.HashSet<>();
 
     private Sabotage() {}
 
@@ -204,6 +206,8 @@ public final class Sabotage {
             if (sw.global) globalOff = true;
             else offBreakers.add(pos);
         }
+        if (globalOff) GENERATOR_OFF.add(level.dimension());
+        else GENERATOR_OFF.remove(level.dimension());
 
         long r = HorrorConfig.BREAKER_RADIUS.get();
         long r2 = r * r;
@@ -236,6 +240,11 @@ public final class Sabotage {
             if (s.getValue(LampBlock.LIT) != lit) level.setBlock(pos, s.setValue(LampBlock.LIT, lit), 3);
         }
         if (dirty) d.setDirty();
+    }
+
+    /** 0.9: выключен ли генератор в этом мире (по последнему расчёту света). */
+    public static boolean generatorOff(ServerLevel level) {
+        return GENERATOR_OFF.contains(level.dimension());
     }
 
     private static void play(ServerLevel level, BlockPos pos, String soundId, float volume, float pitch) {

@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "floor=false,lit=true": {
+      "model": "bodycamhorror:block/emergency_lamp"
+    },
+    "floor=false,lit=false": {
+      "model": "bodycamhorror:block/emergency_lamp_off"
+    },
+    "floor=true,lit=true": {
+      "model": "bodycamhorror:block/emergency_lamp_floor"
+    },
+    "floor=true,lit=false": {
+      "model": "bodycamhorror:block/emergency_lamp_floor_off"
+    }
+  }
+}

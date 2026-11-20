@@ -57,6 +57,7 @@ public final class FacilityBuilder {
         basement();
         stairs();
         int lamps = lamps();
+        emergencyLamps();
         MapData map = points();
         Component lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 15), 0, 0));
         return Component.translatable("bh.cmd.facility_built", lamps, map.lootPoints().size(), map.tapePoints().size(), lobby);
@@ -160,6 +161,18 @@ public final class FacilityBuilder {
         for (int[] p : upper) n += symLamp(p[0], 9, p[1], lamp);
         for (int[] p : basement) n += symLamp(p[0], -2, p[1], lamp);
         return n;
+    }
+
+    /**
+     * 0.9: три аварийные лампы, тёмные при работающем генераторе и тускло-красные без него.
+     * Подвал над генератором и пол в центре зала стоят ровно в центре карты; лампа галереи висит над проходом
+     * у перил, на линии, равноудалённой от обоих выходов (как точки кассеты), поэтому ни одной стороне не ближе.
+     */
+    private void emergencyLamps() {
+        BlockState e = ModBlocks.EMERGENCY_LAMP.get().defaultBlockState();
+        set(24, -2, 16, e);                                                         // подвал, над генератором
+        set(24, 0, 16, e.setValue(com.talviom.bodycamhorror.sabotage.EmergencyLampBlock.FLOOR, true)); // центр зала, на полу
+        set(29, 9, 8, e);                                                           // галерея над залом
     }
 
     private int symLamp(int x, int y, int z, BlockState lamp) {

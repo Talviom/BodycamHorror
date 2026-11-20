@@ -15,14 +15,14 @@ import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * Клиент: клавиши мода. Фонарик на O (L занята прицелом TACZ), инвентарь на Tab
+ * Клиент: клавиши мода. Фонарик на T (с 0.9, чат переехал на Enter, см. KeyDefaults09), инвентарь на Tab
  * (список игроков стоит перенести на другую клавишу, например Caps Lock).
  * Взаимодействие со щитком и генератором идёт через клавишу F самого TACZ (тег interact_key/whitelist).
  * Имена вложенных классов и методов уникальны в пакете client (см. пояснение в ClientEffects).
  */
 public final class ClientKeys {
     public static final KeyMapping FLASHLIGHT = new KeyMapping(
-            "key.bodycamhorror.flashlight", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.bodycamhorror");
+            "key.bodycamhorror.flashlight", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_T, "key.categories.bodycamhorror");
     public static final KeyMapping INVENTORY = new KeyMapping(
             "key.bodycamhorror.inventory", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_TAB, "key.categories.bodycamhorror");
 

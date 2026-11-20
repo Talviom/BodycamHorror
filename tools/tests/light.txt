@@ -1,0 +1,114 @@
+# 0.9 фонарик и свет: батарейка 75 с, самозаряд только до 15 % за 50 с, слабый свет блоков,
+# аварийные лампы «Комплекса» (тёмные при генераторе, тускло-красные без него), конус и красный в шейдере.
+# Запуск: gradlew runClient -PbhShaders -PbhTest=tools/tests/light.txt
+# «bh arena build facility» в 2000 120 2000: угол здания 2002 120 2002, генератор 2026 115 2018,
+# аварийные лампы: подвал 2026 118 2018, пол зала 2026 120 2018, галерея 2031 129 2010.
+# Кадры: run/screenshots/09l_*.png. Результат: [bh-test] DONE failures=0.
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 2000 120 2000 run bh arena build facility
+expect Facility built
+time set midnight
+gamemode adventure Dev
+wait 40
+
+# --- аварийные лампы стоят и тёмные, пока работает генератор ---
+execute if block 2026 118 2018 bodycamhorror:emergency_lamp[lit=false,floor=false]
+expect passed
+execute if block 2026 120 2018 bodycamhorror:emergency_lamp[lit=false,floor=true]
+expect passed
+execute if block 2031 129 2010 bodycamhorror:emergency_lamp[lit=false,floor=false]
+expect passed
+
+# --- матч: фонарик, батарейка ---
+bh team alpha Dev
+bh start test
+bh skip
+give Dev bodycamhorror:flashlight
+execute as Dev run bh horror fear 0
+bh debug
+expect bat=100%
+
+# Зал с первого этажа, свет ламп горит, генератор работает.
+tp Dev 2020.5 120 2018.5 -90 -10
+hud off
+wait 40
+shot 09l_hall_power_on
+
+# --- генератор выключен: обычные лампы гаснут, аварийные светят красным ---
+setblock 2026 115 2018 air
+setblock 2026 115 2018 bodycamhorror:generator[powered=false]
+wait 30
+execute if block 2026 118 2018 bodycamhorror:emergency_lamp[lit=true]
+expect passed
+execute if block 2026 120 2018 bodycamhorror:emergency_lamp[lit=true]
+expect passed
+execute if block 2031 129 2010 bodycamhorror:emergency_lamp[lit=true]
+expect passed
+wait 30
+shot 09l_hall_emergency
+tp Dev 2020.5 115 2018.5 -90 0
+wait 40
+shot 09l_basement_emergency
+tp Dev 2035.5 126 2010.5 90 -20
+wait 40
+shot 09l_gallery_emergency
+
+
+# --- фонарик в темноте: конус от плеча, свет блоков слабый ---
+tp Dev 2006.5 120 2005.5 90 5
+bh bot light Dev
+expect flashlight: on
+wait 40
+shot 09l_flashlight_corridor
+tp Dev 2020.5 115 2018.5 -90 0
+wait 30
+shot 09l_flashlight_basement_red
+tp Dev 2015.5 120 2006.5 0 20
+wait 30
+shot 09l_flashlight_close_wall
+
+# 390 тиков после включения (19,5 с из 75): заряд около 74 %.
+wait 260
+bh tenant remove
+bh debug
+expect light=on/
+expect bat=7
+
+# --- генератор снова включён: аварийные лампы гаснут ---
+setblock 2026 115 2018 air
+setblock 2026 115 2018 bodycamhorror:generator[powered=true]
+wait 30
+execute if block 2026 120 2018 bodycamhorror:emergency_lamp[lit=false]
+expect passed
+
+# --- батарейка садится до нуля (ещё ~60 с) ---
+wait 420
+bh tenant remove
+wait 420
+bh tenant remove
+wait 290
+bh tenant remove
+bh debug
+expect light=off
+expect bat=0%
+
+# --- самозаряд: с нуля до 15 % за 50 с, выше не идёт ---
+wait 500
+bh tenant remove
+bh debug
+reject bat=0%
+reject bat=15%
+wait 520
+bh tenant remove
+bh debug
+expect bat=15%
+wait 400
+bh debug
+expect bat=15%
+reject bat=16%
+
+hud on
+bh stop

@@ -1,5 +1,6 @@
 {
   "block.bodycamhorror.lamp": "Ceiling Light",
+  "block.bodycamhorror.emergency_lamp": "Emergency Light",
   "block.bodycamhorror.breaker": "Breaker Box",
   "block.bodycamhorror.generator": "Generator",
   "item.bodycamhorror.flashlight": "Flashlight",

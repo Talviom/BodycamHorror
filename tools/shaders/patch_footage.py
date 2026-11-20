@@ -17,12 +17,15 @@
 
 Что меняется по смыслу (стиль проекта, мрачная «найденная плёнка»):
 6. Встроенный фонарик пака горел всегда ночью. Теперь светит только наш нагрудный фонарик:
-   мод передаёт его яркость в uniform bhFlashlight (клавиша O, батарейка, мигание, помехи).
+   мод передаёт его яркость в uniform bhFlashlight (клавиша T, батарейка, мигание, помехи).
    Луч идёт от правого плеча, пятно тёплое и неровное, в воздухе виден слабый конус.
 7. Страх (uniform bhFear): края экрана сжимаются в такт сердцу, цвет уходит в серую кость,
    камера «плавает» экспозицией, в тенях больше зерна. При страхе 0 картинка как без эффекта.
 8. Чёрное остаётся чёрным: тени не поднимаются в серое.
 9. Хроматическая аберрация (разъезд красного и голубого) выключена: запрещена правилами стиля.
+10. 0.9: конус фонарика уже и длиннее, с неровным краем и грязным стеклом, пыль в воздухе слабее
+    (свет блоков фонарика в моде ослаблен, луч рисует шейдер). Рядом с горящей аварийной лампой
+    (uniform bhEmergency) тени уходят в тусклый красный.
 """
 import re
 import shutil
@@ -58,31 +61,36 @@ FLASHLIGHT_GLSL = r"""
         float f_dot = dot(lampDir, lampAim);
         float f_ang = acos(clamp(f_dot, -1.0, 1.0));
 
-        // Дешёвый отражатель: горячее пятно с тусклым центром, кольца и широкий слабый ореол.
-        float hotspot = smoothstep(0.30, 0.16, f_ang);
-        float hole = 1.0 - 0.25 * smoothstep(0.05, 0.0, f_ang);
-        float rings = 0.88 + 0.12 * sin(f_ang * 95.0);
-        float spill = smoothstep(0.60, 0.28, f_ang) * 0.18;
-        float mask = hotspot * hole * rings + spill;
+        // 0.9: узкий конус дешёвого фонаря без пересвеченного диска: пятно ~10° плавно гаснет к краю,
+        // еле заметные кольца отражателя и пятна грязного стекла, слабый ореол до ~25°.
+        // Свет блоков фонарика теперь слабый (3..7), основной луч рисует шейдер.
+        float hotspot = smoothstep(0.24, 0.02, f_ang);
+        hotspot *= hotspot;
+        float rings = 0.95 + 0.05 * sin(f_ang * 110.0 + 0.6);
+        float smudge = 0.88 + 0.12 * sin(lampDir.x * 23.0 + 1.3) * sin(lampDir.y * 19.0);
+        float spill = smoothstep(0.45, 0.16, f_ang) * 0.08;
+        float mask = hotspot * rings * smudge + spill;
 
-        vec3 lampColor = mix(vec3(1.0, 0.70, 0.42), vec3(1.0, 0.88, 0.70), bhFlashlight);
-        float atten = 1.0 / (1.0 + f_dist * f_dist * 0.07);
-        atten *= smoothstep(26.0, 10.0, f_dist);
-        float ndotl = max(0.0, dot(normal, -lampDir));
-        sceneData += albedo * lampColor * mask * atten * ndotl * 2.6 * bhFlashlight;
+        // Тёплая лампа накаливания; на слабой батарейке желтеет и уходит в оранжевый.
+        vec3 lampColor = mix(vec3(1.0, 0.60, 0.32), vec3(1.0, 0.82, 0.60), bhFlashlight);
+        // Вблизи не слепит: у стены в шаге пятно тусклое, на 8-15 блоках ещё видно.
+        float atten = 1.0 / (1.0 + f_dist * f_dist * 0.05) * smoothstep(0.6, 3.5, f_dist) * 0.7 + 0.3 / (1.0 + f_dist * f_dist * 0.05);
+        atten *= smoothstep(30.0, 12.0, f_dist);
+        float ndotl = max(0.0, dot(normal, -lampDir)) * 0.85 + 0.15;
+        sceneData += albedo * lampColor * mask * atten * ndotl * 2.0 * bhFlashlight;
 
-        // Конус в воздухе: слабая пыль, видимая вдоль луча.
+        // Конус в воздухе: еле видная пыль вдоль луча, без сияния вокруг.
         float jitter = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
-        float rayLen = min(length(viewPos), 14.0);
+        float rayLen = min(length(viewPos), 12.0);
         float haze = 0.0;
         for (int i = 0; i < 8; i++) {
             float t = (float(i) + jitter) / 8.0 * rayLen;
             vec3 hp = viewDir * t - lampPos;
             float hd = length(hp);
             float ha = acos(clamp(dot(hp / hd, lampAim), -1.0, 1.0));
-            haze += smoothstep(0.34, 0.12, ha) / (1.0 + hd * hd * 0.09);
+            haze += smoothstep(0.24, 0.08, ha) / (1.0 + hd * hd * 0.12);
         }
-        sceneData += lampColor * haze * (rayLen / 8.0) * 0.010 * bhFlashlight;
+        sceneData += lampColor * haze * (rayLen / 8.0) * 0.003 * bhFlashlight;
     }
 }
 //------------------------------------------------------------------------------------------------//
@@ -108,6 +116,19 @@ FEAR_GLSL = r"""
 """
 
 
+EMERGENCY_GLSL = r"""
+        // BODYCAMHORROR 0.9: аварийный красный. Рядом с горящей аварийной лампой (bhEmergency 0..1) тени и
+        // полутона уходят в тусклый кроваво-красный, светлые места (луч фонарика) остаются почти своего цвета.
+        if (bhEmergency > 0.001) {
+            float lumE = dot(finalData, vec3(0.299, 0.587, 0.114));
+            float shadowE = 1.0 - smoothstep(0.04, 0.55, lumE);
+            vec3 redE = vec3(lumE * 1.8 + 0.022, lumE * 0.32 + 0.002, lumE * 0.28 + 0.002);
+            finalData = mix(finalData, redE, bhEmergency * (0.25 + 0.6 * shadowE));
+            finalData = clamp(finalData, 0.0, 1.0);
+        }
+"""
+
+
 def patch_composite1(text: str) -> str:
     start = text.index("//----// FLASHLIGHT EFFECT //")
     end = text.index("#endif", text.index("sceneData += albedo * f_color", start))
@@ -117,10 +138,10 @@ def patch_composite1(text: str) -> str:
 
 
 def patch_final(text: str) -> str:
-    text = text.replace("out vec3 finalData;", "out vec3 finalData;\nuniform float bhFear;", 1)
+    text = text.replace("out vec3 finalData;", "out vec3 finalData;\nuniform float bhFear;\nuniform float bhEmergency;", 1)
     anchor = "        finalData = applyChromaticAberration(texcoord, finalData);\n"
     assert anchor in text
-    return text.replace(anchor, anchor + FEAR_GLSL, 1)
+    return text.replace(anchor, anchor + FEAR_GLSL + EMERGENCY_GLSL, 1)
 
 
 OPTION_OVERRIDES = {
