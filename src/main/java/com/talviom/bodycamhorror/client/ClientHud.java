@@ -160,7 +160,7 @@ public final class ClientHud {
     private static void drawCameraText(GuiGraphics g, Minecraft mc, int width) {
         boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
         String cam = Vhs.tr("bh.hud.cam", mc.player.getGameProfile().getName().toUpperCase(java.util.Locale.ROOT));
-        String time = LocalDateTime.now().format(TIMECODE);
+        String time = DreadFx.timecode(LocalDateTime.now().format(TIMECODE));
         int x = width - 8;
         int y = 8;
         // Как на старой камере: выцветшая кость и пепел, красной остаётся только точка записи.

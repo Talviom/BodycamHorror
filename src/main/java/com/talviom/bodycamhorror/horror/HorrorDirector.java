@@ -5,6 +5,7 @@ import com.talviom.bodycamhorror.flashlight.Flashlight;
 import com.talviom.bodycamhorror.match.MatchManager;
 import com.talviom.bodycamhorror.match.MatchState;
 import com.talviom.bodycamhorror.net.BhNetwork;
+import com.talviom.bodycamhorror.net.DreadPacket;
 import com.talviom.bodycamhorror.radio.RadioState;
 import com.talviom.bodycamhorror.sabotage.Sabotage;
 import net.minecraft.core.Holder;
@@ -102,7 +103,106 @@ public final class HorrorDirector {
                 BhNetwork.sendGlitch(target, 20, 0.3f);
                 playTo(target, "bodycamhorror:radio_static", target.position(), 0.5f, 0.8f);
             }
+            case BREATH -> playTo(target, "bodycamhorror:tenant_breath", target.position().add(behind(target).scale(1.2)).add(0, 1.4, 0), 0.9f, 0.9f);
+            case TAPE_HISS -> playTo(target, "bodycamhorror:tape_hiss", around(target, 5, 9), 0.8f, 0.85f + rnd.nextFloat() * 0.2f);
+            case DOOR -> playTo(target, "bodycamhorror:door_slam", around(target, 5, 9), 1.0f, 0.9f + rnd.nextFloat() * 0.15f);
+            case METAL -> playTo(target, "bodycamhorror:metal_bang", around(target, 14, 22), 1.0f, 0.85f + rnd.nextFloat() * 0.25f);
+            case CRY -> playTo(target, "bodycamhorror:far_cry", around(target, 16, 24), 1.0f, 0.9f + rnd.nextFloat() * 0.15f);
+            case PHONE -> phone(target);
+            case SURGE -> {
+                if (!surge(target)) whisper(target);
+            }
+            case WAVE -> {
+                if (!wave(target)) knock(target);
+            }
+            case TIMECODE -> BhNetwork.sendDread(target, new DreadPacket(DreadPacket.TIMECODE, 0, 0, 0, 0, 40 + rnd.nextInt(40)));
+            case REWIND -> {
+                BhNetwork.sendDread(target, new DreadPacket(DreadPacket.REWIND, 0, 0, 0, 0, 28));
+                playTo(target, "bodycamhorror:tape_rewind", target.position(), 0.9f, 1.0f);
+            }
+            case SILHOUETTE -> {
+                if (!silhouette(target)) breathOrWhisper(target);
+            }
         }
+    }
+
+    // ---------- 0.9: новые ивенты ----------
+
+    private void breathOrWhisper(ServerPlayer p) {
+        if (rnd.nextBoolean()) fire(HorrorEvent.BREATH, p);
+        else whisper(p);
+    }
+
+    /** Телефон звонит в стороне, после звонков трубку снимают: дыхание оттуда же. */
+    private void phone(ServerPlayer p) {
+        Vec3 pos = around(p, 7, 12);
+        playTo(p, "bodycamhorror:phone_ring", pos, 1.0f, 1.0f);
+        schedule(100, () -> playTo(p, "minecraft:block.lever.click", pos, 0.8f, 0.6f));
+        schedule(112, () -> playTo(p, "bodycamhorror:tenant_breath", pos, 1.0f, 0.85f));
+    }
+
+    /** Скачок напряжения: лампы вокруг гудят, потом все гаснут на 2-3 с. */
+    private boolean surge(ServerPlayer p) {
+        ServerLevel level = p.serverLevel();
+        List<net.minecraft.core.BlockPos> lamps = Sabotage.lampsAround(level, p.blockPosition(), 18);
+        if (lamps.isEmpty()) return false;
+        for (int i = 0; i < Math.min(3, lamps.size()); i++) {
+            net.minecraft.core.BlockPos l = lamps.get(rnd.nextInt(lamps.size()));
+            playTo(p, "bodycamhorror:lamp_buzz", Vec3.atCenterOf(l), 1.0f, 1.3f + rnd.nextFloat() * 0.2f);
+        }
+        Sabotage.darkPulse(level, p.blockPosition(), 18, 12, 40 + rnd.nextInt(20));
+        schedule(12, () -> playTo(p, "bodycamhorror:breaker_off", p.position(), 0.5f, 1.4f));
+        return true;
+    }
+
+    /** Волна: лампы гаснут по очереди, от самой дальней к игроку, и потом загораются. */
+    private boolean wave(ServerPlayer p) {
+        ServerLevel level = p.serverLevel();
+        net.minecraft.core.BlockPos at = p.blockPosition();
+        List<net.minecraft.core.BlockPos> lamps = new ArrayList<>(Sabotage.lampsAround(level, at, 26));
+        if (lamps.size() < 2) return false;
+        lamps.sort((a, b) -> Double.compare(b.distSqr(at), a.distSqr(at)));
+        int delay = 0;
+        for (net.minecraft.core.BlockPos l : lamps) {
+            Sabotage.darkPulse(level, l, 1, delay, 70 - Math.min(40, delay / 2));
+            int d = delay;
+            schedule(d, () -> playTo(p, "minecraft:block.lever.click", Vec3.atCenterOf(l), 0.35f, 0.5f));
+            delay += 5;
+        }
+        return true;
+    }
+
+    /**
+     * Силуэт Жильца в конце коридора по взгляду игрока, в 10-22 блоках. Только у него на экране;
+     * исчезает, когда подходишь ближе 7 блоков или через 6 с. Нет места (стена близко): false.
+     */
+    private boolean silhouette(ServerPlayer p) {
+        ServerLevel level = p.serverLevel();
+        Vec3 look = p.getLookAngle();
+        Vec3 flat = new Vec3(look.x, 0, look.z);
+        if (flat.lengthSqr() < 1e-4) return false;
+        flat = flat.normalize();
+        Vec3 eye = p.getEyePosition();
+        net.minecraft.world.phys.BlockHitResult hit = level.clip(new net.minecraft.world.level.ClipContext(eye, eye.add(flat.scale(24)),
+                net.minecraft.world.level.ClipContext.Block.COLLIDER, net.minecraft.world.level.ClipContext.Fluid.NONE, p));
+        double free = hit.getLocation().distanceTo(eye);
+        if (free < 11) return false;
+        double dist = Math.min(free - 1.5, 10 + rnd.nextDouble() * 10);
+        Vec3 at = p.position().add(flat.scale(dist));
+        // Пол под ним: ищем вниз до 3 блоков.
+        net.minecraft.core.BlockPos feet = net.minecraft.core.BlockPos.containing(at);
+        for (int i = 0; i < 3 && level.getBlockState(feet.below()).isAir(); i++) feet = feet.below();
+        if (level.getBlockState(feet.below()).isAir()) return false;
+        float yaw = (float) (Math.atan2(-flat.z, -flat.x) * 180 / Math.PI) - 90f;
+        BhNetwork.sendDread(p, new DreadPacket(DreadPacket.SILHOUETTE, at.x, feet.getY(), at.z, yaw, 120));
+        return true;
+    }
+
+    /** Точка вокруг игрока на расстоянии от min до max, в случайную сторону. */
+    private Vec3 around(ServerPlayer p, double min, double max) {
+        double angle = rnd.nextDouble() * Math.PI * 2;
+        double dist = min + rnd.nextDouble() * (max - min);
+        return p.position().add(Math.cos(angle) * dist, 0.5 + rnd.nextDouble(), Math.sin(angle) * dist);
     }
 
     /**
@@ -122,7 +222,7 @@ public final class HorrorDirector {
         int approach = 3 + rnd.nextInt(3);
         int leave = 5 + rnd.nextInt(3);
         int delay = 0;
-        int interval = 7;
+        int interval = 10;
         float volume = 0.5f;
 
         for (int i = 0; i < approach + leave; i++) {
@@ -136,12 +236,13 @@ public final class HorrorDirector {
                 dist += 0.9;
                 sideOffset += drift;
                 volume *= 0.72f;
-                interval = Math.min(11, interval + 1);
+                interval = Math.min(14, interval + 1);
             }
             Vec3 pos = origin.add(back.scale(dist)).add(sideDir.scale(sideOffset));
             float vol = volume;
             float pitch = 0.85f + rnd.nextFloat() * 0.25f;
-            schedule(delay, () -> playTo(p, "minecraft:block.stone.step", pos, vol, pitch));
+            // 0.9: свой тяжёлый шаркающий шаг, чтобы обманку не путали с шагами врага.
+            schedule(delay, () -> playTo(p, "bodycamhorror:fake_step", pos, vol, pitch));
             // Короткая пауза на месте перед разворотом.
             delay += interval + rnd.nextInt(2) + (i == approach - 1 ? 10 + rnd.nextInt(10) : 0);
         }

@@ -49,7 +49,8 @@ public final class FearSystem {
     public static final float EVENTS_FROM = 25f;
     /** Чем выше страх, тем медленнее он растёт: при 65 вдвое медленнее, к 100 почти стоит. */
     private static final float HEADROOM = 130f;
-    private static final int STRONG_PER_ROUND = 3;
+    /** 0.9: сильных событий за раунд до 5 (было 3), их теперь больше видов. */
+    private static final int STRONG_PER_ROUND = 5;
     private static final int UPDATE_TICKS = 10;
     private static final int HUD_TICKS = 5;
     private static final float HURT_FEAR_PER_HP = 2.5f;
@@ -253,22 +254,32 @@ public final class FearSystem {
         int maxSec;
         int reliefSec;
         boolean strong = s.fear >= 75f && s.strongUsed < STRONG_PER_ROUND;
+        // 0.9 (пункт 15): ивентов намного больше, от лёгких к тяжёлым: звуки, свет, камера, фигуры.
         if (s.fear < 50f) {
-            pool = new HorrorEvent[]{HorrorEvent.KNOCK, HorrorEvent.WHISPER};
-            minSec = 30;
-            maxSec = 45;
+            pool = new HorrorEvent[]{HorrorEvent.KNOCK, HorrorEvent.WHISPER, HorrorEvent.BREATH, HorrorEvent.TAPE_HISS,
+                    HorrorEvent.METAL, HorrorEvent.DOOR};
+            minSec = 24;
+            maxSec = 36;
             reliefSec = 10;
         } else if (!strong) {
-            pool = new HorrorEvent[]{HorrorEvent.WHISPER, HorrorEvent.FOOTSTEPS, HorrorEvent.FOOTSTEPS};
-            minSec = 22;
-            maxSec = 32;
-            reliefSec = 14;
+            pool = new HorrorEvent[]{HorrorEvent.WHISPER, HorrorEvent.FOOTSTEPS, HorrorEvent.FOOTSTEPS, HorrorEvent.DOOR,
+                    HorrorEvent.CRY, HorrorEvent.PHONE, HorrorEvent.TIMECODE, HorrorEvent.WAVE, HorrorEvent.BREATH};
+            minSec = 18;
+            maxSec = 28;
+            reliefSec = 12;
         } else {
-            pool = new HorrorEvent[]{HorrorEvent.KNOCK, HorrorEvent.GLITCH, HorrorEvent.RADIO, HorrorEvent.FLICKER, HorrorEvent.FOOTSTEPS};
-            minSec = 16;
-            maxSec = 24;
-            reliefSec = 20;
+            pool = new HorrorEvent[]{HorrorEvent.KNOCK, HorrorEvent.GLITCH, HorrorEvent.RADIO, HorrorEvent.FLICKER,
+                    HorrorEvent.FOOTSTEPS, HorrorEvent.SURGE, HorrorEvent.REWIND, HorrorEvent.SILHOUETTE, HorrorEvent.WAVE};
+            minSec = 14;
+            maxSec = 22;
+            reliefSec = 18;
             s.strongUsed++;
+        }
+        // К концу раунда (последняя минута) события чаще.
+        int roundTicks = BhConfig.ROUND_SECONDS.get() * 20;
+        if (roundTicks - liveTicks < 60 * 20) {
+            minSec = minSec * 2 / 3;
+            maxSec = maxSec * 2 / 3;
         }
         HorrorEvent ev = pool[rnd.nextInt(pool.length)];
         // Одно и то же событие дважды подряд надоедает: берём другое.

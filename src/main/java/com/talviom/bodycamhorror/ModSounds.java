@@ -31,6 +31,13 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> TENANT_CLICK = register("tenant_click");
     public static final RegistryObject<SoundEvent> BANDAGE_WRAP = register("bandage_wrap");
     public static final RegistryObject<SoundEvent> BANDAGE_TIE = register("bandage_tie");
+    // 0.9, хоррор-ивенты (tools/assets/make_dread.py)
+    public static final RegistryObject<SoundEvent> FAKE_STEP = register("fake_step");
+    public static final RegistryObject<SoundEvent> DOOR_SLAM = register("door_slam");
+    public static final RegistryObject<SoundEvent> METAL_BANG = register("metal_bang");
+    public static final RegistryObject<SoundEvent> FAR_CRY = register("far_cry");
+    public static final RegistryObject<SoundEvent> PHONE_RING = register("phone_ring");
+    public static final RegistryObject<SoundEvent> TAPE_REWIND = register("tape_rewind");
 
     private ModSounds() {}
 

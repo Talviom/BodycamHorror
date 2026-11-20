@@ -29,5 +29,11 @@
   "tenant_quiet": { "sounds": ["bodycamhorror:tenant_quiet"] },
   "tenant_scare": { "sounds": ["bodycamhorror:tenant_scare"] },
   "bandage_wrap": { "sounds": ["bodycamhorror:bandage_wrap1", "bodycamhorror:bandage_wrap2", "bodycamhorror:bandage_wrap3"] },
-  "bandage_tie": { "sounds": ["bodycamhorror:bandage_tie"] }
+  "bandage_tie": { "sounds": ["bodycamhorror:bandage_tie"] },
+  "fake_step": { "sounds": ["bodycamhorror:fake_step1", "bodycamhorror:fake_step2", "bodycamhorror:fake_step3", "bodycamhorror:fake_step4"] },
+  "door_slam": { "sounds": ["bodycamhorror:door_slam"] },
+  "metal_bang": { "sounds": ["bodycamhorror:metal_bang"] },
+  "far_cry": { "sounds": ["bodycamhorror:far_cry"] },
+  "phone_ring": { "sounds": ["bodycamhorror:phone_ring"] },
+  "tape_rewind": { "sounds": ["bodycamhorror:tape_rewind"] }
 }
