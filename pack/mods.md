@@ -55,7 +55,7 @@ CreativeCore 2.12.39, vinconfig 0.0.4.5, MRU 1.0.4.
 
 ## Шейдеры и ресурспаки
 
-Шейдеры: Body Camera Shader 1.6.1, FOOTAGE 1.0 (оба остаются).
+Шейдеры: FOOTAGE_bh (наша правка FOOTAGE 1.0, исходный FOOTAGE_1.0.zip лежит рядом для tools/shaders/patch_footage.py). Body Camera Shader 1.6.1 убран в 0.9: играем только с FOOTAGE_bh (в игре он в mods_disabled/shaderpacks).
 Ресурспаки (не включены): Limitless Designs 2.2.6, LOW Realistic 3.4.1, No Hotbar, EXP Orb Muted, invisXP.
 
 ## Настройки (`pack/config-backup/options.txt`)
