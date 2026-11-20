@@ -1,3 +1,4 @@
+# УСТАРЕЛ (с 29fe6fc): команд «bh tenant scare» и «grab» больше нет, нападение теперь «bh tenant attack <игрок> <вид>». Проверки Жильца: tenant_dread, tenant_attack, tenant_kill.
 # Жилец в игре: вид при свете, в темноте, в луче, скример, позы; поведение на ботах.
 # Запуск: gradlew runClient -PbhShaders -PbhTest=tools/tests/tenant_look.txt
 # Скриншоты: run/screenshots/5*.png, проверки [bh-test] в run/logs/latest.log

@@ -122,7 +122,8 @@ def far_cry():
     amp = np.interp(t, [0, 0.25, 1.6, 2.2, sec], [0, 1, 0.9, 0.4, 0])
     voice = vowel * amp
     far = lowpass(voice, 1800)
-    return pad(room(far, rng, 3.0, 0.8, 0.65, 2200), 0.6)
+    # Silence goes in before the reverb, otherwise room() cuts the echo tail at the end of the voice (a click).
+    return pad(room(pad(far, 1.4), rng, 3.0, 0.8, 0.65, 2200), 0.1)
 
 
 def phone_ring():
