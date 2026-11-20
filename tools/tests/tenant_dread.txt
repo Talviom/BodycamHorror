@@ -1,0 +1,137 @@
+# 0.9: Жилец и страх (пункты 12, 10, 3, 15 плана).
+#   12: после нападения он невидим, а новое нападение раньше срока снова его показывает; у стены встаёт рядом, а не в стену
+#   3:  рядом с ним (9 блоков) лампы заикаются, фонарик срывается
+#   15: новые ивенты по одному: звуки (в логе), свет (лампы), камера (часы, перемотка), силуэт
+# Запуск: gradlew runClient -PbhTest=tools/tests/tenant_dread.txt
+# Результат: [bh-test] DONE failures=0, кадры run/screenshots/09t_*.png
+
+bh stop
+bh bot remove all
+bh tenant remove
+tp @p 1004.5 121 1004.5
+execute positioned 1000 120 1000 run bh arena build
+expect Arena built
+time set midnight
+weather clear
+gamemode adventure @p
+clear @p
+give @p bodycamhorror:flashlight
+gamerule naturalRegeneration false
+# Сценарий только смотрит: урона по игроку здесь не нужно (иначе падение или удушье прервут проверку).
+effect give @p minecraft:resistance 9999 4 true
+hud on
+
+# --- 12: второе нападение сразу после первого: Жилец виден ---
+tp @p 1004.5 120 1004.5 -59 12
+bh bot light Dev
+execute positioned 1009.5 120 1007.5 rotated 120 0 run bh tenant spawn frozen
+wait 40
+bh tenant attack Dev scare
+expect Tenant attacks Dev
+wait 90
+bh tenant info
+expect last=scare
+tp @e[type=bodycamhorror:tenant] 1009.5 120 1007.5
+tp @p 1004.5 120 1004.5 -59 12
+bh tenant attack Dev scare
+wait 8
+shot 09t_12_visible_again
+wait 80
+bh bot light Dev
+expect flashlight: off
+
+# --- 12: игрок смотрит в стену в полутора блоках: у лица он встаёт сбоку, а не в стену ---
+bh tenant remove
+fill 1012 120 1014 1012 123 1019 minecraft:stone_bricks
+tp @p 1010.5 120 1016.5 -90 0
+execute positioned 1005.5 120 1016.5 rotated -90 0 run bh tenant spawn frozen
+wait 30
+tp @p 1010.5 120 1016.5 -90 0
+bh tenant attack Dev scare
+wait 47
+shot 09t_12_wall_face
+wait 60
+bh tenant remove
+fill 1012 120 1014 1012 123 1019 minecraft:air
+
+# --- 3: рядом с Жильцом лампы заикаются, фонарик срывается (смотрим 3 кадра подряд) ---
+tp @p 1015.5 120 1015.5 -45 20
+bh bot light Dev
+expect flashlight: on
+execute positioned 1019.5 120 1019.5 run bh tenant spawn
+bh tenant freeze
+bh tenant unfreeze
+wait 30
+shot 09t_3_dread_a
+wait 7
+shot 09t_3_dread_b
+wait 9
+shot 09t_3_dread_c
+bh tenant info
+bh tenant remove
+bh bot light Dev
+expect flashlight: off
+
+# --- 15: ивенты по одному ---
+tp @p 1020.5 120 1020.5 -45 0
+wait 20
+execute as @p run bh horror test breath
+expect breath
+wait 30
+execute as @p run bh horror test tape_hiss
+expect tape_hiss
+wait 30
+execute as @p run bh horror test door
+expect door
+wait 40
+execute as @p run bh horror test metal
+expect metal
+wait 60
+execute as @p run bh horror test cry
+expect cry
+wait 60
+execute as @p run bh horror test phone
+expect phone
+wait 120
+execute as @p run bh horror test footsteps
+expect footsteps
+wait 120
+
+# свет
+execute as @p run bh horror test surge
+expect surge
+wait 25
+shot 09t_15_surge
+wait 60
+execute as @p run bh horror test wave
+expect wave
+wait 30
+shot 09t_15_wave
+wait 80
+
+# камера
+execute as @p run bh horror test timecode
+expect timecode
+wait 10
+shot 09t_15_timecode
+wait 60
+execute as @p run bh horror test rewind
+expect rewind
+wait 10
+shot 09t_15_rewind
+wait 40
+
+# фигура: прямой коридор 24 блока через арену (прорезаем стены комнат), игрок смотрит вдоль него
+fill 1002 120 1004 1027 122 1006 minecraft:air
+tp @p 1003.5 120 1005.5 -90 3
+bh bot light Dev
+wait 20
+execute as @p run bh horror test silhouette
+expect silhouette
+wait 10
+shot 09t_15_silhouette
+wait 130
+shot 09t_15_silhouette_gone
+bh bot light Dev
+gamerule naturalRegeneration true
+effect clear @p
