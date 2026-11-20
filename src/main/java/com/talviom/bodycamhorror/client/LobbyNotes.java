@@ -35,6 +35,7 @@ public final class LobbyNotes {
             new Row(null, "bh.notes.gear", "key.bodycamhorror.inventory"),
             new Row("F", "bh.notes.interact", "tacz", "interact"),
             new Row("R", "bh.notes.reload", "tacz", "reload"),
+            new Row(null, "bh.notes.radio", "key.bodycamhorror.radio"),
             new Row(null, "bh.notes.voice", "key.voice_chat"),
     };
 

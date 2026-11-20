@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public final class BhNetwork {
     /** Меняется при изменении пакетов: клиент и сервер разных версий мода не соединятся. */
-    private static final String PROTOCOL = "7";
+    private static final String PROTOCOL = "8";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(BodycamHorror.MOD_ID, "main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 
@@ -34,6 +34,11 @@ public final class BhNetwork {
         // 0.9: хоррор-ивенты одного игрока (id 12, чтобы не столкнуться с пакетами других веток).
         CHANNEL.registerMessage(12, DreadPacket.class, DreadPacket::encode, DreadPacket::decode,
                 DreadPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // 0.9: рация на Z (id 20, 21), ветка sound, PROTOCOL 8.
+        CHANNEL.registerMessage(20, RadioTalkPacket.class, RadioTalkPacket::encode, RadioTalkPacket::decode,
+                RadioTalkPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(21, RadioCuePacket.class, RadioCuePacket::encode, RadioCuePacket::decode,
+                RadioCuePacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(4, OpenInventoryPacket.class, OpenInventoryPacket::encode, OpenInventoryPacket::decode,
                 OpenInventoryPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }

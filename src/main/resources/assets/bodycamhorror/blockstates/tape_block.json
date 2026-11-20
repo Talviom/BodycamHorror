@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "bodycamhorror:block/tape_block"
+    },
+    "facing=east": {
+      "model": "bodycamhorror:block/tape_block",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "bodycamhorror:block/tape_block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "bodycamhorror:block/tape_block",
+      "y": 270
+    }
+  }
+}

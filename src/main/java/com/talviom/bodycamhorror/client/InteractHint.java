@@ -30,6 +30,14 @@ public final class InteractHint {
         if (mc.gameMode != null && mc.gameMode.getPlayerMode() == GameType.SPECTATOR) return;
         if (!(mc.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) return;
         BlockState state = mc.level.getBlockState(hit.getBlockPos());
+        if (state.is(ModBlocks.TAPE_BLOCK.get())) {
+            // 0.9: кассета. Пустой рукой берут ПКМ, с оружием в руках F (клавиша взаимодействия TACZ).
+            String tapeKey = mc.player.getMainHandItem().isEmpty() ? Vhs.tr("bh.hint.rmb") : LobbyNotes.keyLabel("F", "tacz", "interact");
+            if (tapeKey == null) tapeKey = Vhs.tr("bh.hint.rmb");
+            Vhs.ghostCentered(e.getGuiGraphics(), Vhs.title("[" + tapeKey + "] " + Vhs.tr("bh.hint.take_tape")),
+                    e.getWindow().getGuiScaledWidth() / 2, e.getWindow().getGuiScaledHeight() / 2 + 14, 0xC8000000 | Vhs.BONE, 1f, 0.15f);
+            return;
+        }
         boolean breaker = state.is(ModBlocks.BREAKER.get());
         if (!breaker && !state.is(ModBlocks.GENERATOR.get())) return;
         boolean on = !state.hasProperty(PowerSwitchBlock.POWERED) || state.getValue(PowerSwitchBlock.POWERED);

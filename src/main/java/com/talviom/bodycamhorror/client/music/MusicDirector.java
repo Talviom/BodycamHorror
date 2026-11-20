@@ -116,10 +116,16 @@ public final class MusicDirector {
             if (isRoundStart(currentId)) fadeOutCurrent(50);
         }
 
+        // 0.9 (пункт 17): ванильный проигрыватель музыки глушим и напрямую, каждый тик. Наш перехват PlaySoundEvent
+        // ловит почти всё, но если какой-то мод запустит ванильный трек мимо события, он всё равно сразу смолкнет.
+        mc.getMusicManager().stopPlaying();
+
         ResourceLocation wanted = null;
         if (mc.level == null) {
             lastKind = null;
-            if (mc.screen != null) wanted = MENU;
+            // 0.9: раньше музыка меню хотела открытый экран, и на миг между экранами (загрузка, переход
+            // к списку миров) она начинала затухать и перезапускалась: казалось, что музыка обрывается.
+            wanted = MENU;
         } else if (inLobby(now)) {
             wanted = LOBBY;
         }

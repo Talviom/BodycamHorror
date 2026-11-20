@@ -20,6 +20,8 @@ public final class RadioState {
 
     private static volatile Map<UUID, Entry> alive = Map.of();
     private static final Map<UUID, Long> JAM_UNTIL_MS = new java.util.concurrent.ConcurrentHashMap<>();
+    /** 0.9: кто сейчас держит клавишу рации (Z). Только их голос уходит союзникам по рации. */
+    private static final java.util.Set<UUID> TALKING = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     private RadioState() {}
 
@@ -27,6 +29,7 @@ public final class RadioState {
     public static void update(MinecraftServer server, MatchManager match) {
         if (!match.running()) {
             if (!alive.isEmpty()) alive = Map.of();
+            TALKING.clear();
             return;
         }
         Map<UUID, Entry> next = new HashMap<>();
@@ -35,6 +38,16 @@ public final class RadioState {
             if (team != null && !p.isSpectator() && p.isAlive()) next.put(p.getUUID(), new Entry(team, p.position()));
         }
         alive = next;
+        TALKING.retainAll(next.keySet());
+    }
+
+    public static boolean isTalking(UUID player) {
+        return TALKING.contains(player);
+    }
+
+    /** @return true, если состояние изменилось (тогда союзникам нужен щелчок рации) */
+    public static boolean setTalking(UUID player, boolean talking) {
+        return talking ? alive.containsKey(player) && TALKING.add(player) : TALKING.remove(player);
     }
 
     public static Map<UUID, Entry> alive() {

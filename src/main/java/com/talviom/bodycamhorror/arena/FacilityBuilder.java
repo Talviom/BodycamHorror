@@ -220,13 +220,32 @@ public final class FacilityBuilder {
         map.setExit(BhTeam.BRAVO, bravoExit);
 
         // Кассета: на перпендикуляре к середине отрезка между выходами (одинаково далеко от обоих), на всех уровнях.
-        int[][] tape = {{29, 0, 9}, {19, 0, 23}, {30, 6, 5}, {18, 6, 27}, {26, -5, 13}, {22, -5, 19}};
-        for (int[] t : tape) map.tapePoints().add(p(t[0], t[1], t[2]));
+        // 0.9: 12 точек (по 4 на этаж), в каждой мебель из Macaw's Furniture, кассета 3D-блоком лежит на ней.
+        int[][] tape = {
+                {29, 0, 9}, {19, 0, 23}, {31, 0, 6}, {17, 0, 26},
+                {30, 6, 5}, {18, 6, 27}, {33, 6, 3}, {15, 6, 29},
+                {26, -5, 13}, {22, -5, 19}, {29, -5, 9}, {19, -5, 23}};
+        String[] furniture = {
+                "mcwfurnitures:dark_oak_end_table", "mcwfurnitures:dark_oak_end_table", "mcwfurnitures:dark_oak_drawer", "mcwfurnitures:dark_oak_drawer",
+                "mcwfurnitures:spruce_desk", "mcwfurnitures:spruce_desk", "mcwfurnitures:spruce_double_drawer", "mcwfurnitures:spruce_double_drawer",
+                "mcwfurnitures:dark_oak_counter", "mcwfurnitures:dark_oak_counter", "mcwfurnitures:spruce_drawer", "mcwfurnitures:spruce_drawer"};
+        for (int i = 0; i < tape.length; i++) {
+            int[] t = tape[i];
+            set(t[0], t[1], t[2], furniture(furniture[i]));
+            map.tapePoints().add(p(t[0], t[1], t[2]));
+        }
         map.setDirty();
         return map;
     }
 
     // ---------- помощники ----------
+
+    /** Мебель из Macaw's Furniture; без этого мода (dev-клиент) вместо неё бочка, на ней кассета лежит так же. */
+    private static BlockState furniture(String id) {
+        net.minecraft.world.level.block.Block b = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(new net.minecraft.resources.ResourceLocation(id));
+        if (b == null || b == Blocks.AIR) return Blocks.BARREL.defaultBlockState();
+        return b.defaultBlockState();
+    }
 
     private BlockPos p(int x, int y, int z) {
         return base.offset(x, y, z);

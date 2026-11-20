@@ -35,5 +35,7 @@
   "metal_bang": { "sounds": ["bodycamhorror:metal_bang"] },
   "far_cry": { "sounds": ["bodycamhorror:far_cry"] },
   "phone_ring": { "sounds": ["bodycamhorror:phone_ring"] },
-  "tape_rewind": { "sounds": ["bodycamhorror:tape_rewind"] }
+  "tape_rewind": { "sounds": ["bodycamhorror:tape_rewind"] },
+  "radio_on": { "sounds": ["bodycamhorror:radio_on"] },
+  "radio_off": { "sounds": ["bodycamhorror:radio_off"] }
 }
