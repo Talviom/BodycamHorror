@@ -20,11 +20,12 @@ import java.util.UUID;
  * «Монстр «Жилец»: механика и баланс» и решений пользователя от 2026-11-18.
  */
 public final class TenantRules {
-    /** Вокруг горящей лампы он не ходит. Свет фонарика зоной не считается. */
-    public static final double LIGHT_ZONE = 7.0;
+    /** Вокруг горящей лампы он не ходит. Свет фонарика зоной не считается. 0.9: 3 блока вместо 7. */
+    public static final double LIGHT_ZONE = 3.0;
     public static final double ALLY_RANGE = 10.0;
     public static final float TAKE_FEAR = 60f;
-    public static final int ATTACK_COOLDOWN_TICKS = 40 * 20;
+    /** 0.9: отдых между нападениями 25 с вместо 40. */
+    public static final int ATTACK_COOLDOWN_TICKS = 25 * 20;
     public static final int ATTACKS_PER_ROUND = 4;
 
     private record Count(int round, int attacks, long lastAttack, boolean taken) {}
@@ -62,6 +63,21 @@ public final class TenantRules {
         return best;
     }
 
+    /** 0.9: случайная тёмная точка карты в радиусе (для патруля). null, если таких нет. */
+    @javax.annotation.Nullable
+    public static BlockPos randomDarkSpot(ServerLevel level, Vec3 from, double range, net.minecraft.util.RandomSource rnd) {
+        com.talviom.bodycamhorror.match.MapData map = com.talviom.bodycamhorror.match.MapData.get(level);
+        java.util.List<BlockPos> all = new java.util.ArrayList<>(map.lootPoints());
+        all.addAll(map.tapePoints());
+        java.util.List<BlockPos> pts = new java.util.ArrayList<>();
+        for (BlockPos p : all) {
+            if (Vec3.atBottomCenterOf(p).distanceToSqr(from) > range * range) continue;
+            if (litNear(level, Vec3.atCenterOf(p), LIGHT_ZONE)) continue;
+            pts.add(p);
+        }
+        return pts.isEmpty() ? null : pts.get(rnd.nextInt(pts.size()));
+    }
+
     /** Союзники: одна команда. Вне матча союзником считается любой другой игрок. */
     public static boolean sameSide(ServerPlayer a, ServerPlayer b) {
         MatchManager m = MatchManager.INSTANCE;
@@ -97,7 +113,7 @@ public final class TenantRules {
         return c;
     }
 
-    /** Можно нападать: не чаще раза в 40 с, не больше 4 за раунд, не в перестрелке. */
+    /** Можно нападать: не чаще раза в 25 с, не больше 4 за раунд, не в перестрелке. */
     public static boolean canAttack(ServerPlayer p, long now) {
         Count c = count(p);
         return c.attacks() < ATTACKS_PER_ROUND && now - c.lastAttack() >= ATTACK_COOLDOWN_TICKS

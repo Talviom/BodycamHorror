@@ -133,6 +133,44 @@ public final class Sabotage {
         return true;
     }
 
+    /**
+     * 0.9: лампы рядом с Жильцом заикаются: одно-три коротких моргания и гул, без долгого отключения.
+     * @return false, если рядом нет ни одной горящей лампы
+     */
+    public static boolean stutterAround(ServerLevel level, BlockPos center, int radius) {
+        List<BlockPos> near = lampsAround(level, center, radius);
+        if (near.isEmpty()) return false;
+        RandomSource rnd = level.getRandom();
+        long t = level.getGameTime();
+        int blinks = 1 + rnd.nextInt(3);
+        long r2 = (long) radius * radius;
+        for (int i = 0; i < blinks; i++) {
+            int off = 2 + rnd.nextInt(3);
+            PULSES.add(new Pulse(center.immutable(), r2, t, t + off));
+            t += off + 2 + rnd.nextInt(4);
+        }
+        play(level, near.get(rnd.nextInt(near.size())), "bodycamhorror:lamp_buzz", 0.8f, 0.8f + rnd.nextFloat() * 0.3f);
+        return true;
+    }
+
+    /** 0.9: гасит лампы в радиусе вокруг точки через delay тиков на ticks тиков (ивенты: волна, скачок). */
+    public static void darkPulse(ServerLevel level, BlockPos center, int radius, int delay, int ticks) {
+        long t = level.getGameTime() + delay;
+        PULSES.add(new Pulse(center.immutable(), (long) radius * radius, t, t + ticks));
+    }
+
+    /** 0.9: горящие лампы в радиусе вокруг точки. */
+    public static List<BlockPos> lampsAround(ServerLevel level, BlockPos center, int radius) {
+        long r2 = (long) radius * radius;
+        List<BlockPos> out = new ArrayList<>();
+        for (BlockPos lamp : SabotageData.get(level).lamps) {
+            if (lamp.distSqr(center) > r2 || !level.isLoaded(lamp)) continue;
+            BlockState s = level.getBlockState(lamp);
+            if (s.getBlock() instanceof LampBlock && s.getValue(LampBlock.LIT)) out.add(lamp);
+        }
+        return out;
+    }
+
     public static void tick(ServerLevel level) {
         long now = level.getGameTime();
         boolean changed = PULSES.removeIf(p -> p.to() <= now);

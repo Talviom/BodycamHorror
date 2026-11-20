@@ -40,9 +40,10 @@ public final class HorrorConfig {
         // Раздел переименован в v0.5.2, чтобы у всех подхватились новые значения баланса, а не старые из файла.
         b.push("fearBalance");
         DARK_LIGHT_LEVEL = b.comment("Light level at eye height that counts as darkness (0..15)").defineInRange("darkLightLevel", 2, 0, 15);
-        FEAR_DARK_PER_SECOND = b.comment("Fear gained per second in darkness without a flashlight").defineInRange("darkPerSecond", 2.0, 0.0, 100.0);
+        // 0.9: ключ с новым именем, чтобы у всех подхватилось 3.0, а не старое 2.0 из файла.
+        FEAR_DARK_PER_SECOND = b.comment("Fear gained per second in darkness without a flashlight").defineInRange("darkPerSecond09", 3.0, 0.0, 100.0);
         FEAR_ALONE_PER_SECOND = b.comment("Fear gained per second with no teammate nearby").defineInRange("alonePerSecond", 0.6, 0.0, 100.0);
-        FEAR_CALM_PER_SECOND = b.comment("Fear lost per second in light, with the flashlight on, or next to a teammate").defineInRange("calmPerSecond", 2.5, 0.0, 100.0);
+        FEAR_CALM_PER_SECOND = b.comment("Fear lost per second in lamp light (the flashlight no longer calms) or next to a teammate").defineInRange("calmPerSecond", 2.5, 0.0, 100.0);
         FEAR_RELIEF_PER_SECOND = b.comment("After a scare fear stops growing for a while and drops by this much per second")
                 .defineInRange("reliefPerSecond", 1.5, 0.0, 100.0);
         COMBAT_SECONDS = b.comment("No horror events for this long after a player hits or gets hit").defineInRange("combatSeconds", 8, 0, 120);

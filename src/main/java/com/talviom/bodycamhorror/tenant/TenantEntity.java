@@ -51,10 +51,15 @@ import java.util.UUID;
  *   рядом союзник          — душит, 4 сердца; союзник отбивает двумя попаданиями или лучом в лицо
  *   один и страшно (60+)   — душит, потом «утащить» в «Затёртую запись» (пока заглушка: чернота и пробуждение)
  *   один и ещё не страшно  — у самого лица исчезает со скримером, не трогая
+ *   последний живой (1 на 1) — душит, 4 сердца, отбить некому (0.9)
+ *
+ * 0.9: без шума не стоит, а бродит по тёмным точкам карты (PATROL); в 9 блоках от него лампы
+ * заикаются и гудят, фонарик срывается. В начале любого нападения он снова видим.
  * Во время удушья жертву могут добить враги (решение 2026-11-18): урон от игроков проходит как обычно.
  */
 public class TenantEntity extends PathfinderMob implements GeoEntity {
-    public enum State { WAIT, FOLLOW, STALK, STARE, BLINK, RUSH, STRANGLE, VANISH, STUNNED, RETREAT }
+    /** PATROL (0.9) в конце, чтобы номера прежних состояний у клиента не сдвинулись. */
+    public enum State { WAIT, FOLLOW, STALK, STARE, BLINK, RUSH, STRANGLE, VANISH, STUNNED, RETREAT, PATROL }
 
     /** Чем кончится атака: решается в момент, когда он доходит до лица. */
     public enum Ending { SCARE, STRANGLE, TAKE }
@@ -70,6 +75,14 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
     private static final RawAnimation STUN_ANIM = RawAnimation.begin().thenLoop("animation.tenant.stunned");
 
     private static final double FOLLOW_SPEED = 1.4;
+    private static final double PATROL_SPEED = 0.9;
+    /** Без шума постоит 6-12 с и пойдёт бродить. */
+    private static final int PATROL_IDLE_MIN = 6 * 20;
+    private static final int PATROL_IDLE_RAND = 6 * 20;
+    private static final int PATROL_MAX_TICKS = 25 * 20;
+    private static final double PATROL_RANGE = 32.0;
+    /** Рядом с ним лампы заикаются, фонарик срывается. */
+    public static final double DREAD_RANGE = 9.0;
     private static final double STALK_SPEED = 1.0;
     private static final double STALK_RANGE = 10.0;
     private static final double ATTACK_RANGE = 10.0;
@@ -106,6 +119,7 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
     private int beamTicks;
     private long stunImmuneUntil;
     private String lastOutcome = "-";
+    private int patrolIdle = PATROL_IDLE_MIN;
 
     // Атака.
     private int attackTicks;
@@ -209,7 +223,9 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
             case WAIT -> {
                 getNavigation().stop();
                 if (tickCount % 10 == 0) listen(now);
+                if (state() == State.WAIT && stateTicks >= patrolIdle) startPatrol(level);
             }
+            case PATROL -> patrol(now);
             case FOLLOW -> follow(now);
             case STALK -> stalk(level, now);
             case STUNNED -> {
@@ -237,6 +253,34 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         goal = n.pos();
         target = n.source();
         setState(State.FOLLOW);
+    }
+
+    /** Пойти бродить: случайная тёмная точка карты в 32 блоках (точки лута и кассеты). */
+    private void startPatrol(ServerLevel level) {
+        patrolIdle = PATROL_IDLE_MIN + random.nextInt(PATROL_IDLE_RAND);
+        BlockPos to = TenantRules.randomDarkSpot(level, position(), PATROL_RANGE, random);
+        if (to == null || to.closerToCenterThan(position(), 3)) {
+            stateTicks = 0;
+            return;
+        }
+        goal = Vec3.atBottomCenterOf(to);
+        target = null;
+        setState(State.PATROL);
+        lastOutcome = "patrol->" + to.toShortString();
+        getNavigation().moveTo(goal.x, goal.y, goal.z, PATROL_SPEED);
+    }
+
+    private void patrol(long now) {
+        if (tickCount % 10 != 0) return;
+        listen(now);
+        if (state() != State.PATROL) return;
+        if (goal == null || goal.distanceToSqr(position()) < 4 || stateTicks > PATROL_MAX_TICKS) {
+            // Дошёл: теперь живёт здесь и снова слушает.
+            home = blockPosition();
+            setState(State.WAIT);
+            return;
+        }
+        if (getNavigation().isDone()) getNavigation().moveTo(goal.x, goal.y, goal.z, PATROL_SPEED);
     }
 
     private void follow(long now) {
@@ -285,6 +329,9 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         forcedEnding = forced;
         TenantRules.attacked(p, now);
         getNavigation().stop();
+        // 0.9 (пункт 12): после прошлого нападения он невидим до конца отдыха; команда или новое
+        // нападение раньше срока показывали анимацию и звуки без него самого.
+        setInvisible(false);
         stareFrom = position();
         attackTicks = 0;
         rescueHits = 0;
@@ -412,6 +459,8 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         if (e == null) {
             if (TenantRules.allyNear(p)) e = Ending.STRANGLE;
             else if (TenantRules.canTake(p)) e = Ending.TAKE;
+            // 0.9: в 1 на 1 (последний живой своей команды) душит с уроном, а не только пугает.
+            else if (TenantRules.lastAlive(p)) e = Ending.STRANGLE;
             else e = Ending.SCARE;
         }
         ending = e;
@@ -488,11 +537,40 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         return p.position().add(flat.normalize().scale(dist));
     }
 
-    /** Встать лицом к игроку на расстоянии dist перед его взглядом. */
+    /**
+     * Встать лицом к игроку на расстоянии dist перед его взглядом. 0.9 (пункт 12): если там стена
+     * (игрок смотрит в стену), ищет свободное место рядом: чуть правее и левее взгляда, ближе, дальше.
+     */
     private void placeInFront(ServerPlayer p, double dist) {
-        Vec3 at = frontOf(p, dist);
-        moveTo(at.x, p.getY(), at.z, getYRot(), 0);
+        Vec3 at = freeSpotNear(p, dist);
+        moveTo(at.x, at.y, at.z, getYRot(), 0);
         faceTowards(p);
+    }
+
+    private Vec3 freeSpotNear(ServerPlayer p, double dist) {
+        Vec3 look = p.getLookAngle();
+        Vec3 flat = new Vec3(look.x, 0, look.z);
+        if (flat.lengthSqr() < 1e-4) flat = new Vec3(0, 0, 1);
+        flat = flat.normalize();
+        for (double d : new double[]{dist, dist * 0.8, dist * 1.25}) {
+            for (int deg : new int[]{0, 25, -25, 50, -50, 80, -80, 120, -120, 180}) {
+                double a = Math.toRadians(deg);
+                double dx = flat.x * Math.cos(a) - flat.z * Math.sin(a);
+                double dz = flat.x * Math.sin(a) + flat.z * Math.cos(a);
+                Vec3 safe = safeSpot(new Vec3(p.getX() + dx * d, p.getY(), p.getZ() + dz * d));
+                if (safe != null && seesFrom(p, safe)) return safe;
+            }
+        }
+        Vec3 at = frontOf(p, dist);
+        return new Vec3(at.x, p.getY(), at.z);
+    }
+
+    /** Между глазами игрока и лицом в точке нет стены. */
+    private boolean seesFrom(ServerPlayer p, Vec3 feet) {
+        net.minecraft.world.level.ClipContext ctx = new net.minecraft.world.level.ClipContext(p.getEyePosition(),
+                feet.add(0, 1.5, 0), net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                net.minecraft.world.level.ClipContext.Fluid.NONE, p);
+        return level().clip(ctx).getType() == net.minecraft.world.phys.HitResult.Type.MISS;
     }
 
     private void faceTowards(ServerPlayer p) {
@@ -556,13 +634,24 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         }
     }
 
-    /** Рядом с ним страшно: страх растёт, бодикам ловит помехи. */
+    /**
+     * Рядом с ним страшно: страх растёт, бодикам ловит помехи. 0.9 (пункт 3): в 9 блоках от него
+     * лампы заикаются и гудят, а фонарик срывается, так что его можно почувствовать, даже не видя.
+     * Пока он невидим после нападения (отдыхает), свет не трогает.
+     */
     private void pressure(ServerLevel level) {
+        boolean dread = !isInvisible();
         for (ServerPlayer p : level.players()) {
             if (p.isSpectator() || !p.isAlive()) continue;
             double d2 = p.distanceToSqr(this);
             if (d2 < 12 * 12) FearSystem.INSTANCE.add(p, 1.5f);
             if (d2 < 8 * 8 && tickCount % 40 == 0) BhNetwork.sendGlitch(p, 10, 0.25f);
+            if (dread && d2 < DREAD_RANGE * DREAD_RANGE && Flashlight.isLit(p) && random.nextFloat() < 0.35f) {
+                Flashlight.blackout(p, 2 + random.nextInt(5));
+            }
+        }
+        if (dread && tickCount % 30 == 0 && random.nextFloat() < 0.6f) {
+            com.talviom.bodycamhorror.sabotage.Sabotage.stutterAround(level, blockPosition(), (int) DREAD_RANGE);
         }
     }
 
@@ -669,7 +758,7 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
             case STRANGLE -> st.setAndContinue(STRANGLE_ANIM);
             case STUNNED -> st.setAndContinue(STUN_ANIM);
             case STALK -> st.setAndContinue(STALK_ANIM);
-            case FOLLOW, RETREAT -> st.setAndContinue(st.isMoving() ? WALK : IDLE);
+            case FOLLOW, RETREAT, PATROL -> st.setAndContinue(st.isMoving() ? WALK : IDLE);
             default -> st.setAndContinue(IDLE);
         }));
     }

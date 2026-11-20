@@ -21,8 +21,8 @@ import java.util.UUID;
  * Жилец идёт к самому тяжёлому свежему следу, который он слышит со своего места.
  *
  *   фонарик горит      вес 3, 24 блока, только если Жилец видит игрока
- *   бег                вес 2, 12 блоков
- *   шаги (не крадучись) вес 1, 6 блоков
+ *   бег                вес 2, 18 блоков (0.9, было 12)
+ *   шаги (не крадучись) вес 1, 10 блоков (0.9, было 6)
  *   страх выше 70      вес 1, 5 блоков (сердце)
  *   щиток, генератор   вес 4, вся карта
  */
@@ -63,8 +63,8 @@ public final class TenantHearing {
             Vec3 last = LAST_POS.put(p.getUUID(), pos);
             double moved = last == null ? 0 : Math.sqrt(Math.pow(pos.x - last.x, 2) + Math.pow(pos.z - last.z, 2));
             if (Flashlight.isLit(p)) noise(level, pos, 3f, 24, p, true, "flashlight");
-            if (p.isSprinting()) noise(level, pos, 2f, 12, p, false, "run");
-            else if (moved > 0.6 && !p.isCrouching()) noise(level, pos, 1f, 6, p, false, "steps");
+            if (p.isSprinting()) noise(level, pos, 2f, 18, p, false, "run");
+            else if (moved > 0.6 && !p.isCrouching()) noise(level, pos, 1f, 10, p, false, "steps");
             if (FearSystem.INSTANCE.fear(p) >= 70f) noise(level, pos, 1f, 5, p, false, "heartbeat");
         }
     }

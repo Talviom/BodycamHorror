@@ -28,7 +28,11 @@ import java.util.UUID;
  * Растёт: темнота на уровне глаз без включённого фонарика, рядом нет союзника,
  * долго стоишь на месте в полутьме, мало здоровья, последняя минута раунда,
  * гибель союзника рядом, каждое случившееся событие.
- * Падает: свет или включённый фонарик, союзник рядом.
+ * Падает: свет ламп, союзник рядом.
+ *
+ * 0.9 (пункт 2): страх растёт быстрее. Темнота +3 в секунду; включённый фонарик больше не успокаивает,
+ * а только останавливает рост от темноты; погасшие лампы рядом пугают; урон пугает (+2,5 за каждую
+ * единицу здоровья) и на 8 секунд разгоняет сердцебиение, даже при низком страхе.
  *
  * События начинаются со страха 25. Чем выше страх, тем чаще и сильнее события:
  * 25..50 дальний стук и шёпот (раз в 30-45 с), 50..75 шаги за спиной и шёпот рядом (22-32 с),
@@ -48,6 +52,12 @@ public final class FearSystem {
     private static final int STRONG_PER_ROUND = 3;
     private static final int UPDATE_TICKS = 10;
     private static final int HUD_TICKS = 5;
+    private static final float HURT_FEAR_PER_HP = 2.5f;
+    private static final int HURT_HEARTBEAT_TICKS = 8 * 20;
+    /** Лампы ближе этого считаются «светом» для покоя (свет фонарика не считается). */
+    private static final double LAMP_CALM_RANGE = 6.0;
+    /** Погасшие лампы в этом радиусе пугают, если ты в темноте. */
+    private static final int LAMPS_OUT_RANGE = 10;
     /** В прогоне сценария (tools/tests) страх пишется в лог, по нему строится график. */
     private static final boolean TRACE = System.getProperty("bh.testScript") != null;
 
@@ -63,6 +73,8 @@ public final class FearSystem {
         long reliefUntil = -1;
         HorrorEvent lastEvent;
         int strongUsed;
+        /** До этого тика сердце стучит после ранения (0.9). */
+        long hurtUntil = -1;
     }
 
     private final Map<UUID, State> states = new HashMap<>();
@@ -95,6 +107,14 @@ public final class FearSystem {
     public boolean inCombat(ServerPlayer p) {
         State s = states.get(p.getUUID());
         return s != null && tick - s.lastCombat < HorrorConfig.COMBAT_SECONDS.get() * 20L;
+    }
+
+    /** 0.9: ранение пугает и разгоняет сердце на 8 с. Вызывается из HorrorDirector (LivingHurtEvent). */
+    public void onHurt(ServerPlayer p, float amount) {
+        if (amount <= 0f) return;
+        State s = state(p);
+        s.fear = Mth.clamp(s.fear + Math.min(25f, amount * HURT_FEAR_PER_HP), 0f, 100f);
+        s.hurtUntil = tick + HURT_HEARTBEAT_TICKS;
     }
 
     /** Игрок получил или нанёс урон: на время боя события не мешают. */
@@ -158,6 +178,10 @@ public final class FearSystem {
         boolean flashlight = Flashlight.isOn(p);
         boolean dark = light <= HorrorConfig.DARK_LIGHT_LEVEL.get() && !flashlight;
         s.dark = dark;
+        // Свет фонарика тоже даёт яркость у глаз (блоки света вдоль луча), поэтому «спокойный свет»
+        // это горящая лампа рядом или яркое место при выключенном фонарике.
+        boolean lampLight = com.talviom.bodycamhorror.tenant.TenantRules.litNear(p.serverLevel(), p.position(), LAMP_CALM_RANGE)
+                || (!flashlight && light > HorrorConfig.DARK_LIGHT_LEVEL.get());
 
         // Союзники рядом.
         BhTeam team = match.teamOf(p);
@@ -183,12 +207,13 @@ public final class FearSystem {
         if (!allyNear) gain += HorrorConfig.FEAR_ALONE_PER_SECOND.get().floatValue();
         if (still && light <= 7 && !flashlight) gain += 0.3f;
         if (p.getHealth() < p.getMaxHealth() * 0.4f) gain += 1f;
+        if (!lampLight && lampsOutNear(p.serverLevel(), p.blockPosition())) gain += 0.5f;
         int roundTicks = BhConfig.ROUND_SECONDS.get() * 20;
         if (roundTicks - liveTicks < 60 * 20) gain += 0.4f;
         gain *= Math.max(0f, 1f - s.fear / HEADROOM);
 
         float calm = 0f;
-        if (!dark) calm += HorrorConfig.FEAR_CALM_PER_SECOND.get().floatValue();
+        if (lampLight) calm += HorrorConfig.FEAR_CALM_PER_SECOND.get().floatValue();
         if (allyClose) calm += 1f;
         if (liveTicks < s.reliefUntil) {
             // Передышка после испуга: страх не растёт и понемногу отпускает.
@@ -261,12 +286,28 @@ public final class FearSystem {
 
     private void heartbeat(ServerPlayer p) {
         State s = states.get(p.getUUID());
-        if (s == null || s.fear < 65f) return;
+        if (s == null) return;
+        boolean hurt = tick < s.hurtUntil;
+        if (s.fear < 65f && !hurt) return;
         int period = s.fear >= 85f ? 18 : s.fear >= 75f ? 24 : 30;
+        if (hurt) period = Math.min(period, 14);
         if (tick - s.lastHeartbeat < period) return;
         s.lastHeartbeat = tick;
-        float volume = 0.25f + (s.fear - 65f) / 35f * 0.45f;
+        float volume = 0.25f + Math.max(0f, s.fear - 65f) / 35f * 0.45f;
+        if (hurt) volume = Math.max(volume, 0.6f);
         HorrorDirector.INSTANCE.playSound(p, "bodycamhorror:heartbeat", p.position(), volume, 1.0f);
+    }
+
+    /** Рядом есть погасшая лампа (щиток, генератор, мигание). */
+    private static boolean lampsOutNear(net.minecraft.server.level.ServerLevel level, BlockPos pos) {
+        long r2 = (long) LAMPS_OUT_RANGE * LAMPS_OUT_RANGE;
+        for (BlockPos lamp : com.talviom.bodycamhorror.sabotage.SabotageData.get(level).lamps) {
+            if (lamp.distSqr(pos) > r2 || !level.isLoaded(lamp)) continue;
+            net.minecraft.world.level.block.state.BlockState st = level.getBlockState(lamp);
+            if (st.getBlock() instanceof com.talviom.bodycamhorror.sabotage.LampBlock
+                    && !st.getValue(com.talviom.bodycamhorror.sabotage.LampBlock.LIT)) return true;
+        }
+        return false;
     }
 
     private State state(ServerPlayer p) {

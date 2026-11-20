@@ -73,6 +73,13 @@ public final class HorrorDirector {
         FearSystem.INSTANCE.tick(server, liveTicks);
     }
 
+    /** 0.9: ранение в матче пугает и разгоняет сердце (FearSystem.onHurt). */
+    @SubscribeEvent
+    public void onHorrorPlayerHurt(net.minecraftforge.event.entity.living.LivingHurtEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer p) || !MatchManager.INSTANCE.running()) return;
+        FearSystem.INSTANCE.onHurt(p, e.getAmount());
+    }
+
     // ---------- события ----------
 
     public void fire(HorrorEvent event, ServerPlayer target) {
