@@ -644,7 +644,8 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         for (ServerPlayer p : level.players()) {
             if (p.isSpectator() || !p.isAlive()) continue;
             double d2 = p.distanceToSqr(this);
-            if (d2 < 12 * 12) FearSystem.INSTANCE.add(p, 1.5f);
+            // Чем выше страх, тем слабее добавка: у самого порога страх «пилит», а не стоит на 100 весь раунд.
+            if (d2 < 12 * 12) FearSystem.INSTANCE.add(p, 1.5f * Math.max(0.2f, 1f - FearSystem.INSTANCE.fear(p) / 130f));
             if (d2 < 8 * 8 && tickCount % 40 == 0) BhNetwork.sendGlitch(p, 10, 0.25f);
             if (dread && d2 < DREAD_RANGE * DREAD_RANGE && Flashlight.isLit(p) && random.nextFloat() < 0.35f) {
                 Flashlight.blackout(p, 2 + random.nextInt(5));

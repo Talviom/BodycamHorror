@@ -22,6 +22,8 @@ import java.util.UUID;
 public final class TenantRules {
     /** Вокруг горящей лампы он не ходит. Свет фонарика зоной не считается. 0.9: 3 блока вместо 7. */
     public static final double LIGHT_ZONE = 3.0;
+    /** Лампа светит вниз и вверх на столько блоков (свет 15 гаснет до темноты примерно за 13). */
+    private static final double LAMP_HEIGHT_REACH = 6.0;
     public static final double ALLY_RANGE = 10.0;
     public static final float TAKE_FEAR = 60f;
     /** 0.9: отдых между нападениями 25 с вместо 40. */
@@ -34,10 +36,18 @@ public final class TenantRules {
 
     private TenantRules() {}
 
+    /**
+     * Горящая лампа в радиусе по горизонтали (и не дальше 6 блоков по высоте). 0.9: по горизонтали, потому что
+     * лампы висят под потолком в 3-4 блоках над полом, и при зоне в 3 блока считать по прямой значило бы,
+     * что лампа не держит его нигде.
+     */
     public static boolean litNear(ServerLevel level, Vec3 pos, double radius) {
         double r2 = radius * radius;
         for (BlockPos lamp : SabotageData.get(level).lamps) {
-            if (Vec3.atCenterOf(lamp).distanceToSqr(pos) > r2) continue;
+            Vec3 c = Vec3.atCenterOf(lamp);
+            double dx = c.x - pos.x;
+            double dz = c.z - pos.z;
+            if (dx * dx + dz * dz > r2 || Math.abs(c.y - pos.y) > LAMP_HEIGHT_REACH) continue;
             BlockState s = level.getBlockState(lamp);
             if (s.getBlock() instanceof LampBlock && s.getValue(LampBlock.LIT)) return true;
         }
