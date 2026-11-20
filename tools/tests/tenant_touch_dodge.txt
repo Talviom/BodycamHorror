@@ -1,0 +1,72 @@
+# 0.9.1: Жилец хватает того, кто его касается, и уходит рывком в сторону, когда по нему стреляют.
+# Запуск: gradlew runClient -PbhShaders -PbhTest=tools/tests/tenant_touch_dodge.txt
+# Кадры: run/screenshots/91*.png и 92*.png, проверки [bh-test] в run/logs/latest.log
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 1000 120 1000 run bh arena build
+expect Arena built
+time set midnight
+weather clear
+clear @p
+give @p bodycamhorror:flashlight
+fill 1000 123 1000 1040 123 1040 air replace bodycamhorror:lamp
+gamerule naturalRegeneration false
+hud on
+
+# --- уклон: в творческом режиме, чтобы он не схватил Dev, пока идёт на выстрел ---
+gamemode creative @p
+# Фонарик выключен: на свет он пошёл бы сам, и место «до выстрела» поплыло бы.
+tp @p 1004.5 120 1004.5 -45 10
+execute positioned 1009.5 120 1009.5 rotated 135 0 run bh tenant spawn
+wait 30
+bh tenant info
+expect pos=1009, 120, 1009
+shot 91_before_shot
+bh tenant hit Dev
+expect last=dodge
+expect damage=0
+reject pos=1009, 120, 1009
+wait 2
+shot 92_after_dodge
+# Сразу второй выстрел попадает: кулдаун 3 с.
+bh tenant hit Dev
+expect damage=6
+wait 65
+bh tenant hit Dev
+expect last=dodge
+expect damage=6
+
+# --- касание: бот стоит вплотную, Жилец сразу душит (8 единиц урона) ---
+bh tenant remove
+gamemode adventure @p
+execute positioned 1036 120 1036 run bh bot add bravo B5
+execute positioned 1036.3 120 1036 run bh tenant spawn
+wait 12
+bh tenant info
+expect state=strangle
+expect last=touch-strangle
+expect B5
+wait 60
+bh debug
+expect B5(bot) team=bravo alive=false mode=adventure hp=12
+bh tenant info
+expect state=retreat
+
+# --- касание игроком: кадр для глаза (урон вне матча по Dev не проходит, его проверил бот) ---
+bh tenant remove
+bh bot remove all
+tp @p 1004.5 120 1004.5 -45 10
+bh bot light Dev
+execute positioned 1005.1 120 1005.1 rotated 135 0 run bh tenant spawn
+wait 15
+bh tenant info
+expect last=touch-strangle
+shot 93_touch_strangle
+wait 60
+bh bot light Dev
+
+gamerule naturalRegeneration true
+bh tenant remove
+bh bot remove all

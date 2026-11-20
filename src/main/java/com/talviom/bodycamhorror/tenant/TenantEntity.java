@@ -56,6 +56,11 @@ import java.util.UUID;
  * 0.9: без шума не стоит, а бродит по тёмным точкам карты (PATROL); в 9 блоках от него лампы
  * заикаются и гудят, фонарик срывается. В начале любого нападения он снова видим.
  * Во время удушья жертву могут добить враги (решение 2026-11-18): урон от игроков проходит как обычно.
+ *
+ * 0.9.1 (замечания пользователя 20.11): кто его коснётся, того он хватает сразу, без предупреждения
+ * (душит с уроном, а напуганного одиночку утаскивает), не чаще раза в 8 с. Если по нему стреляют,
+ * он рывком уходит на 1-2 блока в сторону от линии огня (хлопок плёнки, пепел), не чаще раза в 3 с:
+ * пули сразу после рывка уже попадают.
  */
 public class TenantEntity extends PathfinderMob implements GeoEntity {
     /** PATROL (0.9) в конце, чтобы номера прежних состояний у клиента не сдвинулись. */
@@ -106,6 +111,13 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
     private static final int BEAM_TICKS_TO_FREE = 15;
     private static final float STRANGLE_DAMAGE_HALF = 4f;
     private static final float DAMAGE_TO_RETREAT = 40f;
+    /** Касание: на сколько раздуть его коробку при проверке и как часто может схватить. */
+    private static final double TOUCH_REACH = 0.25;
+    private static final int TOUCH_COOLDOWN_TICKS = 8 * 20;
+    /** Уклон от выстрела: не чаще раза в 3 с, на 1,2-2 блока. */
+    private static final int DODGE_COOLDOWN_TICKS = 3 * 20;
+    private static final double DODGE_MIN = 1.2;
+    private static final double DODGE_MAX = 2.0;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
@@ -120,6 +132,8 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
     private long stunImmuneUntil;
     private String lastOutcome = "-";
     private int patrolIdle = PATROL_IDLE_MIN;
+    private long touchReadyAt;
+    private long dodgeReadyAt;
 
     // Атака.
     private int attackTicks;
@@ -206,6 +220,7 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
             attackTick(level, now);
             return;
         }
+        if (touchCheck(level, now)) return;
         // На свету ему нельзя: уходит в ближайшее тёмное место карты и живёт там.
         // Если тёмного места нет (весь свет горит), остаётся где есть и слушает: иначе он бесконечно
         // «отступал» бы к той же освещённой точке и весь раунд стоял на месте (было в 0.7.1).
@@ -319,6 +334,45 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
             return;
         }
         if (tickCount % 10 == 0) getNavigation().moveTo(p, STALK_SPEED);
+    }
+
+    // ---------- касание ----------
+
+    /**
+     * 0.9.1: игрок, который его касается, схвачен сразу. Раньше рядом с ним можно было стоять сколько угодно,
+     * если лимит нападений или перестрелка не давали начать атаку. Не трогает, пока он невидим (отдыхает
+     * после нападения), оглушён, во время подготовки и после конца раунда.
+     */
+    private boolean touchCheck(ServerLevel level, long now) {
+        if (now < touchReadyAt || isInvisible() || state() == State.STUNNED || tickCount % 4 != 0) return false;
+        com.talviom.bodycamhorror.match.MatchState ms = com.talviom.bodycamhorror.match.MatchManager.INSTANCE.state();
+        if (ms == com.talviom.bodycamhorror.match.MatchState.ROUND_END || ms == com.talviom.bodycamhorror.match.MatchState.PREP) return false;
+        net.minecraft.world.phys.AABB box = getBoundingBox().inflate(TOUCH_REACH);
+        for (ServerPlayer p : level.players()) {
+            if (p.isSpectator() || p.isCreative() || !p.isAlive() || !box.intersects(p.getBoundingBox())) continue;
+            touchGrab(p, now);
+            return true;
+        }
+        return false;
+    }
+
+    /** Схватить того, кто коснулся: сразу к концовке, без взгляда и прыжков. */
+    private void touchGrab(ServerPlayer p, long now) {
+        touchReadyAt = now + TOUCH_COOLDOWN_TICKS;
+        target = p.getUUID();
+        TenantRules.attacked(p, now);
+        getNavigation().stop();
+        setInvisible(false);
+        stareFrom = position();
+        attackTicks = T_FACE;
+        rescueHits = 0;
+        rescueBeam = 0;
+        // Касание никогда не кончается одним испугом: душит, а напуганного одиночку утаскивает.
+        forcedEnding = TenantRules.canTake(p) ? Ending.TAKE : Ending.STRANGLE;
+        FearSystem.INSTANCE.add(p, 20f);
+        BodycamHorror.LOGGER.info("[tenant] touched by {}, grabs ({})", p.getGameProfile().getName(), forcedEnding.name().toLowerCase());
+        atFace(p);
+        lastOutcome = "touch-" + lastOutcome;
     }
 
     // ---------- атака ----------
@@ -689,6 +743,7 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
             if (victim == null || shooter == victim || !TenantRules.sameSide(victim, shooter)) return false;
             rescueHits++;
         }
+        if (tryDodge(shooter)) return false;
         damageTaken += amount;
         playSound(ModSounds.TENANT_CLICK.get(), 0.8f, 0.8f + random.nextFloat() * 0.3f);
         if (damageTaken >= DAMAGE_TO_RETREAT && state() != State.STRANGLE) {
@@ -697,6 +752,67 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
             retreat(30 * 20);
         }
         return false;
+    }
+
+    /**
+     * 0.9.1: по нему стреляют, он рывком уходит на 1-2 блока вбок от линии огня, как эндермен, только без
+     * фиолетовых искр: глухой хлопок плёнки, клочья пепла и пыли там, где он стоял, у стрелка короткий сбой кадра.
+     * Не чаще раза в 3 с, поэтому очередь после рывка уже попадает. Не уходит во время нападения (жертву отбивают
+     * попаданиями), оглушённым и замороженным (для скриншотов).
+     */
+    private boolean tryDodge(ServerPlayer shooter) {
+        long now = level().getGameTime();
+        State s = state();
+        if (frozen || now < dodgeReadyAt || isInvisible()) return false;
+        if (s != State.WAIT && s != State.PATROL && s != State.FOLLOW && s != State.STALK && s != State.RETREAT) return false;
+        Vec3 from = position();
+        Vec3 line = from.subtract(shooter.position());
+        Vec3 flat = new Vec3(line.x, 0, line.z);
+        if (flat.lengthSqr() < 1e-4) flat = new Vec3(1, 0, 0);
+        flat = flat.normalize();
+        Vec3 side = new Vec3(-flat.z, 0, flat.x);
+        double dist = DODGE_MIN + random.nextDouble() * (DODGE_MAX - DODGE_MIN);
+        int first = random.nextBoolean() ? 1 : -1;
+        Vec3 to = null;
+        // Вбок (в случайную сторону, потом в другую), вбок и назад, ближе; если всюду стены, не уходит.
+        for (Vec3 dir : new Vec3[]{side.scale(first), side.scale(-first), side.scale(first).add(flat.scale(0.7)).normalize(),
+                side.scale(-first).add(flat.scale(0.7)).normalize()}) {
+            for (double k : new double[]{dist, DODGE_MIN}) {
+                Vec3 c = safeSpot(from.add(dir.scale(k)));
+                if (c != null && c.distanceToSqr(from) > 0.8) {
+                    to = c;
+                    break;
+                }
+            }
+            if (to != null) break;
+        }
+        if (to == null) return false;
+        dodgeReadyAt = now + DODGE_COOLDOWN_TICKS;
+        ServerLevel level = (ServerLevel) level();
+        dodgeDust(level, from);
+        moveTo(to.x, to.y, to.z, getYRot(), getXRot());
+        getNavigation().stop();
+        faceTowards(shooter);
+        BhNetwork.sendSnap(this);
+        dodgeDust(level, to);
+        level.playSound(null, from.x, from.y, from.z, ModSounds.TENANT_DODGE.get(), SoundSource.HOSTILE, 1.2f,
+                0.9f + random.nextFloat() * 0.2f);
+        BhNetwork.sendGlitch(shooter, 5, 0.3f);
+        FearSystem.INSTANCE.add(shooter, 6f);
+        lastOutcome = "dodge";
+        // Его выдал выстрел: идёт на стрелка, если ещё не шёл.
+        if (s == State.WAIT || s == State.PATROL) {
+            target = shooter.getUUID();
+            goal = shooter.position();
+            setState(State.FOLLOW);
+        }
+        return true;
+    }
+
+    /** Серая пыль и пепел по его росту: тёмный «след» рывка вместо фиолетовых искр эндермена. */
+    private static void dodgeDust(ServerLevel level, Vec3 at) {
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE, at.x, at.y + 1.0, at.z, 6, 0.2, 0.6, 0.2, 0.005);
+        level.sendParticles(net.minecraft.core.particles.ParticleTypes.ASH, at.x, at.y + 1.0, at.z, 30, 0.3, 0.8, 0.3, 0.02);
     }
 
     @Override
