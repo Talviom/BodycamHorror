@@ -13,7 +13,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Рация команды поверх Simple Voice Chat.
- * Во время матча живые союзники слышат друг друга на любом расстоянии.
+ * Во время матча живые союзники слышат друг друга на любом расстоянии, пока говорящий держит клавишу рации (Z, с 0.9).
+ * У слушателя такой голос проходит через «радио»-фильтр (RadioVoiceFilter, на клиенте).
  * Обычный голос по близости остаётся: врага рядом по-прежнему слышно.
  * Шёпот (клавиша шёпота в Voice Chat) в рацию не идёт.
  * Мёртвые в рацию не говорят. Во время помех часть слов пропадает.
@@ -31,6 +32,9 @@ public class RadioPlugin implements VoicechatPlugin {
     @Override
     public void registerEvents(EventRegistration registration) {
         registration.registerEvent(MicrophonePacketEvent.class, this::onMicrophone);
+        // 0.9: на клиенте голос из рации (статичный звук без места в мире) звучит как рация: узкая полоса, хрип, шипение.
+        registration.registerEvent(de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent.StaticSound.class,
+                e -> e.setRawAudio(RadioVoiceFilter.apply(e.getRawAudio())));
     }
 
     private void onMicrophone(MicrophonePacketEvent event) {
@@ -42,6 +46,8 @@ public class RadioPlugin implements VoicechatPlugin {
         UUID senderId = sender.getPlayer().getUuid();
         RadioState.Entry me = alive.get(senderId);
         if (me == null) return;
+        // 0.9: в рацию идёт только голос того, кто держит клавишу рации (Z). Без неё голос слышно лишь рядом.
+        if (!RadioState.isTalking(senderId)) return;
 
         boolean senderJammed = RadioState.isJammed(senderId);
         if (senderJammed && ThreadLocalRandom.current().nextDouble() < JAM_LOSS) return;

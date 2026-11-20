@@ -38,6 +38,9 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> FAR_CRY = register("far_cry");
     public static final RegistryObject<SoundEvent> PHONE_RING = register("phone_ring");
     public static final RegistryObject<SoundEvent> TAPE_REWIND = register("tape_rewind");
+    // 0.9, рация на Z (tools/assets/make_radio.py)
+    public static final RegistryObject<SoundEvent> RADIO_ON = register("radio_on");
+    public static final RegistryObject<SoundEvent> RADIO_OFF = register("radio_off");
 
     private ModSounds() {}
 

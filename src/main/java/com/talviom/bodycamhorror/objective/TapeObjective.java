@@ -76,6 +76,8 @@ public final class TapeObjective {
         reset();
         ServerLevel level = server.overworld();
         for (ServerPlayer p : server.getPlayerList().getPlayers()) removeTapes(p);
+        removeTapeBlocks(level);
+        for (ItemEntity e : tapesOnGround(level)) e.discard();
         if (!mapReady(level)) return;
         active = true;
         spawnTape(level, randomPoint(level));
@@ -106,6 +108,7 @@ public final class TapeObjective {
         ServerLevel level = server.overworld();
         for (ServerPlayer p : server.getPlayerList().getPlayers()) removeTapes(p);
         for (ItemEntity e : tapesOnGround(level)) e.discard();
+        removeTapeBlocks(level);
     }
 
     public void reset() {
@@ -228,6 +231,9 @@ public final class TapeObjective {
         for (ItemEntity e : tapesOnGround(level)) {
             play(level, e.position(), ModSounds.TAPE_HISS.get(), 0.6f, 0.85f + rnd.nextFloat() * 0.2f);
         }
+        for (BlockPos p : tapeBlocks(level)) {
+            play(level, Vec3.atCenterOf(p), ModSounds.TAPE_HISS.get(), 0.6f, 0.85f + rnd.nextFloat() * 0.2f);
+        }
     }
 
     /** Кассета упала за край карты: она «находится» в другой точке. */
@@ -244,14 +250,99 @@ public final class TapeObjective {
     private Vec3 randomPoint(ServerLevel level) {
         List<BlockPos> points = MapData.get(level).tapePoints();
         BlockPos p = points.get(rnd.nextInt(points.size()));
-        return new Vec3(p.getX() + 0.5, p.getY() + 0.1, p.getZ() + 0.5);
+        return new Vec3(p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5);
     }
 
-    public static ItemEntity spawnTape(ServerLevel level, Vec3 at) {
+    /**
+     * 0.9: кассета появляется 3D-блоком. Если в точке стоит мебель (или другой твёрдый блок), кассета ложится сверху,
+     * иначе на пол. Если положить некуда, она остаётся предметом на земле, как раньше.
+     */
+    public static void spawnTape(ServerLevel level, Vec3 at) {
+        BlockPos spot = findSpot(level, BlockPos.containing(at));
+        if (spot != null) {
+            placeTapeBlock(level, spot, level.getRandom().nextInt(4));
+            return;
+        }
         ItemEntity e = new ItemEntity(level, at.x, at.y, at.z, new ItemStack(ModBlocks.TAPE.get()), 0, 0, 0);
         protect(e);
         level.addFreshEntity(e);
-        return e;
+    }
+
+    /** Свободное место для кассеты: сама точка, если там воздух над опорой, иначе на опору ниже или над мебелью. */
+    static BlockPos findSpot(ServerLevel level, BlockPos start) {
+        BlockPos p = start;
+        // В точке стоит мебель: кассета на ней (поднимаемся, пока не найдём воздух, не выше двух блоков).
+        for (int i = 0; i < 3 && !free(level, p); i++) p = p.above();
+        if (!free(level, p)) return null;
+        // Висит в воздухе (уронили в прыжке, с галереи): опускаем до пола, не ниже 12 блоков.
+        for (int i = 0; i < 12 && free(level, p.below()) && p.getY() > level.getMinBuildHeight(); i++) p = p.below();
+        return free(level, p.below()) ? null : p;
+    }
+
+    private static boolean free(ServerLevel level, BlockPos p) {
+        net.minecraft.world.level.block.state.BlockState s = level.getBlockState(p);
+        return s.isAir() || (s.canBeReplaced() && s.getFluidState().isEmpty());
+    }
+
+    static void placeTapeBlock(ServerLevel level, BlockPos pos, int turn) {
+        net.minecraft.core.Direction f = net.minecraft.core.Direction.from2DDataValue(turn & 3);
+        level.setBlock(pos, ModBlocks.TAPE_BLOCK.get().defaultBlockState().setValue(TapeBlock.FACING, f), 3);
+        TAPE_BLOCKS.add(new TapeSpot(level.dimension(), pos.immutable()));
+    }
+
+    private record TapeSpot(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dim, BlockPos pos) {}
+
+    /** Где сейчас лежат кассеты-блоки (чтобы шипеть ими и убрать их в конце раунда). */
+    private static final java.util.Set<TapeSpot> TAPE_BLOCKS = new java.util.HashSet<>();
+
+    private static List<BlockPos> tapeBlocks(ServerLevel level) {
+        List<BlockPos> out = new java.util.ArrayList<>();
+        for (java.util.Iterator<TapeSpot> it = TAPE_BLOCKS.iterator(); it.hasNext(); ) {
+            TapeSpot s = it.next();
+            if (s.dim() != level.dimension()) continue;
+            if (level.isLoaded(s.pos()) && !level.getBlockState(s.pos()).is(ModBlocks.TAPE_BLOCK.get())) {
+                it.remove();
+                continue;
+            }
+            out.add(s.pos());
+        }
+        return out;
+    }
+
+    private static void removeTapeBlocks(ServerLevel level) {
+        for (BlockPos p : tapeBlocks(level)) {
+            if (level.getBlockState(p).is(ModBlocks.TAPE_BLOCK.get())) level.setBlock(p, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+        }
+        TAPE_BLOCKS.removeIf(s -> s.dim() == level.dimension());
+    }
+
+    /** ПКМ или F по кассете-блоку. */
+    public void pickUpBlock(ServerPlayer p, BlockPos pos) {
+        MatchManager m = MatchManager.INSTANCE;
+        if (m.running() && (!m.isAlive(p) || m.state() != com.talviom.bodycamhorror.match.MatchState.LIVE)) return;
+        ServerLevel level = p.serverLevel();
+        if (!level.getBlockState(pos).is(ModBlocks.TAPE_BLOCK.get())) return;
+        level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+        TAPE_BLOCKS.remove(new TapeSpot(level.dimension(), pos));
+        ItemStack tape = new ItemStack(ModBlocks.TAPE.get());
+        if (!p.getInventory().add(tape)) {
+            // Места нет: кассета сразу ложится обратно на то же место.
+            placeTapeBlock(level, pos, 0);
+            p.displayClientMessage(text(Component.translatable("bh.tape.no_room"), ASH), true);
+            return;
+        }
+        if (m.running()) onPickedUp(p);
+    }
+
+    /**
+     * 0.9: кассета-предмет попала в мир (выпала у погибшего, выброшена на G, игрок вышел): вместо плоского
+     * предмета на полу ложится та же 3D-кассета. @return true, если предмет заменён блоком
+     */
+    public static boolean dropAsBlock(ServerLevel level, ItemEntity item) {
+        BlockPos spot = findSpot(level, BlockPos.containing(item.position()));
+        if (spot == null) return false;
+        placeTapeBlock(level, spot, level.getRandom().nextInt(4));
+        return true;
     }
 
     /** Кассета на земле не исчезает со временем и не ломается. */

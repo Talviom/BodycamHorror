@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "bodycamhorror:breaker",
-    "bodycamhorror:generator"
+    "bodycamhorror:generator",
+    "bodycamhorror:tape_block"
   ]
 }

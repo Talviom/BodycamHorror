@@ -47,6 +47,10 @@ public final class ModBlocks {
     public static final RegistryObject<Item> EXIT_MARKER_ITEM = ITEMS.register("exit_marker", () -> new BlockItem(EXIT_MARKER.get(), new Item.Properties()));
     /** Кассета, цель раунда. Не горит в лаве и не исчезает на земле во время матча (см. TapeObjective). */
     public static final RegistryObject<Item> TAPE = ITEMS.register("tape", () -> new Item(new Item.Properties().stacksTo(1).fireResistant()));
+    /** 0.9: кассета, лежащая в мире 3D-моделью (на мебели или на полу). Забрать только подбором, сломать нельзя. */
+    public static final RegistryObject<Block> TAPE_BLOCK = BLOCKS.register("tape_block", () -> new com.talviom.bodycamhorror.objective.TapeBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(-1f, 3600000f).sound(SoundType.WOOD)
+                    .noLootTable().noOcclusion().noCollission().pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)));
 
     private ModBlocks() {}
 
