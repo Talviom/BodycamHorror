@@ -34,7 +34,7 @@ $props = @(
 $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-17.0.21.9-hotspot"
 Push-Location $repo
 try {
-    & .\gradlew.bat runServer "-PbhServerDir=run-world" "-PbhTest=tools/world/build_world.txt" --console=plain
+    & .\gradlew.bat runServer -PbhFurniture "-PbhServerDir=run-world" "-PbhTest=tools/world/build_world.txt" --console=plain
 } finally {
     Pop-Location
 }

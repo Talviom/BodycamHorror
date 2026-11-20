@@ -101,6 +101,11 @@ dependencies {
         runtimeOnly fg.deobf('blank:embeddium:0.3.31+mc1.20.1')
         runtimeOnly fg.deobf('blank:oculus-mc1.20.1:1.8.0')
     }
+    // Мебель Macaw's для точек кассеты (0.9): без неё FacilityBuilder ставит бочки.
+    // Нужна готовым мирам (tools/world/make-world.ps1) и проверке мебели: -PbhFurniture.
+    if (project.hasProperty('bhFurniture')) {
+        runtimeOnly fg.deobf('blank:mcw-furniture:3.4.1-mc1.20.1forge')
+    }
 }
 
 tasks.named('processResources', ProcessResources).configure {
