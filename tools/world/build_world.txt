@@ -1,0 +1,25 @@
+# Готовый мир для сборки друзей: «Комплекс» и лобби у точки появления, ночь, без мобов и погоды.
+# Запускает tools/world/make-world.ps1 (выделенный dev-сервер, плоский пустой мир). Руками не нужен.
+# «bh arena build facility» в 0 120 0 ставит угол здания в 2 120 2, лобби западнее (центр около -12 120 4).
+
+execute positioned 0 120 0 run bh arena build facility
+expect Facility built
+expect Lobby built
+bh status
+time set midnight
+weather clear
+gamerule doDaylightCycle false
+gamerule doWeatherCycle false
+gamerule doMobSpawning false
+gamerule doPatrolSpawning false
+gamerule doTraderSpawning false
+gamerule doInsomnia false
+gamerule doFireTick false
+gamerule mobGriefing false
+gamerule announceAdvancements false
+gamerule spawnRadius 0
+setworldspawn -12 120 4
+wait 20
+save-all flush
+wait 40
+stop

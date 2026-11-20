@@ -21,6 +21,16 @@ New-Item -ItemType Directory -Force -Path $stage | Out-Null
 Copy-Item (Join-Path $PSScriptRoot "INSTALL.txt") (Join-Path $stage "INSTALL.txt") -Force
 $staged = @("INSTALL.txt")
 
+# Готовые миры (0.9): «Комплекс» и лобби уже построены. Делает tools\world\make-world.ps1 после всех правок карты.
+$worlds = Join-Path $Out "worlds"
+if (Test-Path $worlds) {
+    Copy-Item $worlds (Join-Path $stage "saves") -Recurse -Force
+    $staged += "saves"
+    Write-Host "Миры: $((Get-ChildItem $worlds -Directory).Name -join ', ')"
+} else {
+    Write-Warning "Нет готовых миров в ${worlds}: сначала tools\world\make-world.ps1 (иначе хосту придётся строить карту командой)"
+}
+
 # options.txt хоста берём как основу (графика, дальность прорисовки, клавиши сборки),
 # но личное сбрасываем: громкость, чувствительность мыши, поле зрения, последний сервер.
 $hostOptions = Join-Path $Game "options.txt"

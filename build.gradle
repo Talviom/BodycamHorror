@@ -60,6 +60,13 @@ minecraft {
         }
         server {
             args '--nogui'
+            // Готовый мир для сборки: tools/world/make-world.ps1 (gradlew runServer -PbhServerDir=... -PbhTest=...).
+            if (project.hasProperty('bhServerDir')) {
+                workingDirectory project.file(project.property('bhServerDir'))
+            }
+            if (project.hasProperty('bhTest')) {
+                property 'bh.testScript', project.file(project.property('bhTest')).absolutePath
+            }
         }
     }
 }

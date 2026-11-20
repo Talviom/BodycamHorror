@@ -11,3 +11,4 @@ out/
 
 # Python cache from tools/assets
 __pycache__/
+run-world
