@@ -67,6 +67,11 @@ public final class ShaderState {
         return Mth.clamp(best * 1.4f, 0f, 1f);
     }
 
+    /** 1.0: 0..1, сила тумана на улице (OutdoorFog). Шейдер затягивает им даль в почти чёрную муть. */
+    public static float fog() {
+        return OutdoorFog.strength();
+    }
+
     /** Значения для текущего кадра, сглаженные между тиками. */
     public static float flashlight() {
         return Mth.lerp(partial(), flashlightPrev, flashlight);

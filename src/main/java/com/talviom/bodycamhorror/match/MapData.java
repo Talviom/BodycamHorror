@@ -28,6 +28,8 @@ public class MapData extends SavedData {
     private final List<BlockPos> tapePoints = new ArrayList<>();
     private BlockPos lobby;
     private final Map<BhTeam, BlockPos> lobbyPads = new EnumMap<>(BhTeam.class);
+    /** Логово Жильца: здесь он просыпается каждый раунд (null: самая тёмная точка, как раньше). */
+    private BlockPos tenantHome;
 
     public MapData() {
         for (BhTeam t : BhTeam.values()) spawns.put(t, new ArrayList<>());
@@ -93,6 +95,16 @@ public class MapData extends SavedData {
         setDirty();
     }
 
+    @javax.annotation.Nullable
+    public BlockPos tenantHome() {
+        return tenantHome;
+    }
+
+    public void setTenantHome(@javax.annotation.Nullable BlockPos pos) {
+        tenantHome = pos == null ? null : pos.immutable();
+        setDirty();
+    }
+
     public static MapData load(CompoundTag tag) {
         MapData d = new MapData();
         for (BhTeam t : BhTeam.values()) {
@@ -106,6 +118,7 @@ public class MapData extends SavedData {
         }
         if (tag.contains("lobby")) d.lobby = NbtUtils.readBlockPos(tag.getCompound("lobby"));
         d.pairedLoot = tag.getBoolean("paired_loot");
+        if (tag.contains("tenant_home")) d.tenantHome = NbtUtils.readBlockPos(tag.getCompound("tenant_home"));
         return d;
     }
 
@@ -122,6 +135,7 @@ public class MapData extends SavedData {
         }
         if (lobby != null) tag.put("lobby", NbtUtils.writeBlockPos(lobby));
         tag.putBoolean("paired_loot", pairedLoot);
+        if (tenantHome != null) tag.put("tenant_home", NbtUtils.writeBlockPos(tenantHome));
         return tag;
     }
 

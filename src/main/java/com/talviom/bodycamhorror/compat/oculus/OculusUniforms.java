@@ -10,6 +10,7 @@ import net.irisshaders.iris.gl.uniform.UniformUpdateFrequency;
  * поэтому без Oculus этот класс никогда не загружается.
  *
  * В шейдере: uniform float bhFlashlight; uniform float bhFear; uniform float bhEmergency (0.9, красный свет аварийных ламп);
+ * uniform float bhFog (1.0, туман на улице, 0..1);
  * Без нашего мода шейдер получает 0 (фонарика нет, страха нет).
  */
 public final class OculusUniforms {
@@ -19,5 +20,6 @@ public final class OculusUniforms {
         uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "bhFlashlight", (FloatSupplier) ShaderState::flashlight);
         uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "bhFear", (FloatSupplier) ShaderState::fear);
         uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "bhEmergency", (FloatSupplier) ShaderState::emergency);
+        uniforms.uniform1f(UniformUpdateFrequency.PER_FRAME, "bhFog", (FloatSupplier) ShaderState::fog);
     }
 }

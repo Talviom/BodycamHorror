@@ -195,6 +195,7 @@ public final class FacilityBuilder {
         map.spawns(BhTeam.BRAVO).clear();
         map.lootPoints().clear();
         map.tapePoints().clear();
+        map.setTenantHome(null);
         for (int z : new int[]{13, 16, 19}) {
             map.spawns(BhTeam.ALPHA).add(p(4, 0, z));
             map.spawns(BhTeam.BRAVO).add(p(W - 4, 0, D - z));

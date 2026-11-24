@@ -27,6 +27,12 @@ public final class ArenaCommand {
                     Component result = com.talviom.bodycamhorror.arena.FacilityBuilder.build(c.getSource().getServer().overworld(), base);
                     c.getSource().sendSuccess(() -> result, true);
                     return 1;
-                })))));
+                })).then(Commands.literal("hospital").executes(c -> {
+                    // «Больница» (1.0): основная карта, корпус в два этажа с двором-колодцем и хозблоком (HospitalBuilder).
+                    BlockPos base = BlockPos.containing(c.getSource().getPosition()).offset(2, 0, 2);
+                    Component result = com.talviom.bodycamhorror.arena.HospitalBuilder.build(c.getSource().getServer().overworld(), base);
+                    c.getSource().sendSuccess(() -> result, true);
+                    return 1;
+                }))));
     }
 }

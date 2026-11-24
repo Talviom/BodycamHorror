@@ -23,6 +23,7 @@
    камера «плавает» экспозицией, в тенях больше зерна. При страхе 0 картинка как без эффекта.
 8. Чёрное остаётся чёрным: тени не поднимаются в серое.
 9. Хроматическая аберрация (разъезд красного и голубого) выключена: запрещена правилами стиля.
+11. 1.0: туман на улице (uniform bhFog), даль уходит в почти чёрную муть, луч фонарика в нём виден сильнее.
 10. 0.9: конус фонарика уже и длиннее, с неровным краем и грязным стеклом, пыль в воздухе слабее
     (свет блоков фонарика в моде ослаблен, луч рисует шейдер). Рядом с горящей аварийной лампой
     (uniform bhEmergency) тени уходят в тусклый красный.
@@ -90,8 +91,15 @@ FLASHLIGHT_GLSL = r"""
             float ha = acos(clamp(dot(hp / hd, lampAim), -1.0, 1.0));
             haze += smoothstep(0.24, 0.08, ha) / (1.0 + hd * hd * 0.12);
         }
-        sceneData += lampColor * haze * (rayLen / 8.0) * 0.003 * bhFlashlight;
+        sceneData += lampColor * haze * (rayLen / 8.0) * 0.003 * bhFlashlight * (1.0 + 5.0 * bhFog);
     }
+}
+// 1.0: туман на улице (bhFog 0..1 из мода, только под открытым небом). Даль уходит в почти чёрную
+// серо-костяную муть, видно метров на 18-20; луч фонарика в тумане виден сильнее (см. haze выше).
+if (bhFog > 0.001) {
+    float fogDist = length(viewPos);
+    float fogA = (1.0 - exp(-fogDist * fogDist * 0.006)) * bhFog;
+    sceneData = mix(sceneData, vec3(0.020, 0.019, 0.017), clamp(fogA, 0.0, 0.97));
 }
 //------------------------------------------------------------------------------------------------//
 """
@@ -134,7 +142,7 @@ def patch_composite1(text: str) -> str:
     end = text.index("#endif", text.index("sceneData += albedo * f_color", start))
     end = text.index("\n", text.index("//----", end)) + 1
     text = text[:start] + FLASHLIGHT_GLSL.lstrip("\n") + text[end:]
-    return text.replace("uniform int worldTime;", "uniform int worldTime;\nuniform float bhFlashlight;", 1)
+    return text.replace("uniform int worldTime;", "uniform int worldTime;\nuniform float bhFlashlight;\nuniform float bhFog;", 1)
 
 
 def patch_final(text: str) -> str:

@@ -72,6 +72,7 @@ public final class TenantSpawner {
     /** Из точек лута и кассеты: подальше от спавнов, среди таких самая тёмная, при равенстве самая далёкая. */
     static BlockPos darkestFarPoint(ServerLevel level) {
         MapData map = MapData.get(level);
+        if (map.tenantHome() != null) return map.tenantHome();
         List<BlockPos> candidates = new ArrayList<>(map.lootPoints());
         candidates.addAll(map.tapePoints());
         if (candidates.isEmpty()) return null;

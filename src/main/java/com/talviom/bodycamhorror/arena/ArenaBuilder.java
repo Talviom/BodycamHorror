@@ -68,6 +68,7 @@ public final class ArenaBuilder {
         map.spawns(BhTeam.BRAVO).clear();
         map.lootPoints().clear();
         map.tapePoints().clear();
+        map.setTenantHome(null);
         for (int i = 0; i < 3; i++) {
             map.spawns(BhTeam.ALPHA).add(base.offset(3 + i * 2, 0, 3));
             map.spawns(BhTeam.BRAVO).add(base.offset(SIZE - 3 - i * 2, 0, SIZE - 3));

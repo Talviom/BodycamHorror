@@ -63,6 +63,9 @@ public final class TenantHearing {
             Vec3 last = LAST_POS.put(p.getUUID(), pos);
             double moved = last == null ? 0 : Math.sqrt(Math.pow(pos.x - last.x, 2) + Math.pow(pos.z - last.z, 2));
             if (Flashlight.isLit(p)) noise(level, pos, 3f, 24, p, true, "flashlight");
+            // 1.0: стекло и железо под ногами (спуски со второго этажа) в полный рост слышно как бег, на корточках как шаги.
+            boolean noisy = moved > 0.3 && p.onGround() && com.talviom.bodycamhorror.movement.SneakSounds.noisySurface(p.getBlockStateOn());
+            if (noisy) noise(level, pos, p.isCrouching() ? 1f : 2f, p.isCrouching() ? 10 : 18, p, false, "glass");
             if (p.isSprinting()) noise(level, pos, 2f, 18, p, false, "run");
             else if (moved > 0.6 && !p.isCrouching()) noise(level, pos, 1f, 10, p, false, "steps");
             if (FearSystem.INSTANCE.fear(p) >= 70f) noise(level, pos, 1f, 5, p, false, "heartbeat");

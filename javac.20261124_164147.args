@@ -1,0 +1,6 @@
+-proc:none
+-d
+/tmp/sx
+-sourcepath
+src/main/java
+src/main/java/com/talviom/bodycamhorror/arena/HospitalBuilder.java
