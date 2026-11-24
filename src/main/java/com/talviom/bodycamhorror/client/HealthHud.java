@@ -81,8 +81,9 @@ public final class HealthHud {
         float lostAlpha = lost > shown ? 1f - Mth.clamp((now - lostAt - 350) / 650f, 0f, 1f) : 0f;
         if (lostAlpha <= 0f) lost = 0f;
 
-        // Кровь темнеет при низком здоровье и неровно мерцает, как умирающая лампа.
-        float dark = 0.65f + 0.35f * Mth.clamp((shown - 0.1f) / 0.5f, 0f, 1f);
+        // На низком здоровье кровь неровно мерцает, как умирающая лампа. Не темнеет: на красном
+        // экране при ранении тёмная кровь сливалась с фоном.
+        float dark = 1f;
         float alpha = 1f;
         if (shown < LOW) {
             double t = now / (140.0 + shown * 400.0);
@@ -108,8 +109,9 @@ public final class HealthHud {
         if (top < TEX_H) {
             layer(g, top, TEX_H - top, dark, dark, dark, alpha);
             // Поверхность крови: светлая полоска мениска.
+            // На низком здоровье мениск цвета кости, чтобы остаток крови был виден на красном экране.
             int a = Math.round(alpha * 200) << 24;
-            g.fill(INNER_X0, top, INNER_X1, top + 1, a | 0x963428);
+            g.fill(INNER_X0, top, INNER_X1, top + 1, a | (shown < LOW ? Vhs.BONE : 0x963428));
         }
         Vhs.blitAlpha(g, VIAL, 0, 0, TEX_W, TEX_H, TEX_W * 2, 0, TEX_W, TEX_H, SHEET_W, TEX_H, 1f);
         g.pose().popPose();
