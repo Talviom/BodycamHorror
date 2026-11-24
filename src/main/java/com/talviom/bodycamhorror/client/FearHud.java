@@ -26,9 +26,9 @@ public final class FearHud {
     /** Значок фонарика: три кадра 24x18 (выключен, светит, сел). */
     private static final ResourceLocation TORCH = Vhs.rl("textures/gui/torch.png");
     private static final int TORCH_TEX_W = 24;
-    /** На экране всё вдвое мельче текстуры: батарейка 20x9, фонарик 12x9 пикселей интерфейса. */
-    private static final int BATTERY_W = BATTERY_TEX_W / 2;
-    private static final int BATTERY_H = BATTERY_TEX_H / 2;
+    /** На экране в масштабе пробирки (HealthHud.HUD_SCALE): батарейка 34x15, фонарик 20x15 пикселей интерфейса. */
+    private static final int BATTERY_W = Math.round(BATTERY_TEX_W * HealthHud.HUD_SCALE);
+    private static final int BATTERY_H = Math.round(BATTERY_TEX_H * HealthHud.HUD_SCALE);
     private static final int MARGIN = 8;
     /** Насколько поднять нижний угол, пока открыт чат (строка ввода внизу экрана). */
     private static final int CHAT_LIFT = 14;
@@ -48,7 +48,7 @@ public final class FearHud {
         // Левый нижний угол: пробирка, рядом внизу батарейка и фонарик.
         int bottom = h - MARGIN - (mc.screen instanceof ChatScreen ? CHAT_LIFT : 0);
         int x = MARGIN;
-        if (HealthHud.drawHealth(g, x, bottom)) x += HealthHud.WIDTH + 5;
+        if (HealthHud.drawHealth(g, x, bottom)) x += HealthHud.WIDTH + 7;
         if (ClientState.hasFlashlight) drawBattery(g, x, bottom - BATTERY_H);
     }
 
@@ -122,7 +122,7 @@ public final class FearHud {
         int sheetW = BATTERY_TEX_W * 3;
         g.pose().pushPose();
         g.pose().translate(x, y, 0f);
-        g.pose().scale(0.5f, 0.5f, 1f);
+        g.pose().scale(HealthHud.HUD_SCALE, HealthHud.HUD_SCALE, 1f);
         Vhs.blitAlpha(g, BATTERY, 0, 0, BATTERY_TEX_W, BATTERY_TEX_H, 0, 0, BATTERY_TEX_W, BATTERY_TEX_H, sheetW, BATTERY_TEX_H, alpha);
         int fill = Math.round(CHARGE_W * Mth.clamp(b, 0f, 1f));
         if (fill > 0 && !blink) {

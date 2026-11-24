@@ -37,9 +37,14 @@ public final class HealthHud {
     private static final int INNER_TOP = 7;
     private static final int INNER_X0 = 4;
     private static final int INNER_X1 = 16;
+    /**
+     * Во сколько раз текстура мельче на экране: 0,5 (вдвое) умножено на 1,7, пользователь попросил
+     * крупнее (на 1920x1080 с масштабом 2 пробирка была 18x85 пикселей и терялась).
+     */
+    static final float HUD_SCALE = 0.5f * 1.7f;
     /** Размер пробирки на экране в пикселях интерфейса: тонкая, «как палец». */
-    public static final int WIDTH = TEX_W / 2;
-    public static final int HEIGHT = TEX_H / 2;
+    public static final int WIDTH = Math.round(TEX_W * HUD_SCALE);
+    public static final int HEIGHT = Math.round(TEX_H * HUD_SCALE);
     /** Насколько сдвинуть чат вправо, пока видна пробирка. */
     private static final int CHAT_SHIFT = 8 + WIDTH + 6;
 
@@ -99,7 +104,7 @@ public final class HealthHud {
         }
         g.pose().pushPose();
         g.pose().translate(x, y, 0f);
-        g.pose().scale(0.5f, 0.5f, 1f);
+        g.pose().scale(HUD_SCALE, HUD_SCALE, 1f);
         Vhs.blitAlpha(g, VIAL, 0, 0, TEX_W, TEX_H, 0, 0, TEX_W, TEX_H, SHEET_W, TEX_H, 1f);
         int top = fillTop(shown);
         int lostTop = fillTop(lost);
