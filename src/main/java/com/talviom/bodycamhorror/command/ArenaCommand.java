@@ -33,6 +33,6 @@ public final class ArenaCommand {
                     Component result = com.talviom.bodycamhorror.arena.HospitalBuilder.build(c.getSource().getServer().overworld(), base);
                     c.getSource().sendSuccess(() -> result, true);
                     return 1;
-                }))));
+                })))));
     }
 }
