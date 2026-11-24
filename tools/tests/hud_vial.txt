@@ -1,0 +1,74 @@
+# HUD: пробирка здоровья (внизу слева), горизонтальная батарейка фонарика с иконкой, чат сдвинут вправо.
+# Ночь, матч идёт (сердце видно), у игрока фонарик. Батарейка 75 с: ~50 % через 750 тиков, ниже 15 % через ~1300.
+# Запуск: gradlew runClient -PbhSize=1920x1080 -PbhTest=tools/tests/hud_vial.txt (guiScale:2 в run/options.txt)
+# Кадры: run/screenshots/hud_vial_*.png. Результат: [bh-test] DONE failures=0.
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 2000 120 2000 run bh arena build facility
+expect Facility built
+time set midnight
+weather clear
+gamerule naturalRegeneration false
+gamemode adventure Dev
+wait 40
+
+# --- матч и фонарик ---
+bh team alpha Dev
+bh start test
+bh skip
+clear Dev
+effect clear Dev
+give Dev bodycamhorror:flashlight
+execute as Dev run bh horror fear 0
+hud on
+tp Dev 2006.5 120 2005.5 90 5
+wait 20
+bh bot light Dev
+expect flashlight: on
+wait 40
+bh debug
+shot hud_vial_a_full_hp_light_on
+
+# --- (б) здоровье ~50 %, батарейка ~50 % ---
+damage Dev 10 minecraft:generic
+data get entity Dev Health
+wait 340
+bh tenant remove
+execute as Dev run bh horror fear 0
+wait 340
+bh tenant remove
+execute as Dev run bh horror fear 0
+bh debug
+data get entity Dev Health
+wait 20
+shot hud_vial_b_half_hp_half_battery
+
+# --- (в) здоровье ~20 %, батарейка ниже 15 % ---
+damage Dev 6 minecraft:generic
+data get entity Dev Health
+wait 280
+bh tenant remove
+execute as Dev run bh horror fear 0
+wait 260
+bh tenant remove
+execute as Dev run bh horror fear 0
+bh debug
+data get entity Dev Health
+wait 10
+shot hud_vial_c_low_hp_low_battery
+
+# --- (г) открытый чат с сообщениями: сдвинут вправо от пробирки, строка ввода не налезает ---
+say Проверка чата: первое сообщение
+tellraw @a {"text":"<Dev> второе сообщение, подлиннее, чтобы проверить перенос и отступ слева"}
+tellraw @a {"text":"<Dev2> третье"}
+wait 10
+screen chat
+wait 20
+shot hud_vial_d_chat_open
+screen close
+wait 10
+
+gamerule naturalRegeneration true
+bh stop

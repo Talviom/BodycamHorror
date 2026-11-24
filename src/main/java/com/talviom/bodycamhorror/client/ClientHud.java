@@ -101,7 +101,7 @@ public final class ClientHud {
         }
     }
 
-    private static boolean creativeOrSpectator() {
+    static boolean creativeOrSpectator() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.gameMode == null) return false;
         GameType mode = mc.gameMode.getPlayerMode();
