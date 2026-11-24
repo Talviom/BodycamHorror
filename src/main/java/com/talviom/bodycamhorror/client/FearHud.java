@@ -110,7 +110,7 @@ public final class FearHud {
         boolean dead = b <= 0.02f;
         // На слабом заряде мигает остаток заряда.
         boolean blink = on && low && (System.currentTimeMillis() / 250) % 2 == 0;
-        float alpha = on ? 1f : 0.55f;
+        float alpha = on ? 0.85f : 0.5f;
         if (!Vhs.has(BATTERY)) {
             int a = (int) (alpha * 255) << 24;
             g.fill(x, y, x + BATTERY_W - 2, y + BATTERY_H, a | Vhs.SOOT);
@@ -126,10 +126,10 @@ public final class FearHud {
         Vhs.blitAlpha(g, BATTERY, 0, 0, BATTERY_TEX_W, BATTERY_TEX_H, 0, 0, BATTERY_TEX_W, BATTERY_TEX_H, sheetW, BATTERY_TEX_H, alpha);
         int fill = Math.round(CHARGE_W * Mth.clamp(b, 0f, 1f));
         if (fill > 0 && !blink) {
-            int rgb = low ? Vhs.DRIED_BLOOD : Vhs.BONE;
+            int rgb = low ? Vhs.DRIED_BLOOD : 0x5C574E; // пепел, не кость: на фоне HUD кость была слишком яркой
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            RenderSystem.setShaderColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 0.85f * alpha);
+            RenderSystem.setShaderColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, 0.8f * alpha);
             g.blit(BATTERY, CHARGE_X, 0, fill, BATTERY_TEX_H, BATTERY_TEX_W + CHARGE_X, 0, fill, BATTERY_TEX_H, sheetW, BATTERY_TEX_H);
             RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
             RenderSystem.disableBlend();
@@ -138,7 +138,7 @@ public final class FearHud {
         if (Vhs.has(TORCH)) {
             int frame = dead ? 2 : on ? 1 : 0;
             Vhs.blitAlpha(g, TORCH, BATTERY_TEX_W + 6, 0, TORCH_TEX_W, BATTERY_TEX_H, frame * TORCH_TEX_W, 0,
-                    TORCH_TEX_W, BATTERY_TEX_H, TORCH_TEX_W * 3, BATTERY_TEX_H, dead ? 0.8f : alpha);
+                    TORCH_TEX_W, BATTERY_TEX_H, TORCH_TEX_W * 3, BATTERY_TEX_H, dead ? 0.7f : alpha);
         }
         g.pose().popPose();
     }
