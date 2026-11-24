@@ -4,6 +4,7 @@ import com.talviom.bodycamhorror.BodycamHorror;
 import com.talviom.bodycamhorror.tenant.TenantHearing;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.SoundType;
@@ -39,7 +40,29 @@ public final class SneakSounds {
                 || t == SoundType.LANTERN || t == SoundType.NETHERITE_BLOCK;
     }
 
+    /**
+     * Спуск со второго этажа (козырёк, крыша перехода, окно над контейнером) и любое падение с 2,5 блока:
+     * к обычному звуку блока добавляется шорох одежды из звуков самой игры (кожаная броня), без своих файлов.
+     * На железе (контейнер, козырёк) ещё глухой лязг железного люка, тише и ниже обычного.
+     */
+    private static void bodyLanded(ServerPlayer p, float distance) {
+        if (p.isSpectator() || distance < 2.5f) return;
+        ServerLevel level = p.serverLevel();
+        BlockState on = p.getBlockStateOn();
+        if (on.isAir()) return;
+        float k = Mth.clamp(distance / 6f, 0.4f, 1f);
+        float soft = p.isCrouching() ? 0.5f : 1f;
+        level.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.ARMOR_EQUIP_LEATHER, SoundSource.PLAYERS,
+                0.55f * k * soft, 0.8f + level.random.nextFloat() * 0.1f);
+        SoundType t = on.getSoundType(level, p.getOnPos(), p);
+        if (t == SoundType.METAL || t == SoundType.COPPER || t == SoundType.NETHERITE_BLOCK) {
+            level.playSound(null, p.getX(), p.getY(), p.getZ(), SoundEvents.IRON_TRAPDOOR_CLOSE, SoundSource.PLAYERS,
+                    0.45f * k * soft, 0.6f + level.random.nextFloat() * 0.08f);
+        }
+    }
+
     private static void landed(ServerPlayer p, float distance) {
+        bodyLanded(p, distance);
         if (!p.isCrouching() || p.isSpectator() || distance < 0.6f) return;
         ServerLevel level = p.serverLevel();
         BlockState on = p.getBlockStateOn();
