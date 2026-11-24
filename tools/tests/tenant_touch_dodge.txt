@@ -42,6 +42,8 @@ expect damage=6
 bh tenant remove
 gamemode adventure @p
 execute positioned 1036 120 1036 run bh bot add bravo B5
+# Новый игрок 60 тиков неуязвим после входа: без паузы удушье не отнимает здоровье (hp=20 вместо 12).
+wait 70
 execute positioned 1036.3 120 1036 run bh tenant spawn
 wait 12
 bh tenant info
