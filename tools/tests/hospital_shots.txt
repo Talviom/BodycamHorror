@@ -1,0 +1,69 @@
+# 1.0: карта «Больница» (HospitalBuilder). Строит карту и снимает кадры для согласования с пользователем.
+# Запуск: gradlew runClient -PbhFurniture -PbhSize=1920x1080 -PbhTest=tools/tests/hospital_shots.txt
+# «bh arena build hospital» в 2000 120 2000: угол забора в 2002 120 2002, точка схемы (x, y, z) = (2002+x, 120+y, 2010+z).
+# Кадры: run/screenshots/h10_*.png. Результат: [bh-test] DONE failures=0.
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 2000 120 2000 run bh arena build hospital
+expect Hospital built
+expect Lobby built
+time set midnight
+weather clear
+gamerule doDaylightCycle false
+wait 60
+
+# --- сверху, без тумана (наблюдатель) ---
+gamemode spectator Dev
+tp Dev 2046.5 190 2040.5 0 90
+wait 80
+hud off
+wait 3
+shot h10_top
+tp Dev 2046.5 160 2105.5 180 38
+wait 60
+shot h10_from_south
+tp Dev 2046.5 150 1975.5 0 38
+wait 60
+shot h10_from_north
+
+# --- на земле, туман и ночь (приключение) ---
+gamemode adventure Dev
+tp Dev 2046.5 120 2071.5 180 -8
+wait 80
+shot h10_front_fog
+tp Dev 2013.5 120 2043.5 90 8
+wait 60
+shot h10_ambulance
+tp Dev 2016.5 120 2040.5 -90 0
+wait 60
+shot h10_spawn_a
+tp Dev 2021.5 120 2028.5 180 0
+wait 60
+shot h10_corridor_signs
+tp Dev 2046.5 120 2060.5 180 -10
+wait 60
+shot h10_hall_ground
+tp Dev 2046.5 125 2055.5 180 25
+wait 60
+shot h10_hall_bridge
+tp Dev 2047.5 125 2061.5 0 30
+wait 60
+shot h10_canopy_window
+tp Dev 2046.5 120 2047.5 180 -5
+wait 80
+shot h10_courtyard
+tp Dev 2046.5 117 2008.5 -90 5
+wait 60
+shot h10_morgue
+tp Dev 2041.5 120 2008.5 180 0
+wait 60
+shot h10_boiler
+tp Dev 2024.5 125 2036.5 0 40
+wait 60
+shot h10_ward_hole
+tp Dev 2046.5 125 2021.5 0 10
+wait 60
+shot h10_operating
+hud on
