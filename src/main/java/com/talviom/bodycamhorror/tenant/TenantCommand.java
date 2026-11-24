@@ -23,6 +23,7 @@ import java.util.List;
  * /bh tenant attack <игрок> [scare|strangle|take] — атака сейчас, без лимитов (концовку можно задать)
  * /bh tenant freeze|unfreeze  — остановить или отпустить
  * /bh tenant info             — состояние каждого Жильца
+ * /bh tenant hit <игрок> [урон] — попадание по Жильцу от имени игрока (проверка уклона, 0.9.1)
  */
 public final class TenantCommand {
     private TenantCommand() {}
@@ -42,6 +43,10 @@ public final class TenantCommand {
                         .then(Commands.literal("freeze").executes(c -> freeze(c, true)))
                         .then(Commands.literal("unfreeze").executes(c -> freeze(c, false)))
                         .then(attack())
+                        .then(Commands.literal("hit").then(Commands.argument("player", EntityArgument.player())
+                                .executes(c -> hit(c, 6f))
+                                .then(Commands.argument("amount", com.mojang.brigadier.arguments.FloatArgumentType.floatArg(0.5f, 100f))
+                                        .executes(c -> hit(c, com.mojang.brigadier.arguments.FloatArgumentType.getFloat(c, "amount"))))))
                         .then(Commands.literal("info").executes(c -> {
                             List<TenantEntity> all = all(c.getSource().getLevel());
                             if (all.isEmpty()) c.getSource().sendSuccess(() -> Component.literal("[tenant] none, noises=" + TenantHearing.count()), false);
@@ -93,6 +98,20 @@ public final class TenantCommand {
         all.forEach(t -> t.setFrozen(frozen));
         c.getSource().sendSuccess(() -> Component.translatable(frozen ? "bh.cmd.tenant_frozen" : "bh.cmd.tenant_released", all.size()), false);
         return all.size();
+    }
+
+    private static int hit(CommandContext<CommandSourceStack> c, float amount) throws CommandSyntaxException {
+        ServerPlayer p = EntityArgument.getPlayer(c, "player");
+        List<TenantEntity> all = all(c.getSource().getLevel());
+        if (all.isEmpty()) {
+            c.getSource().sendFailure(Component.translatable("bh.cmd.tenant_none"));
+            return 0;
+        }
+        TenantEntity t = all.get(0);
+        t.hurt(p.damageSources().playerAttack(p), amount);
+        String line = "[tenant] hit by " + p.getGameProfile().getName() + ": " + t.info() + " pos=" + t.blockPosition().toShortString();
+        c.getSource().sendSuccess(() -> Component.literal(line), false);
+        return 1;
     }
 
     private static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> attack() {
