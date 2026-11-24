@@ -69,6 +69,20 @@ shot 93_touch_strangle
 wait 60
 bh bot light Dev
 
+# --- 0.9.2: утаскивание тоже ранит, 3 сердца (6 единиц) ---
+bh tenant remove
+bh bot remove all
+execute positioned 1036 120 1036 run bh bot add bravo B6
+wait 70
+execute positioned 1036 120 1041 run bh tenant spawn frozen
+bh tenant attack B6 take
+expect Tenant attacks B6
+wait 110
+bh tenant info
+expect last=take
+bh debug
+expect B6(bot) team=bravo alive=false mode=adventure hp=14
+
 gamerule naturalRegeneration true
 bh tenant remove
 bh bot remove all

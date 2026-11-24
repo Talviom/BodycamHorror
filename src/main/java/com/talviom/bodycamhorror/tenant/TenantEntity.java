@@ -49,7 +49,7 @@ import java.util.UUID;
  *   2,2 с  душит: камера заперта на его лице, экран краснеет, двигаться и стрелять нельзя
  * Концовки:
  *   рядом союзник          — душит, 4 сердца; союзник отбивает двумя попаданиями или лучом в лицо
- *   один и страшно (60+)   — душит, потом «утащить» в «Затёртую запись» (пока заглушка: чернота и пробуждение)
+ *   один и страшно (60+)   — душит, 3 сердца (0.9.2), потом «утащить» в «Затёртую запись» (пока заглушка: чернота и пробуждение)
  *   один и ещё не страшно  — у самого лица исчезает со скримером, не трогая
  *   последний живой (1 на 1) — душит, 4 сердца, отбить некому (0.9)
  *
@@ -110,6 +110,8 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
     private static final int BEAM_TICKS_TO_STUN = 30;
     private static final int BEAM_TICKS_TO_FREE = 15;
     private static final float STRANGLE_DAMAGE_HALF = 4f;
+    /** 0.9.2 (решение пользователя 24.11): утаскивание тоже ранит, 3 сердца за два раза. */
+    private static final float TAKE_DAMAGE_HALF = 3f;
     private static final float DAMAGE_TO_RETREAT = 40f;
     /** Касание: на сколько раздуть его коробку при проверке и как часто может схватить. */
     private static final double TOUCH_REACH = 0.25;
@@ -367,7 +369,7 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
         attackTicks = T_FACE;
         rescueHits = 0;
         rescueBeam = 0;
-        // Касание никогда не кончается одним испугом: душит, а напуганного одиночку утаскивает.
+        // Касание никогда не кончается одним испугом: душит (4 сердца), а напуганного одиночку утаскивает (3 сердца).
         forcedEnding = TenantRules.canTake(p) ? Ending.TAKE : Ending.STRANGLE;
         FearSystem.INSTANCE.add(p, 20f);
         BodycamHorror.LOGGER.info("[tenant] touched by {}, grabs ({})", p.getGameProfile().getName(), forcedEnding.name().toLowerCase());
@@ -552,10 +554,11 @@ public class TenantEntity extends PathfinderMob implements GeoEntity {
             stun();
             return;
         }
-        if (ending == Ending.STRANGLE && stateTicks == STRANGLE_TICKS / 2) p.hurt(tenantDamage(), STRANGLE_DAMAGE_HALF);
+        float half = ending == Ending.TAKE ? TAKE_DAMAGE_HALF : STRANGLE_DAMAGE_HALF;
+        if (stateTicks == STRANGLE_TICKS / 2) p.hurt(tenantDamage(), half);
         if (stateTicks < STRANGLE_TICKS) return;
 
-        if (ending == Ending.STRANGLE) p.hurt(tenantDamage(), STRANGLE_DAMAGE_HALF);
+        p.hurt(tenantDamage(), half);
         if (!p.isAlive()) {
             vanish(25 * 20);
             return;
