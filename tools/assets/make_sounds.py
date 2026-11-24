@@ -369,6 +369,38 @@ SOUNDS = {
 assert len(SOUNDS) == 15
 
 
+def descent(seed):
+    """1.0: спуск со второго этажа (козырёк, контейнер): шорох одежды, скрип железа под весом, хруст осколков, мягкий толчок.
+    Тихий и короткий, чтобы сидеть рядом с обычными шагами Майнкрафта и не выбиваться."""
+    rng = np.random.default_rng(seed)
+    n = int(0.75 * SR)
+    x = np.zeros(n)
+    # Шорох: две полосы шума, как куртка о бетон.
+    for at, ln, amp in ((0.0, 0.22, 0.55), (0.18, 0.16, 0.35)):
+        m = int(ln * SR)
+        rub = band(noise(m, rng), 350, 2600) * np.hanning(m) ** 1.5
+        rub *= 0.6 + 0.4 * np.abs(np.sin(np.linspace(0, rng.uniform(9, 14), m)))
+        place(x, rub * amp, at * SR)
+    # Скрип железа: два резонанса с медленным уходом высоты.
+    m = int(0.42 * SR)
+    t = np.arange(m) / SR
+    glide = 1.0 - 0.035 * t / t[-1]
+    creak = np.zeros(m)
+    for f, a in ((rng.uniform(560, 640), 0.5), (rng.uniform(1380, 1520), 0.3), (rng.uniform(2380, 2550), 0.12)):
+        creak += a * np.sin(2 * np.pi * np.cumsum(f * glide) / SR)
+    grain = np.abs(lowpass(noise(m, rng), 60))
+    creak *= grain / (np.max(grain) + 1e-9) * np.hanning(m)
+    place(x, creak * 0.35, 0.1 * SR)
+    # Хруст осколков: несколько коротких тихих щелчков в верхах.
+    for _ in range(5):
+        m = int(0.012 * SR)
+        tick = band(noise(m, rng), 3500, 9000) * env_ad(m, 0.0004, 0.003)
+        place(x, tick * rng.uniform(0.12, 0.25), rng.uniform(0.05, 0.35) * SR)
+    # Мягкий толчок приземления.
+    place(x, clunk(int(0.3 * SR), rng, heavy=0.5) * 0.35, 0.42 * SR)
+    return small_room(x, rng, mix=0.2)
+
+
 def write(name, x, out_dir, tmp):
     x = np.nan_to_num(x)
     x = x - np.mean(x)
