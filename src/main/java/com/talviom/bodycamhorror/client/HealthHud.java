@@ -114,9 +114,9 @@ public final class HealthHud {
         if (top < TEX_H) {
             layer(g, top, TEX_H - top, dark, dark, dark, alpha);
             // Поверхность крови: светлая полоска мениска.
-            // На низком здоровье мениск цвета кости, чтобы остаток крови был виден на красном экране.
+            // На низком здоровье мениск цвета пепла, чтобы остаток крови был виден на красном экране.
             int a = Math.round(alpha * 200) << 24;
-            g.fill(INNER_X0, top, INNER_X1, top + 1, a | (shown < LOW ? Vhs.BONE : 0x963428));
+            g.fill(INNER_X0, top, INNER_X1, top + 1, a | (shown < LOW ? Vhs.ASH : 0x5E1A14));
         }
         Vhs.blitAlpha(g, VIAL, 0, 0, TEX_W, TEX_H, TEX_W * 2, 0, TEX_W, TEX_H, SHEET_W, TEX_H, 1f);
         g.pose().popPose();

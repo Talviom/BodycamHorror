@@ -21,9 +21,9 @@ BONE_D = (150, 143, 128)
 ASH = (120, 114, 102)
 SOOT = (78, 74, 66)
 SOOT_D = (40, 37, 33)
-BLOOD = (122, 22, 18)
+BLOOD = (62, 10, 8)
 BLOOD_D = (70, 12, 10)
-BLOOD_DD = (38, 7, 6)
+BLOOD_DD = (16, 3, 3)
 RUST = (96, 62, 38)
 RUST_D = (64, 40, 26)
 
@@ -94,7 +94,7 @@ def vial_back(r):
             if edge:
                 put(f, x, y, INK)
             elif lip[y, x]:
-                put(f, x, y, BONE_D if y == 2 else ASH)
+                put(f, x, y, SOOT if y == 2 else SOOT_D)
     # dried grime inside the bottom of the glass
     for _ in range(14):
         x, y = int(r.integers(4, 16)), int(r.integers(70, 86))
@@ -128,14 +128,14 @@ def vial_blood(r):
     for _ in range(6):
         x, y = int(r.integers(6, 14)), int(r.integers(10, 70))
         if inner[y, x]:
-            put(f, x, y, (150, 52, 42))
+            put(f, x, y, (80, 22, 18))
     return f
 
 
 def crack(f, r, x, y, steps, mask):
     for _ in range(steps):
         if 0 <= x < VW and 0 <= y < VH and mask[y, x]:
-            blend(f, x, y, BONE, 120)
+            blend(f, x, y, ASH, 110)
         x += int(r.choice([-1, 0, 1, 1]))
         y += 1 if r.random() < 0.7 else 0
 
@@ -144,17 +144,17 @@ def vial_front(r):
     f = layer(VW, VH)
     outer, inner, _ = vial_masks()
     for y in range(9, 76):                             # long highlight down the left of the glass
-        blend(f, 5, y, BONE, 80)
-        blend(f, 6, y, BONE, 25)
+        blend(f, 5, y, BONE, 45)
+        blend(f, 6, y, BONE, 14)
     for y in range(14, 34):
-        blend(f, 14, y, BONE, 55)
+        blend(f, 14, y, BONE, 30)
     for y in (22, 34, 46, 58, 70):                     # graduations: it reads as a lab tube
         for x in range(11, 15):
-            blend(f, x, y, ASH, 150)
-        blend(f, 15, y, ASH, 150)
+            blend(f, x, y, ASH, 95)
+        blend(f, 15, y, ASH, 95)
     for y in (28, 40, 52, 64):
         for x in range(13, 15):
-            blend(f, x, y, ASH, 110)
+            blend(f, x, y, ASH, 70)
     crack(f, r, 7, 16, 14, outer)
     crack(f, r, 9, 72, 6, outer)
     for _ in range(18):                                # dust on the glass
@@ -186,8 +186,8 @@ def battery_back(r):
                 put(f, x, y, (18, 16, 14), 220)        # dark window
     for y in range(6, 12):                             # + terminal
         for x in range(35, 39):
-            put(f, x, y, INK if y in (6, 11) or x == 38 else ASH)
-    put(f, 36, 7, BONE_D)
+            put(f, x, y, INK if y in (6, 11) or x == 38 else SOOT)
+    put(f, 36, 7, ASH)
     for x in (2, 3):                                   # - end, worn darker
         for y in range(4, 14):
             put(f, x, y, SOOT_D)
@@ -210,7 +210,7 @@ def battery_fill(r):
 def battery_front(r):
     f = layer(BW, BH)
     for x in range(5, 32):                             # glare along the top
-        blend(f, x, 5, BONE, 60)
+        blend(f, x, 5, BONE, 28)
     for _ in range(16):                                # rust on the shell
         x = int(r.choice([int(r.integers(2, 8)), int(r.integers(26, 34))]))
         y = int(r.choice([3, 14, int(r.integers(3, 15))]))
@@ -220,7 +220,7 @@ def battery_front(r):
             blend(f, 33, y, RUST, 200)
     x, y = 12, 4                                        # hairline crack across the window
     for _ in range(9):
-        blend(f, x, y, BONE, 110)
+        blend(f, x, y, ASH, 100)
         x += 1
         y += 1 if r.random() < 0.6 else 0
     blend(f, 24, 11, BONE, 90)
@@ -242,25 +242,25 @@ def torch_frame(mode):
     shape = set(body) | set(head)
     for (x, y) in shape:
         edge = any((x + dx, y + dy) not in shape for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-        put(f, x, y, INK if edge else ASH)
+        put(f, x, y, INK if edge else SOOT)
     for x in range(2, 10):
-        put(f, x, 7, BONE_D)                           # highlight on the barrel
+        put(f, x, 7, ASH)                              # highlight on the barrel
     for x in range(12, 16):
-        put(f, x, 4, BONE_D)
+        put(f, x, 4, ASH)
     put(f, 5, 8, SOOT_D)                               # switch
     put(f, 6, 8, SOOT_D)
     for y in range(4, 14):                             # lens
-        put(f, 16, y, BONE if mode == 1 else SOOT)
+        put(f, 16, y, ASH if mode == 1 else SOOT_D)
     if mode == 1:                                      # beam
         for i in range(5):
-            blend(f, 18 + i, 8, BONE, 170 - i * 25)
-            blend(f, 18 + i, 9, BONE, 170 - i * 25)
-            blend(f, 18 + i, 5 - i // 2, BONE, 130 - i * 22)
-            blend(f, 18 + i, 12 + i // 2, BONE, 130 - i * 22)
+            blend(f, 18 + i, 8, BONE, 110 - i * 18)
+            blend(f, 18 + i, 9, BONE, 110 - i * 18)
+            blend(f, 18 + i, 5 - i // 2, BONE, 80 - i * 14)
+            blend(f, 18 + i, 12 + i // 2, BONE, 80 - i * 14)
     if mode == 2:                                      # dead: slashed
         for i in range(16):
             x, y = 2 + i, 16 - i
-            put(f, x, y, ASH)
+            put(f, x, y, SOOT)
             put(f, x + 1, y, INK)
     return f
 
