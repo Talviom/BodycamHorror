@@ -247,9 +247,9 @@ public final class DeathFx {
                 Vhs.plain(g, hint, (w - Vhs.width(hint)) / 2, h - 12, 0xB0000000 | Vhs.ASH);
             }
         });
-        // Свободный полёт: «НЕТ СИГНАЛА» слева вверху и выше заставки итогов раунда (внизу её рамка закрывала).
+        // Свободный полёт: «НЕТ СИГНАЛА» слева вверху, под «CAM 01» рамки итогов раунда (внизу её рамка закрывала).
         if (!feed) {
-            layer(g, 850f, () -> Vhs.ghost(g, Vhs.title(Vhs.tr("bh.deathfx.no_signal")), 10, 10,
+            layer(g, 850f, () -> Vhs.ghost(g, Vhs.title(Vhs.tr("bh.deathfx.no_signal")), 10, 24,
                     0xB0000000 | Vhs.ASH, 1.5f, 0.2f));
         }
     }
