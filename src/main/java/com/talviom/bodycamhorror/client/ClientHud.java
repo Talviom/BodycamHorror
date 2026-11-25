@@ -159,7 +159,10 @@ public final class ClientHud {
     /** Надписи камеры в правом верхнем углу: REC, время, имя. */
     private static void drawCameraText(GuiGraphics g, Minecraft mc, int width) {
         boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
-        String cam = Vhs.tr("bh.hud.cam", mc.player.getGameProfile().getName().toUpperCase(java.util.Locale.ROOT));
+        // Экран гаснет при смерти: REC и надписи камеры гаснут вместе с ним.
+        if (DeathFx.hidesHud()) return;
+        // В наблюдении за союзником это его камера.
+        String cam = Vhs.tr("bh.hud.cam", DeathFx.cameraName(mc).toUpperCase(java.util.Locale.ROOT));
         String time = DreadFx.timecode(LocalDateTime.now().format(TIMECODE));
         int x = width - 8;
         int y = 8;

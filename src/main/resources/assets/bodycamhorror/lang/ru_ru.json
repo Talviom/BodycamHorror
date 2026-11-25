@@ -188,5 +188,8 @@
   "death.attack.bodycamhorror.tenant": "Жилец забрал %1$s",
   "death.attack.bodycamhorror.tenant.player": "Жилец забрал %1$s",
   "bh.pack.overrides": "Bodycam Horror: оформление",
-  "bh.poster": "poster_ru"
+  "bh.poster": "poster_ru",
+  "bh.deathfx.no_signal": "НЕТ СИГНАЛА",
+  "bh.deathfx.feed": "ТРАНСЛЯЦИЯ",
+  "bh.deathfx.switch": "ЛКМ / ПКМ  другая камера"
 }

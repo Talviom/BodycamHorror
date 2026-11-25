@@ -27,6 +27,8 @@ public final class BhDeathScreen extends DeathScreen {
         this.cause = causeOfDeath == null ? "" : causeOfDeath.getString();
         String[] omens = Vhs.trList("bh.death.omens");
         this.omen = omens[(int) (Math.random() * omens.length)];
+        // Вне матча экран тоже сначала гаснет, а SIGNAL LOST проступает из помех.
+        com.talviom.bodycamhorror.client.DeathFx.start(false);
     }
 
     /**
@@ -70,5 +72,6 @@ public final class BhDeathScreen extends DeathScreen {
 
         MenuOsd.draw(g, width, height, in, null);
         for (Renderable r : renderables) r.render(g, mouseX, mouseY, partialTick);
+        com.talviom.bodycamhorror.client.DeathFx.drawOverScreen(g, width, height);
     }
 }

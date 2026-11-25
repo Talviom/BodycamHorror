@@ -19,9 +19,17 @@ public class HudStatePacket {
     public final boolean inMatch;
     public final boolean dark;
     public final boolean combat;
+    /** Погиб в идущем матче и смотрит камеры союзников (интерфейс наблюдения, DeathFx). */
+    public final boolean matchSpectator;
 
     public HudStatePacket(float fear, float battery, boolean hasFlashlight, boolean flashlightOn, boolean flashlightLit,
                           boolean inMatch, boolean dark, boolean combat) {
+        this(fear, battery, hasFlashlight, flashlightOn, flashlightLit, inMatch, dark, combat, false);
+    }
+
+    public HudStatePacket(float fear, float battery, boolean hasFlashlight, boolean flashlightOn, boolean flashlightLit,
+                          boolean inMatch, boolean dark, boolean combat, boolean matchSpectator) {
+        this.matchSpectator = matchSpectator;
         this.fear = fear;
         this.battery = battery;
         this.hasFlashlight = hasFlashlight;
@@ -36,7 +44,7 @@ public class HudStatePacket {
         buf.writeFloat(m.fear);
         buf.writeFloat(m.battery);
         int flags = (m.hasFlashlight ? 1 : 0) | (m.flashlightOn ? 2 : 0) | (m.inMatch ? 4 : 0)
-                | (m.dark ? 8 : 0) | (m.combat ? 16 : 0) | (m.flashlightLit ? 32 : 0);
+                | (m.dark ? 8 : 0) | (m.combat ? 16 : 0) | (m.flashlightLit ? 32 : 0) | (m.matchSpectator ? 64 : 0);
         buf.writeByte(flags);
     }
 
@@ -44,7 +52,8 @@ public class HudStatePacket {
         float fear = buf.readFloat();
         float battery = buf.readFloat();
         int f = buf.readByte();
-        return new HudStatePacket(fear, battery, (f & 1) != 0, (f & 2) != 0, (f & 32) != 0, (f & 4) != 0, (f & 8) != 0, (f & 16) != 0);
+        return new HudStatePacket(fear, battery, (f & 1) != 0, (f & 2) != 0, (f & 32) != 0, (f & 4) != 0, (f & 8) != 0, (f & 16) != 0,
+                (f & 64) != 0);
     }
 
     public static void handle(HudStatePacket m, Supplier<NetworkEvent.Context> ctx) {

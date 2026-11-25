@@ -43,6 +43,9 @@ public final class ModSounds {
     // 0.9, рация на Z (tools/assets/make_radio.py)
     public static final RegistryObject<SoundEvent> RADIO_ON = register("radio_on");
     public static final RegistryObject<SoundEvent> RADIO_OFF = register("radio_off");
+    // 0.9.x интерфейс: экран гаснет при смерти (tools/assets/make_deathfx.py)
+    public static final RegistryObject<SoundEvent> CRT_OFF = register("crt_off");
+    public static final RegistryObject<SoundEvent> DEATH_STATIC = register("death_static");
 
     private ModSounds() {}
 

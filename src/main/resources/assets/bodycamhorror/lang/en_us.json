@@ -188,5 +188,8 @@
   "bh.cmd.tenant_attacks": "Tenant attacks %s",
   "bh.cmd.tenant_attacks_how": "Tenant attacks %s (%s)",
   "bh.pack.overrides": "Bodycam Horror overrides",
-  "bh.poster": "poster"
+  "bh.poster": "poster",
+  "bh.deathfx.no_signal": "NO SIGNAL",
+  "bh.deathfx.feed": "LIVE FEED",
+  "bh.deathfx.switch": "LMB / RMB  next camera"
 }

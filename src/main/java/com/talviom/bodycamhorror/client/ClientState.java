@@ -12,6 +12,8 @@ public final class ClientState {
     public static boolean flashlightOn;
     public static boolean flashlightLit;
     public static boolean inMatch;
+    /** Погиб в идущем матче и наблюдает (DeathFx). */
+    public static boolean matchSpectator;
     public static boolean dark;
     public static boolean combat;
 
@@ -32,6 +34,7 @@ public final class ClientState {
         flashlightOn = m.flashlightOn;
         flashlightLit = m.flashlightLit;
         inMatch = m.inMatch;
+        matchSpectator = m.matchSpectator;
         dark = m.dark;
         combat = m.combat;
 
