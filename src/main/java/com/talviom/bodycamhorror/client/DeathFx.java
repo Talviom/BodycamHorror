@@ -193,6 +193,7 @@ public final class DeathFx {
         g.fill(0, 0, w, h, Math.round(255f * fade * fade) << 24);
         Vhs.noise(g, 0, 0, w, h, 0.55f * fade + 0.1f);
         Vhs.noise(g, 0, 0, w, h, 0.35f * fade);
+        speckle(g, w, h, fade);
         Random r = new Random(System.currentTimeMillis() / 45);
         int bars = Math.round(6 + 18 * fade);
         for (int i = 0; i < bars; i++) {
@@ -206,6 +207,18 @@ public final class DeathFx {
         if (!cam && fade > 0.05f) {
             int a = Math.max(8, Math.round(150 * fade));
             Vhs.ghostCentered(g, Vhs.title(Vhs.tr("bh.deathfx.no_signal")), w / 2, h / 2 - 8, (a << 24) | Vhs.ASH, 2f, 0.4f);
+        }
+    }
+
+    /** Крупное зерно помех: точки кости и сажи, гуще в начале. */
+    private static void speckle(GuiGraphics g, int w, int h, float fade) {
+        Random r = new Random(System.nanoTime());
+        int dots = Math.round(w * h / 18f * fade);
+        for (int i = 0; i < dots; i++) {
+            int x = r.nextInt(Math.max(1, w));
+            int y = r.nextInt(Math.max(1, h));
+            int a = 40 + r.nextInt(140);
+            g.fill(x, y, x + 1, y + 1, (a << 24) | (r.nextInt(3) == 0 ? 0x000000 : Vhs.BONE));
         }
     }
 
@@ -231,11 +244,19 @@ public final class DeathFx {
                 String label = Vhs.tr("bh.deathfx.feed");
                 Vhs.ghostCentered(g, Vhs.title(label), w / 2, h - 24, 0xB0000000 | Vhs.ASH, 1f, 0.15f);
                 String hint = Vhs.tr("bh.deathfx.switch");
-                Vhs.plain(g, hint, (w - Vhs.width(hint)) / 2, h - 12, 0x70000000 | Vhs.SOOT);
-            } else {
-                Vhs.ghost(g, Vhs.title(Vhs.tr("bh.deathfx.no_signal")), 10, h - 20, 0x90000000 | Vhs.ASH, 1f, 0.2f);
+                Vhs.plain(g, hint, (w - Vhs.width(hint)) / 2, h - 12, 0xB0000000 | Vhs.ASH);
             }
         });
+        // Свободный полёт: «НЕТ СИГНАЛА» слева вверху и выше заставки итогов раунда (внизу её рамка закрывала).
+        if (!feed) {
+            layer(g, 850f, () -> Vhs.ghost(g, Vhs.title(Vhs.tr("bh.deathfx.no_signal")), 10, 10,
+                    0xB0000000 | Vhs.ASH, 1.5f, 0.2f));
+        }
+    }
+
+    /** Свободный полёт погибшего в матче: своей камеры нет, REC и имя не рисуются. */
+    static boolean freeFlight(Minecraft mc) {
+        return mc.player != null && ClientState.matchSpectator && mc.player.isSpectator() && mc.getCameraEntity() == mc.player;
     }
 
     /** Имя камеры: в наблюдении за союзником его, иначе своё. Для правого верхнего угла (ClientHud). */

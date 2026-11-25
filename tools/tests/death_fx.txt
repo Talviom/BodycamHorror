@@ -52,8 +52,10 @@ kill A2
 wait 30
 shot death_fx_7_free_fly
 # Новый раунд через 6 с: Dev снова жив, обычный HUD.
+# Заставка раунда идёт около 10 с, снимаем после неё.
 wait 140
 bh tenant remove
+wait 240
 shot death_fx_8_next_round
 
 # --- (г) вне матча: SIGNAL LOST проступает из помех ---

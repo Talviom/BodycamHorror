@@ -160,7 +160,7 @@ public final class ClientHud {
     private static void drawCameraText(GuiGraphics g, Minecraft mc, int width) {
         boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
         // Экран гаснет при смерти: REC и надписи камеры гаснут вместе с ним.
-        if (DeathFx.hidesHud()) return;
+        if (DeathFx.hidesHud() || DeathFx.freeFlight(mc)) return;
         // В наблюдении за союзником это его камера.
         String cam = Vhs.tr("bh.hud.cam", DeathFx.cameraName(mc).toUpperCase(java.util.Locale.ROOT));
         String time = DreadFx.timecode(LocalDateTime.now().format(TIMECODE));
