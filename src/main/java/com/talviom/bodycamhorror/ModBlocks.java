@@ -33,6 +33,11 @@ public final class ModBlocks {
             BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_RED).strength(-1f, 3600000f).sound(SoundType.METAL).noLootTable().noOcclusion()
                     .lightLevel(s -> s.getValue(com.talviom.bodycamhorror.sabotage.EmergencyLampBlock.LIT) ? 5 : 0)));
 
+    /** Лобби 1.0: тусклая лампа дневного света, на неё не действуют щитки и хоррор (LobbyLampBlock). */
+    public static final RegistryObject<Block> LOBBY_LAMP = BLOCKS.register("lobby_lamp", () -> new com.talviom.bodycamhorror.lobby.LobbyLampBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_YELLOW).strength(-1f, 3600000f).sound(SoundType.GLASS).noLootTable().noOcclusion()
+                    .lightLevel(s -> s.getValue(com.talviom.bodycamhorror.lobby.LobbyLampBlock.LIT) ? 11 : 2)));
+
     /** Невидимый свет фонарика (убирает себя сам, см. BeamLightBlock). */
     public static final RegistryObject<Block> BEAM_LIGHT = BLOCKS.register("beam_light", () -> new com.talviom.bodycamhorror.flashlight.BeamLightBlock(
             BlockBehaviour.Properties.of().replaceable().noCollission().noLootTable().noOcclusion()

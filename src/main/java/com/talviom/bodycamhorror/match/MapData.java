@@ -30,6 +30,8 @@ public class MapData extends SavedData {
     private final Map<BhTeam, BlockPos> lobbyPads = new EnumMap<>(BhTeam.class);
     /** Логово Жильца: здесь он просыпается каждый раунд (null: самая тёмная точка, как раньше). */
     private BlockPos tenantHome;
+    /** Лобби 1.0: точки тренировки и пульта (kit, console, tape, exit, breaker, emergency, flicker, radio, min, max). */
+    private final Map<String, BlockPos> lobbyPoints = new java.util.HashMap<>();
 
     public MapData() {
         for (BhTeam t : BhTeam.values()) spawns.put(t, new ArrayList<>());
@@ -105,6 +107,22 @@ public class MapData extends SavedData {
         setDirty();
     }
 
+    @javax.annotation.Nullable
+    public BlockPos lobbyPoint(String id) {
+        return lobbyPoints.get(id);
+    }
+
+    public void setLobbyPoint(String id, @javax.annotation.Nullable BlockPos pos) {
+        if (pos == null) lobbyPoints.remove(id);
+        else lobbyPoints.put(id, pos.immutable());
+        setDirty();
+    }
+
+    public void clearLobbyPoints() {
+        lobbyPoints.clear();
+        setDirty();
+    }
+
     public static MapData load(CompoundTag tag) {
         MapData d = new MapData();
         for (BhTeam t : BhTeam.values()) {
@@ -119,6 +137,8 @@ public class MapData extends SavedData {
         if (tag.contains("lobby")) d.lobby = NbtUtils.readBlockPos(tag.getCompound("lobby"));
         d.pairedLoot = tag.getBoolean("paired_loot");
         if (tag.contains("tenant_home")) d.tenantHome = NbtUtils.readBlockPos(tag.getCompound("tenant_home"));
+        CompoundTag lp = tag.getCompound("lobby_points");
+        for (String k : lp.getAllKeys()) d.lobbyPoints.put(k, NbtUtils.readBlockPos(lp.getCompound(k)));
         return d;
     }
 
@@ -136,6 +156,9 @@ public class MapData extends SavedData {
         if (lobby != null) tag.put("lobby", NbtUtils.writeBlockPos(lobby));
         tag.putBoolean("paired_loot", pairedLoot);
         if (tenantHome != null) tag.put("tenant_home", NbtUtils.writeBlockPos(tenantHome));
+        CompoundTag lp = new CompoundTag();
+        for (Map.Entry<String, BlockPos> e : lobbyPoints.entrySet()) lp.put(e.getKey(), NbtUtils.writeBlockPos(e.getValue()));
+        tag.put("lobby_points", lp);
         return tag;
     }
 

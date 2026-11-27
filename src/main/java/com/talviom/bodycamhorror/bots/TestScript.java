@@ -192,6 +192,11 @@ public final class TestScript {
             case "menu" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openMenu);
             case "pause" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openPause);
             case "death" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientShots::openDeath);
+            case "briefing", "briefing1", "briefing4", "briefing9" -> {
+                // Лобби 1.0: папка инструктажа на нужном листе (0 обложка, 1 «Задача», 4 «Свет», 9 вырванный лист).
+                int page = what.equals("briefing") ? 0 : Integer.parseInt(what.substring(8));
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openBriefing(page));
+            }
             case "options", "video", "packs", "worlds", "mods", "lan", "controls" -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.openVanilla(what));
             default -> {
                 if (what.contains(".")) {

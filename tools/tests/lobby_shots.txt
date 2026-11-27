@@ -1,0 +1,61 @@
+# 1.0: лобби «пункт сбора отряда» (LobbyBuilder), стенды, мониторы, тренировочный угол, папка инструктажа.
+# Запуск: gradlew runClient -PbhFurniture -PbhSize=1920x1080 -PbhTest=tools/tests/lobby_shots.txt
+# «bh arena build hospital» в 2000 120 2000 ставит лобби в 1932 120 2030 (точка схемы dx, dz = 1952 - dx, 2044 - dz).
+# Место появления 1942 120 2031, лицом к дальней стене (юг). Кадры: run/screenshots/l10_*.png.
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 2000 120 2000 run bh arena build hospital
+expect Hospital built
+expect Lobby built at 1942, 120, 2031
+time set midnight
+gamemode adventure Dev
+tp Dev 1942.5 120 2031.5 0 5
+wait 100
+hud off
+shot l10_spawn
+tp Dev 1949.5 120 2041.5 0 -8
+wait 60
+shot l10_board
+tp Dev 1937.5 120 2041.5 0 -12
+wait 60
+shot l10_missing
+tp Dev 1943.5 120 2040.5 0 -18
+wait 60
+shot l10_monitors
+tp Dev 1944.5 120 2038.5 -90 5
+wait 60
+shot l10_lockers_alpha
+tp Dev 1944.5 120 2038.5 90 5
+wait 40
+shot l10_lockers_bravo
+tp Dev 1938.5 120 2036.5 135 15
+wait 60
+shot l10_training
+tp Dev 1948.5 120 2035.5 180 -5
+wait 60
+shot l10_weapons
+tp Dev 1942.5 120 2033.5 0 25
+wait 40
+shot l10_console
+tp Dev 1950.5 120 2033.5 -90 0
+wait 40
+shot l10_gear_stand
+hud on
+wait 20
+shot l10_hud_folder
+screen briefing
+wait 30
+shot l10_folder_cover
+screen briefing1
+wait 30
+shot l10_folder_task
+screen briefing4
+wait 30
+shot l10_folder_light
+screen briefing9
+wait 30
+shot l10_folder_last
+screen close
+wait 10

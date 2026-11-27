@@ -93,7 +93,7 @@ public final class ArenaBuilder {
         map.setPairedLoot(false);
         map.setDirty();
 
-        Component lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 15), 0, 0));
+        Component lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 22), 0, 0));
 
         return Component.translatable("bh.cmd.arena_built", lamps, map.lootPoints().size(), map.tapePoints().size(), lobby);
     }

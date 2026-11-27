@@ -69,6 +69,11 @@ final class ClientShots {
     }
 
     /** Открыть меню паузы (как Esc): мод подменяет его своим. */
+    static void openBriefing(int page) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> mc.setScreen(new com.talviom.bodycamhorror.client.BriefingScreen(page)));
+    }
+
     static void openPause() {
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> mc.setScreen(new net.minecraft.client.gui.screens.PauseScreen(true)));

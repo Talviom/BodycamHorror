@@ -59,7 +59,7 @@ public final class FacilityBuilder {
         int lamps = lamps();
         emergencyLamps();
         MapData map = points();
-        Component lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 15), 0, 0));
+        Component lobby = LobbyBuilder.build(level, base.offset(-(LOBBY_GAP + 22), 0, 0));
         return Component.translatable("bh.cmd.facility_built", lamps, map.lootPoints().size(), map.tapePoints().size(), lobby);
     }
 

@@ -51,7 +51,7 @@ public class EmergencyLampBlock extends Block {
 
     @Override
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        boolean lit = Sabotage.generatorOff(level);
+        boolean lit = Sabotage.generatorOff(level) || com.talviom.bodycamhorror.lobby.LobbyTraining.forcedLit(pos);
         if (state.getValue(LIT) != lit) level.setBlock(pos, state.setValue(LIT, lit), 3);
         level.scheduleTick(pos, this, CHECK_TICKS);
     }

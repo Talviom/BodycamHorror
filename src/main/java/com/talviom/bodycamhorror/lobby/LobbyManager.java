@@ -45,6 +45,7 @@ public final class LobbyManager {
         MatchManager match = MatchManager.INSTANCE;
         if (match.running()) {
             returnIn = 0;
+            LobbyTraining.onMatchRunning();
             // Подсказка лобби в строке над панелью гаснет сразу, а не просвечивает сквозь заставку раунда.
             if (statusShown) {
                 statusShown = false;
@@ -54,6 +55,7 @@ public final class LobbyManager {
         }
         if (returnIn > 0 && --returnIn == 0) sendAllToLobby(server);
         if (tick % 10 == 0) checkPads(server);
+        LobbyTraining.tick(server);
     }
 
     public void onPlayerJoined(ServerPlayer p) {

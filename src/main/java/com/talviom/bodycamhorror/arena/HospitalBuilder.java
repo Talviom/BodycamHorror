@@ -140,7 +140,7 @@ public final class HospitalBuilder {
         extraSigns();
         MapData map = points();
         reconnect();
-        Component lobby = LobbyBuilder.build(level, p(-30, 0, 20));
+        Component lobby = LobbyBuilder.build(level, p(-70, 0, 20));
         return Component.translatable("bh.cmd.hospital_built", lampCount, map.lootPoints().size(), map.tapePoints().size(), lobby);
     }
 

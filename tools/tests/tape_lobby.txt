@@ -3,7 +3,7 @@
 # Перед запуском в run/config/bodycamhorror-common.toml поставить roundsToWin = 2 (матч доходит до конца за 2 доставки).
 # «bh arena build» в 1000 120 1000 ставит угол арены в 1002 120 1002:
 #   выход Alpha 1004 120 1004 (спавны Alpha 1005..1009, 1005), выход Bravo 1040 120 1040.
-# Лобби на 21 блок западнее: x 981..995, z 1002..1012; вход 988 120 1004; площадки Alpha 991 120 1009 (слева, если смотреть от входа), Bravo 985 120 1009.
+# Лобби (1.0) на 28 блоков западнее: x 974..995, z 1002..1017; появление 984 120 1003; площадки Alpha 991 120 1010 (слева, если смотреть от входа), Bravo 978 120 1010.
 # Важно: @p у команд сценария ищется от точки спавна мира (это лобби), поэтому игрока зовём по имени Dev.
 # Результат: строки [bh-test] в run/logs/latest.log, в конце DONE failures=0; скриншоты в run/screenshots/060_*.png.
 
@@ -11,18 +11,18 @@ bh stop
 bh bot remove all
 execute positioned 1000 120 1000 run bh arena build
 expect tape points
-expect Lobby built at 988, 120, 1004
+expect Lobby built at 984, 120, 1003
 
 # --- лобби: боты на площадках команд, скины видны ---
-execute positioned 991 120 1009 run bh bot add alpha A1
-execute positioned 992 120 1008 run bh bot add alpha A2
-execute positioned 985 120 1009 run bh bot add bravo B1
-execute positioned 986 120 1008 run bh bot add bravo B2
-tp A1 991.5 120 1009.5 180 0
-tp A2 992.5 120 1008.2 180 0
-tp B1 985.5 120 1009.5 180 0
-tp B2 986.5 120 1008.2 180 0
-tp Dev 988.5 120 1003.6 0 10
+execute positioned 991 120 1010 run bh bot add alpha A1
+execute positioned 992 120 1009 run bh bot add alpha A2
+execute positioned 978 120 1010 run bh bot add bravo B1
+execute positioned 979 120 1009 run bh bot add bravo B2
+tp A1 991.5 120 1010.5 180 0
+tp A2 992.5 120 1009.2 180 0
+tp B1 978.5 120 1010.5 180 0
+tp B2 979.5 120 1009.2 180 0
+tp Dev 984.5 120 1003.6 0 10
 wait 40
 bh debug
 expect A1(bot) team=alpha

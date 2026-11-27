@@ -39,6 +39,17 @@ public final class ModGear {
     public static final RegistryObject<BlockEntityType<PosterBlockEntity>> POSTER_BE = BLOCK_ENTITIES.register("lobby_poster",
             () -> BlockEntityType.Builder.of(PosterBlockEntity::new, POSTER.get()).build(null));
 
+    /** Лобби 1.0: лист на стене (памятка, записка, фото, схема, монитор), текст из lang-файлов (BriefSheetRenderer). */
+    public static final RegistryObject<Block> BRIEF_SHEET = BLOCKS.register("brief_sheet", () -> new com.talviom.bodycamhorror.lobby.BriefSheetBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BROWN).strength(-1f, 3600000f).sound(SoundType.WOOD)
+                    .noLootTable().noOcclusion().noCollission()));
+    @SuppressWarnings("DataFlowIssue")
+    public static final RegistryObject<BlockEntityType<com.talviom.bodycamhorror.lobby.BriefSheetBlockEntity>> BRIEF_SHEET_BE = BLOCK_ENTITIES.register("brief_sheet",
+            () -> BlockEntityType.Builder.of(com.talviom.bodycamhorror.lobby.BriefSheetBlockEntity::new, BRIEF_SHEET.get()).build(null));
+    /** Лобби 1.0: папка инструктажа. Есть только в лобби, на старте раунда забирается вместе со всем инвентарём. */
+    public static final RegistryObject<Item> BRIEFING_FOLDER = ITEMS.register("briefing_folder",
+            () -> new com.talviom.bodycamhorror.lobby.BriefingFolderItem(new Item.Properties().stacksTo(1)));
+
     private ModGear() {}
 
     public static void register(IEventBus modBus) {
@@ -53,6 +64,7 @@ public final class ModGear {
             e.accept(BANDAGE);
             e.accept(BATTERY);
             e.accept(POSTER_ITEM);
+            e.accept(BRIEFING_FOLDER);
         }
     }
 }

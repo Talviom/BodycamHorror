@@ -2,7 +2,7 @@
 
     python tools/world/finish_world.py <server world folder> <out folder> [copies]
 
-Each copy gets its own name in the world list ("Бодикам: Комплекс 1", 2, 3), cheats on (the host needs /bh
+Each copy gets its own name in the world list ("Бодикам: Больница 1", 2, 3), cheats on (the host needs /bh
 commands), adventure mode and normal difficulty, and no server leftovers (player data, stats, session lock).
 level.dat is gzip NBT; a small reader and writer below, no extra packages.
 """
@@ -103,8 +103,8 @@ def main():
     out.mkdir(parents=True)
     skip = {"playerdata", "stats", "advancements", "session.lock", "level.dat_old", "uid.dat"}
     for i in range(1, copies + 1):
-        title = f"Бодикам: Комплекс {i}"
-        dst = out / f"Bodycam Kompleks {i}"
+        title = f"Бодикам: Больница {i}"
+        dst = out / f"Bodycam Bolnitsa {i}"
         shutil.copytree(src, dst, ignore=lambda d, names: [n for n in names if n in skip])
         name, root = load(dst / "level.dat")
         data = root["Data"].value

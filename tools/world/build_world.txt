@@ -1,10 +1,11 @@
-# Готовый мир для сборки друзей: «Комплекс» и лобби у точки появления, ночь, без мобов и погоды.
+# Готовый мир для сборки друзей (1.0): только «Больница» и лобби «пункт сбора», ночь, без мобов и погоды.
 # Запускает tools/world/make-world.ps1 (выделенный dev-сервер, плоский пустой мир). Руками не нужен.
-# «bh arena build facility» в 0 120 0 ставит угол здания в 2 120 2, лобби западнее (центр около -12 120 4).
+# «bh arena build hospital» в 0 120 0 ставит угол забора в 2 120 2, лобби западнее (появление -58 120 31).
+# «Комплекс» в готовый мир больше не входит (решение пользователя 2026-11-27); его можно построить командой /bh arena build facility.
 
-execute positioned 0 120 0 run bh arena build facility
-expect Facility built
-expect Lobby built
+execute positioned 0 120 0 run bh arena build hospital
+expect Hospital built
+expect Lobby built at -58, 120, 31
 bh status
 time set midnight
 weather clear
@@ -18,7 +19,7 @@ gamerule doFireTick false
 gamerule mobGriefing false
 gamerule announceAdvancements false
 gamerule spawnRadius 0
-setworldspawn -12 120 4
+setworldspawn -58 120 31
 wait 20
 save-all flush
 wait 40

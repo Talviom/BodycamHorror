@@ -50,7 +50,9 @@ public class BandageItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (player.getHealth() >= player.getMaxHealth()) return InteractionResultHolder.fail(stack);
+        // Учебный бинт из выдачи в лобби (тег bh_training) можно приложить и здоровым: там урона нет.
+        boolean training = stack.hasTag() && stack.getTag().getBoolean("bh_training");
+        if (!training && player.getHealth() >= player.getMaxHealth()) return InteractionResultHolder.fail(stack);
         player.startUsingItem(hand);
         return InteractionResultHolder.consume(stack);
     }

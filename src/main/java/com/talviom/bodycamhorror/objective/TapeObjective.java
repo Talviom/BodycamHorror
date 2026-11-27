@@ -284,7 +284,7 @@ public final class TapeObjective {
         return s.isAir() || (s.canBeReplaced() && s.getFluidState().isEmpty());
     }
 
-    static void placeTapeBlock(ServerLevel level, BlockPos pos, int turn) {
+    public static void placeTapeBlock(ServerLevel level, BlockPos pos, int turn) {
         net.minecraft.core.Direction f = net.minecraft.core.Direction.from2DDataValue(turn & 3);
         level.setBlock(pos, ModBlocks.TAPE_BLOCK.get().defaultBlockState().setValue(TapeBlock.FACING, f), 3);
         TAPE_BLOCKS.add(new TapeSpot(level.dimension(), pos.immutable()));

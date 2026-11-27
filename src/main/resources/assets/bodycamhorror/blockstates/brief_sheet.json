@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "bodycamhorror:block/brief_sheet"
+    },
+    "facing=south": {
+      "model": "bodycamhorror:block/brief_sheet"
+    },
+    "facing=east": {
+      "model": "bodycamhorror:block/brief_sheet"
+    },
+    "facing=west": {
+      "model": "bodycamhorror:block/brief_sheet"
+    }
+  }
+}

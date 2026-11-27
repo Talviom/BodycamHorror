@@ -1,6 +1,6 @@
-﻿# Готовый мир для сборки друзей (0.9): «Комплекс» и лобби уже построены, правила мира выставлены.
+﻿# Готовый мир для сборки друзей (1.0): «Больница» и лобби уже построены, правила мира выставлены.
 # Запуск:  powershell -ExecutionPolicy Bypass -File tools\world\make-world.ps1
-# Результат: D:\Minecraft\dist\worlds\Bodycam Kompleks 1..3 (make-pack.ps1 кладёт их в saves архива).
+# Результат: D:\Minecraft\dist\worlds\Bodycam Bolnitsa 1..3 (make-pack.ps1 кладёт их в saves архива).
 # Мир строит выделенный dev-сервер из текущего кода (плоский пустой мир), поэтому запускать после всех правок карты.
 param(
     [string]$Out = "D:\Minecraft\dist\worlds",
