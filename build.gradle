@@ -82,6 +82,38 @@ repositories {
     flatDir {
         dirs project.findProperty('bhGameMods') ?: 'D:/Minecraft/game/mods'
     }
+    // -PbhFirstPerson: firstperson, разобранный для тестового клиента (см. ниже).
+    flatDir {
+        dirs "$buildDir/fpdev"
+    }
+}
+
+// firstperson 2.7.2 несёт внутри себя TRansition и TRender (jar-in-jar). fg.deobf переводит на dev-имена только
+// внешний jar, а вложенные остаются с именами релиза и падают при загрузке (NoSuchMethodError m_91087_).
+// Поэтому для тестового клиента вынимаем их отдельными jar, а у копии firstperson оставляем внутри только mixinextras.
+if (project.hasProperty('bhFirstPerson')) {
+    def fpSrc = file("${project.findProperty('bhGameMods') ?: 'D:/Minecraft/game/mods'}/firstperson-forge-2.7.2-mc1.20.1.jar")
+    def fpDir = file("$buildDir/fpdev")
+    def fpOut = file("$fpDir/firstperson-forge-devsplit-2.7.2.jar")
+    if (fpSrc.exists() && !fpOut.exists()) {
+        fpDir.mkdirs()
+        copy {
+            from(zipTree(fpSrc)) {
+                include 'META-INF/jars/TRansition-*.jar', 'META-INF/jars/TRender-*.jar'
+                eachFile { it.path = it.name }
+            }
+            into fpDir
+            includeEmptyDirs = false
+        }
+        def meta = file("$fpDir/metadata.json")
+        def parsed = new groovy.json.JsonSlurper().parse(zipTree(fpSrc).matching { include 'META-INF/jarjar/metadata.json' }.singleFile)
+        parsed.jars = parsed.jars.findAll { it.identifier.artifact == 'mixinextras-forge' }
+        meta.text = groovy.json.JsonOutput.toJson(parsed)
+        ant.zip(destfile: fpOut) {
+            zipfileset(src: fpSrc, excludes: 'META-INF/jarjar/metadata.json,META-INF/jars/TRansition-*.jar,META-INF/jars/TRender-*.jar')
+            zipfileset(file: meta, fullpath: 'META-INF/jarjar/metadata.json')
+        }
+    }
 }
 
 dependencies {
@@ -105,7 +137,9 @@ dependencies {
     // Нужна готовым мирам (tools/world/make-world.ps1) и проверке мебели: -PbhFurniture.
     // Тело firstperson и оружие TACZ для проверки рук при взгляде вниз: -PbhFirstPerson.
     if (project.hasProperty('bhFirstPerson')) {
-        runtimeOnly fg.deobf('blank:firstperson-forge:2.7.2-mc1.20.1')
+        runtimeOnly fg.deobf('blank:firstperson-forge-devsplit:2.7.2')
+        runtimeOnly fg.deobf('blank:TRansition:1.0.21-1.20.1-forge-SNAPSHOT')
+        runtimeOnly fg.deobf('blank:TRender:1.0.15-1.20.1-forge-SNAPSHOT')
         runtimeOnly fg.deobf('blank:tacz-1.20.1:1.1.8-hotfix')
     }
     if (project.hasProperty('bhFurniture')) {
