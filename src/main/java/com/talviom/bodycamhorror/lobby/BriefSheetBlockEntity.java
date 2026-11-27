@@ -51,8 +51,10 @@ public class BriefSheetBlockEntity extends BlockEntity {
         super.saveAdditional(tag);
         tag.putString("topic", topic);
         tag.putInt("style", style);
-        tag.putFloat("x", x);
-        tag.putFloat("y", y);
+        // Не "x"/"y": под этими ключами мир хранит координаты блока и затирает ими сдвиг при сохранении
+        // (лист после перезахода улетал на тысячу блоков в сторону и пропадал).
+        tag.putFloat("ox", x);
+        tag.putFloat("oy", y);
         tag.putFloat("w", w);
         tag.putFloat("h", h);
         tag.putFloat("tilt", tilt);
@@ -63,11 +65,16 @@ public class BriefSheetBlockEntity extends BlockEntity {
         super.load(tag);
         topic = tag.getString("topic");
         style = tag.getInt("style");
-        x = tag.getFloat("x");
-        y = tag.getFloat("y");
+        x = tag.contains("ox") ? tag.getFloat("ox") : legacy(tag, "x");
+        y = tag.contains("oy") ? tag.getFloat("oy") : legacy(tag, "y");
         w = tag.contains("w") ? tag.getFloat("w") : 1f;
         h = tag.contains("h") ? tag.getFloat("h") : 1f;
         tilt = tag.getFloat("tilt");
+    }
+
+    /** Старые листы: сдвиг под "x"/"y" цел только до первого сохранения (тогда он float), потом там координата блока. */
+    private static float legacy(CompoundTag tag, String key) {
+        return tag.contains(key, net.minecraft.nbt.Tag.TAG_FLOAT) ? tag.getFloat(key) : 0f;
     }
 
     @Override
