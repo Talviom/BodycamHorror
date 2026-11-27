@@ -5,7 +5,7 @@ Usage: python -I tools/assets/make_deathfx.py <repo root>
 всё из шума и резонансов, писк строчника тонет в зерне, сверху плёночная грязь (сатурация, срез верхов,
 маленькая комната).
   crt_off.ogg      1,3 с: глухой щелчок реле, сухой треск разряда, уходящий вниз писк, гаснущий гул сети
-  death_static.ogg 1,4 с: эфирное шипение с плавающей громкостью, редкие трески и гул 50 Гц
+  death_static.ogg 1,4 с: мягкое приглушённое шипение (верхи срезаны, чтобы не резало ухо) с плавающей громкостью, редкие трески и гул 50 Гц
 """
 import sys
 import tempfile
@@ -65,16 +65,16 @@ def death_static():
     n = int(1.4 * SR)
     t = np.arange(n) / SR
     white = rng.standard_normal(n)
-    pink = d.lowpass(white, 1200) * 2.2 + d.band(white, 1200, 6500) * 0.8   # мягче белого шума
+    pink = d.lowpass(white, 900) * 2.4 + d.band(white, 900, 3500) * 0.35   # мягкий, без резких верхов
     flutter = 0.75 + 0.25 * np.clip(d.lowpass(rng.standard_normal(n), 12) / 0.15, -1, 1)
     hiss = pink * flutter
-    hiss += crackle(rng, n, 25, 1200, 7000) * 1.4
+    hiss += crackle(rng, n, 12, 800, 3500) * 0.8
     hiss += (np.sin(2 * np.pi * 50 * t) + 0.4 * np.sin(2 * np.pi * 100 * t)) * 0.08
     # Плавный вход и долгий уход: помехи растворяются, когда проступает картинка.
     shape = np.clip(t / 0.12, 0, 1) * np.clip((1.4 - t) / 0.55, 0, 1)
     out = d.highpass(hiss * shape, 120)
-    out = np.tanh(out * 1.3)
-    return d.lowpass(out, 8000)
+    out = np.tanh(out * 1.1)
+    return d.lowpass(out, 3800)
 
 
 SOUNDS = {"crt_off": crt_off, "death_static": death_static}

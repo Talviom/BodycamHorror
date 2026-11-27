@@ -100,7 +100,7 @@ public final class DeathFx {
         }
         if (!staticPlayed && t >= collapseMs() + blackMs()) {
             staticPlayed = true;
-            mc.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.DEATH_STATIC.get(), 1f, cam ? 0.3f : 0.55f));
+            mc.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.DEATH_STATIC.get(), 1f, cam ? 0.18f : 0.32f));
         }
         if (t > totalMs()) active = false;
     }
