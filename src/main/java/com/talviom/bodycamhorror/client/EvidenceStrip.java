@@ -132,7 +132,7 @@ final class EvidenceStrip {
     }
 
     private static void drawTag(GuiGraphics g, Font font, ItemStack s, int slot, boolean selected, int cx, int top, float tilt) {
-        float k = selected ? 0.78f : 0.46f;
+        float k = selected ? 0.78f : 0.58f;
         g.pose().pushPose();
         // Бирка качается вокруг люверса.
         g.pose().translate(cx, top + EYELET_Y, 0f);
@@ -165,7 +165,8 @@ final class EvidenceStrip {
         // Номер и количество чернилами, поверх предмета.
         g.pose().pushPose();
         g.pose().translate(0f, 0f, 210f);
-        int ink = (selected ? 0xE6000000 : 0xB0000000) | INK;
+        // На притушенном картоне чернила почти чёрные, иначе «№N» и «xN» сливаются с бумагой.
+        int ink = selected ? 0xE6000000 | INK : 0xFF0E0B08;
         g.drawString(font, Vhs.text("№" + (slot + 1)), 7, 64, ink, false);
         if (s.getCount() > 1) {
             String c = "x" + s.getCount();
