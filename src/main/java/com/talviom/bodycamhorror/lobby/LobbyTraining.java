@@ -47,8 +47,6 @@ public final class LobbyTraining {
     private static final Map<UUID, Integer> DELIVER = new HashMap<>();
     private static final Set<UUID> HINTED = new HashSet<>();
     private static long tick;
-    private static int flickerLeft;
-    private static long nextHum;
     private static long nextRadio;
     private static int recCountdown = -1;
 
@@ -126,35 +124,22 @@ public final class LobbyTraining {
 
     // ---------- свет и звук ----------
 
+    /** Свет в лобби ровный (просьба пользователя 2026-11-27): лампа на точке flicker больше не мигает, только горит. */
     private static void flicker(ServerLevel level, MapData map) {
+        if (tick % 20 != 0) return;
         BlockPos pos = map.lobbyPoint("flicker");
         if (pos == null || !level.isLoaded(pos)) return;
         BlockState s = level.getBlockState(pos);
-        if (!(s.getBlock() instanceof LobbyLampBlock)) return;
-        RandomSource r = level.getRandom();
-        if (flickerLeft <= 0) {
-            if (!s.getValue(LobbyLampBlock.LIT)) level.setBlock(pos, s.setValue(LobbyLampBlock.LIT, true), 3);
-            if (r.nextInt(170) == 0) {
-                flickerLeft = 6 + r.nextInt(18);
-                play(level, pos, ModSounds.LAMP_BUZZ.get(), 0.45f, 0.9f + r.nextFloat() * 0.2f);
-            }
-            return;
-        }
-        flickerLeft--;
-        if (r.nextFloat() < 0.4f) level.setBlock(pos, s.setValue(LobbyLampBlock.LIT, !s.getValue(LobbyLampBlock.LIT)), 3);
+        if (s.getBlock() instanceof LobbyLampBlock && !s.getValue(LobbyLampBlock.LIT)) level.setBlock(pos, s.setValue(LobbyLampBlock.LIT, true), 3);
     }
 
+    /** Редкие помехи рации на столе дежурного; гудения ламп больше нет. */
     private static void ambience(ServerLevel level, MapData map) {
         RandomSource r = level.getRandom();
-        BlockPos hum = map.lobbyPoint("flicker");
-        if (hum != null && tick >= nextHum) {
-            nextHum = tick + 90 + r.nextInt(70);
-            play(level, hum, ModSounds.LAMP_BUZZ.get(), 0.18f, 0.7f + r.nextFloat() * 0.08f);
-        }
         BlockPos radio = map.lobbyPoint("radio");
         if (radio != null && tick >= nextRadio) {
-            nextRadio = tick + 500 + r.nextInt(500);
-            if (tick > 200) play(level, radio, ModSounds.RADIO_STATIC.get(), 0.3f, 0.85f + r.nextFloat() * 0.2f);
+            nextRadio = tick + 900 + r.nextInt(900);
+            if (tick > 200) play(level, radio, ModSounds.RADIO_STATIC.get(), 0.2f, 0.85f + r.nextFloat() * 0.2f);
         }
     }
 

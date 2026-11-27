@@ -311,7 +311,9 @@ public final class LobbyBuilder {
         set(6, 0, 13, furniture("mcwfurnitures:dark_oak_counter", TO_FAR, Blocks.SPRUCE_PLANKS.defaultBlockState()));
         set(7, 0, 13, furniture("mcwfurnitures:dark_oak_counter", TO_FAR, Blocks.SPRUCE_PLANKS.defaultBlockState()));
         set(7, 1, 13, mod(TO_NEAR, Blocks.BREWING_STAND.defaultBlockState(), "yuushya:coffee_machine"));
-        set(6, 1, 13, mod(TO_FAR, Blocks.FLOWER_POT.defaultBlockState(), "yuushya:piled_paper_cups", "yuushya:paper_cup"));
+        // Магнитофон на стойке у места появления: из него играет музыка лобби (TapeRecorderBlock, RecorderMusic).
+        set(6, 1, 13, ModGear.TAPE_RECORDER.get().defaultBlockState().setValue(com.talviom.bodycamhorror.lobby.TapeRecorderBlock.FACING, TO_FAR)
+                .setValue(com.talviom.bodycamhorror.lobby.TapeRecorderBlock.PLAYING, true));
         put(8, 0, 13, TO_FAR, null, "yuushya:water_dispenser");
         // Табличка «Выход» над запертыми дверями и огнетушитель у места появления.
         put(9, 2, 13, TO_NEAR, null, "yuushya:exit_sign");

@@ -46,6 +46,15 @@ public final class ModGear {
     @SuppressWarnings("DataFlowIssue")
     public static final RegistryObject<BlockEntityType<com.talviom.bodycamhorror.lobby.BriefSheetBlockEntity>> BRIEF_SHEET_BE = BLOCK_ENTITIES.register("brief_sheet",
             () -> BlockEntityType.Builder.of(com.talviom.bodycamhorror.lobby.BriefSheetBlockEntity::new, BRIEF_SHEET.get()).build(null));
+
+    /** Лобби: магнитофон, из которого играет музыка лобби (TapeRecorderBlock). */
+    public static final RegistryObject<Block> TAPE_RECORDER = BLOCKS.register("tape_recorder", () -> new com.talviom.bodycamhorror.lobby.TapeRecorderBlock(
+            net.minecraft.world.level.block.state.BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.COLOR_BLACK)
+                    .strength(1f).sound(net.minecraft.world.level.block.SoundType.METAL).noLootTable().noOcclusion()));
+    public static final RegistryObject<Item> TAPE_RECORDER_ITEM = ITEMS.register("tape_recorder",
+            () -> new net.minecraft.world.item.BlockItem(TAPE_RECORDER.get(), new Item.Properties()));
+    public static final RegistryObject<BlockEntityType<com.talviom.bodycamhorror.lobby.TapeRecorderBlockEntity>> TAPE_RECORDER_BE = BLOCK_ENTITIES.register("tape_recorder",
+            () -> BlockEntityType.Builder.of(com.talviom.bodycamhorror.lobby.TapeRecorderBlockEntity::new, TAPE_RECORDER.get()).build(null));
     /** Лобби 1.0: папка инструктажа. Есть только в лобби, на старте раунда забирается вместе со всем инвентарём. */
     public static final RegistryObject<Item> BRIEFING_FOLDER = ITEMS.register("briefing_folder",
             () -> new com.talviom.bodycamhorror.lobby.BriefingFolderItem(new Item.Properties().stacksTo(1)));

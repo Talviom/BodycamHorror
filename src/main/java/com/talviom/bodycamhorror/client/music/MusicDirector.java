@@ -127,7 +127,8 @@ public final class MusicDirector {
             // к списку миров) она начинала затухать и перезапускалась: казалось, что музыка обрывается.
             wanted = MENU;
         } else if (inLobby(now)) {
-            wanted = LOBBY;
+            // Рядом играет магнитофон лобби: общая музыка лобби молчит, чтобы не было двух треков сразу.
+            wanted = RecorderMusic.heard() ? null : LOBBY;
         }
 
         boolean loopPlaying = MENU.equals(currentId) || LOBBY.equals(currentId);
@@ -145,6 +146,11 @@ public final class MusicDirector {
     private static boolean isRoundStart(ResourceLocation id) {
         for (ResourceLocation r : ROUND_START) if (r.equals(id)) return true;
         return false;
+    }
+
+    /** Для магнитофона лобби: в мире, и матч не идёт. */
+    public static boolean lobbyTime() {
+        return Minecraft.getInstance().level != null && inLobby(System.currentTimeMillis());
     }
 
     /** Лобби: в мире, матч не идёт (ещё не начинался или уже закончился). */

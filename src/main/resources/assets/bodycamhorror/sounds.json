@@ -254,5 +254,13 @@
     "sounds": [
       "bodycamhorror:death_static"
     ]
+  },
+  "music.lobby_tape": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/lobby_tape",
+        "stream": true
+      }
+    ]
   }
 }
