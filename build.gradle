@@ -103,6 +103,11 @@ dependencies {
     }
     // Мебель Macaw's для точек кассеты (0.9): без неё FacilityBuilder ставит бочки.
     // Нужна готовым мирам (tools/world/make-world.ps1) и проверке мебели: -PbhFurniture.
+    // Тело firstperson и оружие TACZ для проверки рук при взгляде вниз: -PbhFirstPerson.
+    if (project.hasProperty('bhFirstPerson')) {
+        runtimeOnly fg.deobf('blank:firstperson-forge:2.7.2-mc1.20.1')
+        runtimeOnly fg.deobf('blank:tacz-1.20.1:1.1.8-hotfix')
+    }
     if (project.hasProperty('bhFurniture')) {
         runtimeOnly fg.deobf('blank:mcw-furniture:3.4.1-mc1.20.1forge')
     }
