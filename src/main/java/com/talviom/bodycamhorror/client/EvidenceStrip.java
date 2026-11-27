@@ -99,7 +99,8 @@ final class EvidenceStrip {
 
         ItemStack held = inv.getItem(inv.selected);
         if (!held.isEmpty()) {
-            String name = held.getHoverName().getString();
+            // Цвет из названия (у патронов TACZ ярко-зелёный код §a) убираем: подпись всегда цвета кости.
+            String name = net.minecraft.ChatFormatting.stripFormatting(held.getHoverName().getString());
             Vhs.plain(g, name, width - 8 - Vhs.width(name), Math.round(originY) - 14, 0xC8000000 | Vhs.BONE);
         }
     }
