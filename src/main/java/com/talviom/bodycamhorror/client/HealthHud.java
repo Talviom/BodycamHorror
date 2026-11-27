@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.GameType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -17,98 +18,130 @@ import net.minecraftforge.fml.common.Mod;
 /**
  * Клиент: здоровье и перевязка вместо ванильных сердечек.
  * <ul>
- *   <li>Полоска здоровья: кусок старой плёнки с перфорацией под сердцем страха, без цифр. Засвеченные
- *       кадры показывают, сколько здоровья осталось; при низком здоровье они темнеют до запёкшейся крови
- *       и неровно мерцают. Потерянный кусок ещё мгновение тлеет тёмно-красным, потом гаснет.</li>
+ *   <li>Здоровье: тонкая пробирка с кровью в левом нижнем углу, без цифр. Уровень крови показывает,
+ *       сколько здоровья осталось; при низком здоровье кровь темнеет и неровно мерцает. Потерянная
+ *       кровь ещё мгновение видна бледным следом на стекле, потом гаснет. Чат сдвинут вправо, чтобы
+ *       пробирка его не закрывала.</li>
  *   <li>Под прицелом, пока держишь ПКМ с бинтом: «ПЕРЕВЯЗКА» и тонкая полоска хода.</li>
  * </ul>
- * Текстура плёнки: tools/assets/make_bandage.py (без неё рисуется простой запасной вариант).
+ * Текстура пробирки: tools/assets/make_hud.py (без неё рисуется простой запасной вариант).
  */
 @Mod.EventBusSubscriber(modid = BodycamHorror.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class HealthHud {
-    private static final ResourceLocation FILM = Vhs.rl("textures/gui/health_film.png");
-    /** Текстура плёнки: 128x24 на ряд, два ряда. */
-    private static final int TEX_W = 128;
-    private static final int TEX_H = 24;
+    private static final ResourceLocation VIAL = Vhs.rl("textures/gui/vial.png");
+    /** Текстура: три слоя 20x88 в ряд (стекло сзади, кровь, стекло спереди), рисуется вдвое мельче. */
+    private static final int TEX_W = 20;
+    private static final int TEX_H = 88;
+    private static final int SHEET_W = TEX_W * 3;
+    /** Внутренность пробирки в текстуре: строки 7..87, ширина 4..15. */
+    private static final int INNER_TOP = 7;
+    private static final int INNER_X0 = 4;
+    private static final int INNER_X1 = 16;
     /**
-     * Размер полоски на экране (в пикселях интерфейса). С 0.8.2 крупнее: на 1920x1080 с масштабом
-     * интерфейса 2 прежние 64x12 были слишком мелкими. Пропорции текстуры сохранены.
+     * Во сколько раз текстура мельче на экране: 0,5 (вдвое) умножено на 1,7, пользователь попросил
+     * крупнее (на 1920x1080 с масштабом 2 пробирка была 18x85 пикселей и терялась).
      */
-    public static final int WIDTH = 112;
-    public static final int HEIGHT = 21;
-    /** Засвеченная полоса внутри плёнки (строки 7..16 из 24), для запасного варианта без текстуры. */
-    private static final int BAND_TOP = Math.round(HEIGHT * 7f / TEX_H);
-    private static final int BAND_H = Math.round(HEIGHT * 10f / TEX_H);
+    static final float HUD_SCALE = 0.5f * 1.7f;
+    /** Размер пробирки на экране в пикселях интерфейса: тонкая, «как палец». */
+    public static final int WIDTH = Math.round(TEX_W * HUD_SCALE);
+    public static final int HEIGHT = Math.round(TEX_H * HUD_SCALE);
+    /** Насколько сдвинуть чат вправо, пока видна пробирка. */
+    private static final int CHAT_SHIFT = 8 + WIDTH + 6;
 
     private static final float LOW = 0.35f;
     private static final float BANDAGING_TEXT_SCALE = 1.6f;
 
-    /** Что сейчас показано (плавно догоняет настоящее здоровье) и тлеющий след потери. */
+    /** Что сейчас показано (плавно догоняет настоящее здоровье) и след потери. */
     private static float shown = -1f;
     private static float lost = 0f;
     private static long lostAt;
 
     private HealthHud() {}
 
-    /** Полоска здоровья, левый верхний угол в (x, y). Вызывается из FearHud рядом с сердцем. */
-    static void drawHealth(GuiGraphics g, int x, int y) {
+    /** Видна ли пробирка сейчас (те же условия, что у FearHud и drawHealth). */
+    static boolean visible() {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || !BhConfig.HIDE_VANILLA_HUD.get() || mc.player.isSpectator()) return;
+        return mc.player != null && !mc.options.hideGui && BhConfig.HIDE_VANILLA_HUD.get()
+                && !mc.player.isSpectator() && !ClientHud.creativeOrSpectator();
+    }
+
+    /**
+     * Пробирка с кровью, левый край x, низ bottom. Вызывается из FearHud.
+     * @return true, если пробирка нарисована
+     */
+    static boolean drawHealth(GuiGraphics g, int x, int bottom) {
+        Minecraft mc = Minecraft.getInstance();
+        if (!visible()) return false;
         float hp = Mth.clamp(mc.player.getHealth() / Math.max(1f, mc.player.getMaxHealth()), 0f, 1f);
         long now = System.currentTimeMillis();
         if (shown < 0f) shown = hp;
         if (hp < shown - 0.001f) {
-            // Удар: показанное здоровье падает сразу, а потерянный кусок тлеет.
+            // Удар: уровень падает сразу, а потерянная кровь ещё видна бледным следом.
             lost = Math.max(lost, shown);
             lostAt = now;
             shown = hp;
         } else {
-            shown = Math.min(hp, shown + 0.02f); // лечение заполняет плёнку постепенно
+            shown = Math.min(hp, shown + 0.02f); // лечение наполняет пробирку постепенно
         }
         float lostAlpha = lost > shown ? 1f - Mth.clamp((now - lostAt - 350) / 650f, 0f, 1f) : 0f;
         if (lostAlpha <= 0f) lost = 0f;
 
-        // Цвет засветки: кость при полном здоровье, к запёкшейся крови при низком.
-        float k = Mth.clamp((shown - 0.15f) / 0.6f, 0f, 1f);
-        int rgb = lerpRgb(Vhs.DRIED_BLOOD, Vhs.BONE, k);
-        float alpha = 0.9f;
+        // На низком здоровье кровь неровно мерцает, как умирающая лампа. Не темнеет: на красном
+        // экране при ранении тёмная кровь сливалась с фоном.
+        float dark = 1f;
+        float alpha = 1f;
         if (shown < LOW) {
-            // Неровное мерцание, как у умирающей лампы, тем чаще, чем меньше здоровья.
             double t = now / (140.0 + shown * 400.0);
-            alpha = 0.55f + 0.35f * (float) Math.abs(Math.sin(t) * Math.sin(t * 0.37 + 1.3));
+            alpha = 0.6f + 0.4f * (float) Math.abs(Math.sin(t) * Math.sin(t * 0.37 + 1.3));
         }
 
-        if (Vhs.has(FILM)) {
-            Vhs.blitAlpha(g, FILM, x, y, WIDTH, HEIGHT, 0, 0, TEX_W, TEX_H, TEX_W, TEX_H * 2, 1f);
-            int lostW = Math.round(WIDTH * lost);
-            int fillW = Math.round(WIDTH * shown);
-            if (lostAlpha > 0f && lostW > fillW) {
-                tinted(g, x + fillW, y, lostW - fillW, fillW, Vhs.DRIED_BLOOD, 0.85f * lostAlpha);
-            }
-            if (fillW > 0) tinted(g, x, y, fillW, 0, rgb, alpha);
-        } else {
-            g.fill(x, y, x + WIDTH, y + HEIGHT, 0xB01C1A17);
-            int fillW = Math.round(WIDTH * shown);
-            g.fill(x, y + BAND_TOP, x + fillW, y + BAND_TOP + BAND_H, ((int) (alpha * 230) << 24) | rgb);
+        int y = bottom - HEIGHT;
+        if (!Vhs.has(VIAL)) {
+            g.fill(x, y, x + WIDTH, bottom, 0xB01C1A17);
+            int fill = Math.round((HEIGHT - 4) * shown);
+            g.fill(x + 2, bottom - 1 - fill, x + WIDTH - 2, bottom - 1, ((int) (alpha * 230) << 24) | Vhs.DRIED_BLOOD);
+            return true;
         }
+        g.pose().pushPose();
+        g.pose().translate(x, y, 0f);
+        g.pose().scale(HUD_SCALE, HUD_SCALE, 1f);
+        Vhs.blitAlpha(g, VIAL, 0, 0, TEX_W, TEX_H, 0, 0, TEX_W, TEX_H, SHEET_W, TEX_H, 1f);
+        int top = fillTop(shown);
+        int lostTop = fillTop(lost);
+        if (lostAlpha > 0f && lostTop < top) {
+            layer(g, lostTop, top - lostTop, 1f, 1f, 1f, 0.4f * lostAlpha);
+        }
+        if (top < TEX_H) {
+            layer(g, top, TEX_H - top, dark, dark, dark, alpha);
+            // Поверхность крови: светлая полоска мениска.
+            // На низком здоровье мениск цвета пепла, чтобы остаток крови был виден на красном экране.
+            int a = Math.round(alpha * 200) << 24;
+            g.fill(INNER_X0, top, INNER_X1, top + 1, a | (shown < LOW ? Vhs.ASH : 0x5E1A14));
+        }
+        Vhs.blitAlpha(g, VIAL, 0, 0, TEX_W, TEX_H, TEX_W * 2, 0, TEX_W, TEX_H, SHEET_W, TEX_H, 1f);
+        g.pose().popPose();
+        return true;
     }
 
-    /** Кусок засвеченной полосы шириной w с места u (в пикселях экрана), окрашенный в rgb. */
-    private static void tinted(GuiGraphics g, int x, int y, int w, int u, int rgb, float alpha) {
+    /** Верхняя строка крови в текстуре для доли здоровья f. */
+    private static int fillTop(float f) {
+        return TEX_H - Math.round((TEX_H - INNER_TOP) * Mth.clamp(f, 0f, 1f));
+    }
+
+    /** Кусок слоя крови со строки v высотой rows, окрашенный (r, gr, b) с прозрачностью alpha. */
+    private static void layer(GuiGraphics g, int v, int rows, float r, float gr, float b, float alpha) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderColor(((rgb >> 16) & 0xFF) / 255f, ((rgb >> 8) & 0xFF) / 255f, (rgb & 0xFF) / 255f, alpha);
-        float k = TEX_W / (float) WIDTH;
-        g.blit(FILM, x, y, w, HEIGHT, u * k, TEX_H, Math.round(w * k), TEX_H, TEX_W, TEX_H * 2);
+        RenderSystem.setShaderColor(r, gr, b, alpha);
+        g.blit(VIAL, 0, v, TEX_W, rows, TEX_W, v, TEX_W, rows, SHEET_W, TEX_H);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.disableBlend();
     }
 
-    private static int lerpRgb(int a, int b, float t) {
-        int r = Math.round(Mth.lerp(t, (a >> 16) & 0xFF, (b >> 16) & 0xFF));
-        int gr = Math.round(Mth.lerp(t, (a >> 8) & 0xFF, (b >> 8) & 0xFF));
-        int bl = Math.round(Mth.lerp(t, a & 0xFF, b & 0xFF));
-        return (r << 16) | (gr << 8) | bl;
+    /** Чат сдвигается вправо, чтобы пробирка в левом нижнем углу не закрывала сообщения. */
+    @SubscribeEvent
+    public static void onVialChatShift(CustomizeGuiOverlayEvent.Chat e) {
+        if (visible()) e.setPosX(e.getPosX() + CHAT_SHIFT);
     }
 
     /** «ПЕРЕВЯЗКА» под прицелом и полоска хода, пока держишь ПКМ с бинтом. Отпустил: перевязка отменена. */

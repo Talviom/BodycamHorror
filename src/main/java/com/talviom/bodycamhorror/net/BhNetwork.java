@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public final class BhNetwork {
     /** Меняется при изменении пакетов: клиент и сервер разных версий мода не соединятся. */
-    private static final String PROTOCOL = "8";
+    private static final String PROTOCOL = "9";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(BodycamHorror.MOD_ID, "main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 
@@ -39,12 +39,21 @@ public final class BhNetwork {
                 RadioTalkPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(21, RadioCuePacket.class, RadioCuePacket::encode, RadioCuePacket::decode,
                 RadioCuePacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // 0.9.x интерфейс: экран гаснет при смерти, переключение камер союзников (id 22, 23), PROTOCOL 9.
+        CHANNEL.registerMessage(22, DeathFxPacket.class, DeathFxPacket::encode, DeathFxPacket::decode,
+                DeathFxPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(23, SpectateCyclePacket.class, SpectateCyclePacket::encode, SpectateCyclePacket::decode,
+                SpectateCyclePacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(4, OpenInventoryPacket.class, OpenInventoryPacket::encode, OpenInventoryPacket::decode,
                 OpenInventoryPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
     public static void sendGlitch(ServerPlayer player, int ticks, float strength) {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new GlitchPacket(ticks, strength));
+    }
+
+    public static void sendDeathFx(ServerPlayer player, int kind) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new DeathFxPacket(kind));
     }
 
     public static void sendScreamer(ServerPlayer player, int kind, int ticks) {

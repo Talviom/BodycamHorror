@@ -8,6 +8,7 @@ import com.talviom.bodycamhorror.objective.TapeObjective;
 import com.talviom.bodycamhorror.loot.LootSpawner;
 import com.talviom.bodycamhorror.net.BannerPacket;
 import com.talviom.bodycamhorror.net.BhNetwork;
+import com.talviom.bodycamhorror.net.DeathFxPacket;
 import com.talviom.bodycamhorror.util.ItemSpec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -294,6 +295,13 @@ public final class MatchManager {
         alive.remove(victim.getUUID());
         FearSystem.INSTANCE.onPlayerDied(server, victim);
 
+        // Экран гаснет: у погибшего полностью, у тех, кто смотрел его камеру, коротко (камера потом
+        // перейдёт к следующему союзнику в holdSpectators).
+        BhNetwork.sendDeathFx(victim, DeathFxPacket.SELF);
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            if (p != victim && p.isSpectator() && p.getCamera() == victim) BhNetwork.sendDeathFx(p, DeathFxPacket.CAM);
+        }
+
         // Снаряжение падает на землю: его можно подобрать.
         victim.getInventory().dropAll();
         victim.setHealth(victim.getMaxHealth());
@@ -394,6 +402,27 @@ public final class MatchManager {
                 return;
             }
         }
+    }
+
+    /**
+     * Погибший переключает камеру: только живые союзники, по кругу (dir +1 или -1).
+     * Если живых союзников нет, остаётся свободный полёт.
+     */
+    public void cycleSpectate(ServerPlayer p, int dir) {
+        if (!running() || alive.contains(p.getUUID()) || !p.isSpectator()) return;
+        BhTeam team = teams.get(p.getUUID());
+        if (team == null) return;
+        List<ServerPlayer> mates = new ArrayList<>();
+        for (UUID id : alive) {
+            if (teams.get(id) != team) continue;
+            ServerPlayer mate = p.server.getPlayerList().getPlayer(id);
+            if (mate != null && !mate.hasDisconnected()) mates.add(mate);
+        }
+        if (mates.isEmpty()) return;
+        mates.sort(Comparator.comparing(m -> m.getGameProfile().getName()));
+        int i = mates.indexOf(p.getCamera());
+        int next = i < 0 ? 0 : Math.floorMod(i + dir, mates.size());
+        p.setCamera(mates.get(next));
     }
 
     /** Матч делает игрока наблюдателем и помечает его, чтобы потом вернуть обычный режим даже после перезахода. */

@@ -29,6 +29,8 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> TENANT_SCARE = register("tenant_scare");
     public static final RegistryObject<SoundEvent> TENANT_BREATH = register("tenant_breath");
     public static final RegistryObject<SoundEvent> TENANT_CLICK = register("tenant_click");
+    /** 0.9.1: рывок в сторону, когда по нему стреляют. */
+    public static final RegistryObject<SoundEvent> TENANT_DODGE = register("tenant_dodge");
     public static final RegistryObject<SoundEvent> BANDAGE_WRAP = register("bandage_wrap");
     public static final RegistryObject<SoundEvent> BANDAGE_TIE = register("bandage_tie");
     // 0.9, хоррор-ивенты (tools/assets/make_dread.py)
@@ -41,6 +43,9 @@ public final class ModSounds {
     // 0.9, рация на Z (tools/assets/make_radio.py)
     public static final RegistryObject<SoundEvent> RADIO_ON = register("radio_on");
     public static final RegistryObject<SoundEvent> RADIO_OFF = register("radio_off");
+    // 0.9.x интерфейс: экран гаснет при смерти (tools/assets/make_deathfx.py)
+    public static final RegistryObject<SoundEvent> CRT_OFF = register("crt_off");
+    public static final RegistryObject<SoundEvent> DEATH_STATIC = register("death_static");
 
     private ModSounds() {}
 

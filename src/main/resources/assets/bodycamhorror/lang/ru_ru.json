@@ -276,5 +276,8 @@
   "bh.room.exit_b": "Выход B",
   "bh.room.ambulance": "Скорая",
   "bh.room.ramp": "Рампа кухни",
-  "bh.room.loot": "Лут, пара %s"
+  "bh.room.loot": "Лут, пара %s",
+  "bh.deathfx.no_signal": "НЕТ СИГНАЛА",
+  "bh.deathfx.feed": "ТРАНСЛЯЦИЯ",
+  "bh.deathfx.switch": "ЛКМ / ПКМ  другая камера"
 }

@@ -156,4 +156,12 @@ final class ClientShots {
             BodycamHorror.LOGGER.error("[bh-test] press " + label + ": no such button on " + mc.screen.getClass().getSimpleName());
         });
     }
+
+    /** Выбрать быстрый слот 1..9, как цифрой на клавиатуре. */
+    static void slot(int n) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> {
+            if (mc.player != null && n >= 1 && n <= 9) mc.player.getInventory().selected = n - 1;
+        });
+    }
 }

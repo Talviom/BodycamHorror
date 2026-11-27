@@ -33,6 +33,7 @@ public final class BhConfig {
     public static final ForgeConfigSpec.BooleanValue LOBBY_NOTES;
 
     public static final ForgeConfigSpec.BooleanValue HIDE_VANILLA_HUD;
+    public static final ForgeConfigSpec.BooleanValue DEATH_EFFECT;
     public static final ForgeConfigSpec.BooleanValue BLOCK_INVENTORY;
     public static final ForgeConfigSpec.BooleanValue BODYCAM_OVERLAY;
 
@@ -112,6 +113,8 @@ public final class BhConfig {
         LOBBY_NOTES = c.comment("Show the field notes card with the controls on screen while no match is running.",
                         "Off by default: the rules and controls are on the poster on the lobby wall (0.7.0).")
                 .define("lobbyNotesHud", false);
+        DEATH_EFFECT = c.comment("On death the screen goes out like an old CRT monitor, then black and static before spectating")
+                .define("deathEffect", true);
         c.pop();
         CLIENT_SPEC = c.build();
     }

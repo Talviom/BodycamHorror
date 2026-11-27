@@ -1,41 +1,258 @@
 {
-  "whisper": { "sounds": ["bodycamhorror:whisper1", "bodycamhorror:whisper2", "bodycamhorror:whisper3"] },
-  "radio_static": { "sounds": ["bodycamhorror:radio_static1", "bodycamhorror:radio_static2"] },
-  "breaker_off": { "sounds": ["bodycamhorror:breaker_off"] },
-  "breaker_on": { "sounds": ["bodycamhorror:breaker_on"] },
-  "generator_down": { "sounds": ["bodycamhorror:generator_down"] },
-  "generator_up": { "sounds": ["bodycamhorror:generator_up"] },
-  "heartbeat": { "sounds": ["bodycamhorror:heartbeat"] },
-  "knock": { "sounds": ["bodycamhorror:knock1", "bodycamhorror:knock2"] },
-  "lamp_buzz": { "sounds": ["bodycamhorror:lamp_buzz1", "bodycamhorror:lamp_buzz2"] },
-  "music.menu": { "sounds": [{ "name": "bodycamhorror:music/menu", "stream": true }] },
-  "music.lobby": { "sounds": [{ "name": "bodycamhorror:music/lobby", "stream": true }] },
-  "music.round_start_1": { "sounds": [{ "name": "bodycamhorror:music/round_start_1", "stream": true }] },
-  "music.round_start_2": { "sounds": [{ "name": "bodycamhorror:music/round_start_2", "stream": true }] },
-  "music.round_start_3": { "sounds": [{ "name": "bodycamhorror:music/round_start_3", "stream": true }] },
-  "music.round_start_4": { "sounds": [{ "name": "bodycamhorror:music/round_start_4", "stream": true }] },
-  "music.round_won": { "sounds": [{ "name": "bodycamhorror:music/round_won", "stream": true }] },
-  "music.round_lost": { "sounds": [{ "name": "bodycamhorror:music/round_lost", "stream": true }] },
-  "music.match_won": { "sounds": [{ "name": "bodycamhorror:music/match_won", "stream": true }] },
-  "music.match_lost": { "sounds": [{ "name": "bodycamhorror:music/match_lost", "stream": true }] },
-  "tape_hiss": { "sounds": ["bodycamhorror:tape_hiss"] },
-  "tape_pickup": { "sounds": ["bodycamhorror:tape_pickup"] },
-  "tape_out": { "sounds": ["bodycamhorror:tape_out"] },
-  "tenant_breath": { "sounds": ["bodycamhorror:tenant_breath1", "bodycamhorror:tenant_breath2"] },
-  "tenant_click": { "sounds": ["bodycamhorror:tenant_click1", "bodycamhorror:tenant_click2", "bodycamhorror:tenant_click3"] },
-  "tenant_blink": { "sounds": ["bodycamhorror:tenant_blink1", "bodycamhorror:tenant_blink2", "bodycamhorror:tenant_blink3"] },
-  "tenant_rush": { "sounds": ["bodycamhorror:tenant_rush"] },
-  "tenant_strangle": { "sounds": ["bodycamhorror:tenant_strangle"] },
-  "tenant_quiet": { "sounds": ["bodycamhorror:tenant_quiet"] },
-  "tenant_scare": { "sounds": ["bodycamhorror:tenant_scare"] },
-  "bandage_wrap": { "sounds": ["bodycamhorror:bandage_wrap1", "bodycamhorror:bandage_wrap2", "bodycamhorror:bandage_wrap3"] },
-  "bandage_tie": { "sounds": ["bodycamhorror:bandage_tie"] },
-  "fake_step": { "sounds": ["bodycamhorror:fake_step1", "bodycamhorror:fake_step2", "bodycamhorror:fake_step3", "bodycamhorror:fake_step4"] },
-  "door_slam": { "sounds": ["bodycamhorror:door_slam"] },
-  "metal_bang": { "sounds": ["bodycamhorror:metal_bang"] },
-  "far_cry": { "sounds": ["bodycamhorror:far_cry"] },
-  "phone_ring": { "sounds": ["bodycamhorror:phone_ring"] },
-  "tape_rewind": { "sounds": ["bodycamhorror:tape_rewind"] },
-  "radio_on": { "sounds": ["bodycamhorror:radio_on"] },
-  "radio_off": { "sounds": ["bodycamhorror:radio_off"] }
+  "whisper": {
+    "sounds": [
+      "bodycamhorror:whisper1",
+      "bodycamhorror:whisper2",
+      "bodycamhorror:whisper3"
+    ]
+  },
+  "radio_static": {
+    "sounds": [
+      "bodycamhorror:radio_static1",
+      "bodycamhorror:radio_static2"
+    ]
+  },
+  "breaker_off": {
+    "sounds": [
+      "bodycamhorror:breaker_off"
+    ]
+  },
+  "breaker_on": {
+    "sounds": [
+      "bodycamhorror:breaker_on"
+    ]
+  },
+  "generator_down": {
+    "sounds": [
+      "bodycamhorror:generator_down"
+    ]
+  },
+  "generator_up": {
+    "sounds": [
+      "bodycamhorror:generator_up"
+    ]
+  },
+  "heartbeat": {
+    "sounds": [
+      "bodycamhorror:heartbeat"
+    ]
+  },
+  "knock": {
+    "sounds": [
+      "bodycamhorror:knock1",
+      "bodycamhorror:knock2"
+    ]
+  },
+  "lamp_buzz": {
+    "sounds": [
+      "bodycamhorror:lamp_buzz1",
+      "bodycamhorror:lamp_buzz2"
+    ]
+  },
+  "music.menu": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/menu",
+        "stream": true
+      }
+    ]
+  },
+  "music.lobby": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/lobby",
+        "stream": true
+      }
+    ]
+  },
+  "music.round_start_1": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/round_start_1",
+        "stream": true
+      }
+    ]
+  },
+  "music.round_start_2": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/round_start_2",
+        "stream": true
+      }
+    ]
+  },
+  "music.round_start_3": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/round_start_3",
+        "stream": true
+      }
+    ]
+  },
+  "music.round_start_4": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/round_start_4",
+        "stream": true
+      }
+    ]
+  },
+  "music.round_won": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/round_won",
+        "stream": true
+      }
+    ]
+  },
+  "music.round_lost": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/round_lost",
+        "stream": true
+      }
+    ]
+  },
+  "music.match_won": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/match_won",
+        "stream": true
+      }
+    ]
+  },
+  "music.match_lost": {
+    "sounds": [
+      {
+        "name": "bodycamhorror:music/match_lost",
+        "stream": true
+      }
+    ]
+  },
+  "tape_hiss": {
+    "sounds": [
+      "bodycamhorror:tape_hiss"
+    ]
+  },
+  "tape_pickup": {
+    "sounds": [
+      "bodycamhorror:tape_pickup"
+    ]
+  },
+  "tape_out": {
+    "sounds": [
+      "bodycamhorror:tape_out"
+    ]
+  },
+  "tenant_breath": {
+    "sounds": [
+      "bodycamhorror:tenant_breath1",
+      "bodycamhorror:tenant_breath2"
+    ]
+  },
+  "tenant_click": {
+    "sounds": [
+      "bodycamhorror:tenant_click1",
+      "bodycamhorror:tenant_click2",
+      "bodycamhorror:tenant_click3"
+    ]
+  },
+  "tenant_blink": {
+    "sounds": [
+      "bodycamhorror:tenant_blink1",
+      "bodycamhorror:tenant_blink2",
+      "bodycamhorror:tenant_blink3"
+    ]
+  },
+  "tenant_rush": {
+    "sounds": [
+      "bodycamhorror:tenant_rush"
+    ]
+  },
+  "tenant_strangle": {
+    "sounds": [
+      "bodycamhorror:tenant_strangle"
+    ]
+  },
+  "tenant_quiet": {
+    "sounds": [
+      "bodycamhorror:tenant_quiet"
+    ]
+  },
+  "tenant_scare": {
+    "sounds": [
+      "bodycamhorror:tenant_scare"
+    ]
+  },
+  "tenant_dodge": {
+    "sounds": [
+      "bodycamhorror:tenant_dodge1",
+      "bodycamhorror:tenant_dodge2"
+    ]
+  },
+  "bandage_wrap": {
+    "sounds": [
+      "bodycamhorror:bandage_wrap1",
+      "bodycamhorror:bandage_wrap2",
+      "bodycamhorror:bandage_wrap3"
+    ]
+  },
+  "bandage_tie": {
+    "sounds": [
+      "bodycamhorror:bandage_tie"
+    ]
+  },
+  "fake_step": {
+    "sounds": [
+      "bodycamhorror:fake_step1",
+      "bodycamhorror:fake_step2",
+      "bodycamhorror:fake_step3",
+      "bodycamhorror:fake_step4"
+    ]
+  },
+  "door_slam": {
+    "sounds": [
+      "bodycamhorror:door_slam"
+    ]
+  },
+  "metal_bang": {
+    "sounds": [
+      "bodycamhorror:metal_bang"
+    ]
+  },
+  "far_cry": {
+    "sounds": [
+      "bodycamhorror:far_cry"
+    ]
+  },
+  "phone_ring": {
+    "sounds": [
+      "bodycamhorror:phone_ring"
+    ]
+  },
+  "tape_rewind": {
+    "sounds": [
+      "bodycamhorror:tape_rewind"
+    ]
+  },
+  "radio_on": {
+    "sounds": [
+      "bodycamhorror:radio_on"
+    ]
+  },
+  "radio_off": {
+    "sounds": [
+      "bodycamhorror:radio_off"
+    ]
+  },
+  "crt_off": {
+    "sounds": [
+      "bodycamhorror:crt_off"
+    ]
+  },
+  "death_static": {
+    "sounds": [
+      "bodycamhorror:death_static"
+    ]
+  }
 }

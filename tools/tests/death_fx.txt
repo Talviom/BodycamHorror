@@ -1,0 +1,69 @@
+# Смерть: экран гаснет как ЭЛТ-монитор (0,4 с схлопывание, 1,5 с черноты, 1 с помех), потом камера союзника.
+# Союзник, за которым смотрят, погиб: короткое погасание и переход к следующему. Нет живых союзников: свободный полёт.
+# Вне матча: погасание, помехи, потом экран SIGNAL LOST.
+# Запуск: gradlew runClient -PbhSize=1920x1080 -PbhTest=tools/tests/death_fx.txt
+# Кадры: run/screenshots/death_fx_*.png. ЛКМ/ПКМ (переключение союзников) сценарий нажать не может, проверять руками.
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 2000 120 2000 run bh arena build facility
+expect Facility built
+time set midnight
+weather clear
+gamemode adventure Dev
+wait 40
+
+# --- матч: Dev, A1, A2 за альфу, B1 за браво ---
+execute positioned 2006 120 2015 run bh bot add alpha A1
+execute positioned 2007 120 2015 run bh bot add alpha A2
+execute positioned 2044 120 2017 run bh bot add bravo B1
+bh team alpha Dev
+bh start
+expect Match started
+wait 20
+bh skip
+expect prep -> live
+bh tenant remove
+hud on
+wait 40
+shot death_fx_0_alive
+
+# --- (а) свой эффект ---
+kill Dev
+wait 4
+shot death_fx_1_collapse
+wait 16
+shot death_fx_2_black
+wait 22
+shot death_fx_3_static
+wait 30
+shot death_fx_4_feed
+
+# --- (б) погиб союзник, за которым смотрю: короткое погасание, потом другой союзник ---
+kill A1
+wait 6
+shot death_fx_5_cam_off
+wait 30
+shot death_fx_6_next_feed
+
+# --- (в) живых союзников нет: раунд проигран, свободный полёт, итоги раунда поверх ---
+kill A2
+wait 30
+shot death_fx_7_free_fly
+# Новый раунд через 6 с: Dev снова жив, обычный HUD.
+# Заставка раунда идёт около 10 с, снимаем после неё.
+wait 140
+bh tenant remove
+wait 240
+shot death_fx_8_next_round
+
+# --- (г) вне матча: SIGNAL LOST проступает из помех ---
+bh stop
+bh bot remove all
+wait 20
+kill Dev
+wait 20
+shot death_fx_9_outside_black
+wait 50
+shot death_fx_10_signal_lost

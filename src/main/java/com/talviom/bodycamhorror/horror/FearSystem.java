@@ -165,7 +165,8 @@ public final class FearSystem {
                         Flashlight.isLit(p),
                         inMatch,
                         inMatch && s != null && s.dark,
-                        inMatch && s != null && tick - s.lastCombat < 40));
+                        inMatch && s != null && tick - s.lastCombat < 40,
+                        match.running() && match.teamOf(p) != null && p.isSpectator()));
             }
         }
     }

@@ -276,5 +276,8 @@
   "bh.room.exit_b": "Exit B",
   "bh.room.ambulance": "Ambulance",
   "bh.room.ramp": "Kitchen ramp",
-  "bh.room.loot": "Loot, pair %s"
+  "bh.room.loot": "Loot, pair %s",
+  "bh.deathfx.no_signal": "NO SIGNAL",
+  "bh.deathfx.feed": "LIVE FEED",
+  "bh.deathfx.switch": "LMB / RMB  next camera"
 }

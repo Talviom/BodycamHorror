@@ -60,6 +60,11 @@ public final class ClientHud {
     private static void drawSlotStrip(GuiGraphics g, int width, int height) {
         Minecraft mc = Minecraft.getInstance();
         if (!BhConfig.SLOT_STRIP.get() || mc.player == null || mc.options.hideGui || creativeOrSpectator()) return;
+        // С 0.9.x слоты висят бирками улик на бечёвке (EvidenceStrip); старые рамки остаются запасным вариантом.
+        if (EvidenceStrip.ready()) {
+            EvidenceStrip.draw(g, mc, width, height);
+            return;
+        }
         Inventory inv = mc.player.getInventory();
 
         int shown = 0;
@@ -101,7 +106,7 @@ public final class ClientHud {
         }
     }
 
-    private static boolean creativeOrSpectator() {
+    static boolean creativeOrSpectator() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.gameMode == null) return false;
         GameType mode = mc.gameMode.getPlayerMode();
@@ -159,7 +164,10 @@ public final class ClientHud {
     /** Надписи камеры в правом верхнем углу: REC, время, имя. */
     private static void drawCameraText(GuiGraphics g, Minecraft mc, int width) {
         boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
-        String cam = Vhs.tr("bh.hud.cam", mc.player.getGameProfile().getName().toUpperCase(java.util.Locale.ROOT));
+        // Экран гаснет при смерти: REC и надписи камеры гаснут вместе с ним.
+        if (DeathFx.hidesHud() || DeathFx.freeFlight(mc)) return;
+        // В наблюдении за союзником это его камера.
+        String cam = Vhs.tr("bh.hud.cam", DeathFx.cameraName(mc).toUpperCase(java.util.Locale.ROOT));
         String time = DreadFx.timecode(LocalDateTime.now().format(TIMECODE));
         int x = width - 8;
         int y = 8;
