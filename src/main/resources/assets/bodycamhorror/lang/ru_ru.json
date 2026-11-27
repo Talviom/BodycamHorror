@@ -336,7 +336,7 @@
   "bh.brief.plan.exit": "выход",
   "bh.brief.plan.outbuilding": "хозблок",
   "bh.brief.plan.entrance": "главный вход",
-  "bh.brief.monitor.cam": "CAM 0%s",
+  "bh.brief.monitor.cam": "КАМ 0%s",
   "bh.brief.folder.cover": "ОТРЯД. ИНСТРУКТАЖ",
   "bh.brief.folder.cover_sub": "Прочитать до выхода.|В здание папку не брать: на старте её заберут.|Листать: стрелки, колёсико или клик.",
   "bh.brief.folder.last_title": "* * *",
