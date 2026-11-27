@@ -60,6 +60,11 @@ public final class ClientHud {
     private static void drawSlotStrip(GuiGraphics g, int width, int height) {
         Minecraft mc = Minecraft.getInstance();
         if (!BhConfig.SLOT_STRIP.get() || mc.player == null || mc.options.hideGui || creativeOrSpectator()) return;
+        // С 0.9.x слоты висят бирками улик на бечёвке (EvidenceStrip); старые рамки остаются запасным вариантом.
+        if (EvidenceStrip.ready()) {
+            EvidenceStrip.draw(g, mc, width, height);
+            return;
+        }
         Inventory inv = mc.player.getInventory();
 
         int shown = 0;

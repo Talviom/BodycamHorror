@@ -160,6 +160,9 @@ public final class TestScript {
                 String label = line.substring(6).trim();
                 BodycamHorror.LOGGER.info(PREFIX + "> " + line);
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.press(label));
+            } else if (line.startsWith("slot ")) {
+                int n = Integer.parseInt(line.substring(5).trim());
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.slot(n));
             } else if (line.startsWith("screen ")) {
                 screen(server, line.substring(7).trim());
             } else if (line.startsWith("lang ")) {

@@ -1,0 +1,31 @@
+# Полоска слотов «бирки улик»: бирки на бечёвке с пломбой и гвоздём, выбранная ниже и светлее, покачивание.
+# Запуск: gradlew runClient -PbhSize=1920x1080 -PbhTest=tools/tests/evidence_tags.txt
+# Кадры: run/screenshots/evidence_*.png
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 2000 120 2000 run bh arena build facility
+expect Facility built
+time set midnight
+gamemode adventure Dev
+tp Dev 2006.5 120 2005.5 90 5
+clear Dev
+give Dev bodycamhorror:flashlight
+give Dev bodycamhorror:bandage 3
+give Dev bodycamhorror:tape
+give Dev bodycamhorror:battery 2
+hud on
+wait 40
+shot evidence_1_flashlight
+# Третий слот: бирка опускается, остальные качаются (кадр сразу и после затухания).
+slot 3
+wait 4
+shot evidence_2_swing
+wait 40
+shot evidence_3_tape
+# Пустой выбранный слот тоже висит биркой.
+slot 6
+wait 40
+shot evidence_4_empty_selected
+slot 1
