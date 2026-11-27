@@ -94,11 +94,9 @@ def tex_inside():
     img = base(DARK, r, 0.1, 0.06)
     y = np.linspace(0.7, 1.1, N)[:, None, None]
     img = img * y
-    # Shelf lip near the top, a coat hook below it.
+    # Shelf lip near the top.
     rect(img, 1, 6, 31, 8, (70, 70, 62))
     rect(img, 1, 8, 31, 9, (12, 12, 11))
-    rect(img, 15, 12, 17, 18, (96, 92, 82))
-    rect(img, 15, 17, 19, 18, (96, 92, 82))
     return edge_darken(img, 2, 0.5)
 
 

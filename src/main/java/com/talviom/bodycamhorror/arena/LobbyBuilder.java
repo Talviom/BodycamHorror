@@ -219,7 +219,7 @@ public final class LobbyBuilder {
         put(11, 0, 0, TO_NEAR, null, "yuushya:package_0");
         put(19, 0, 1, TO_LEFT, null, "yuushya:fire_extinguisher");
         // Часы над дверью в никуда: в этом мире всегда полночь.
-        if (has("yuushya:round_clock_white_concrete")) put(7, 3, 0, TO_NEAR, null, "yuushya:round_clock_white_concrete");
+        if (has("yuushya:round_clock_white_concrete")) put(7, 3, 0, TO_FAR, null, "yuushya:round_clock_white_concrete");
         else frame(7, 3, 0, TO_NEAR, new ItemStack(Items.CLOCK));
     }
 
@@ -259,8 +259,11 @@ public final class LobbyBuilder {
         // Стол инструктажа 6 x 2, стулья с двух сторон.
         for (int dx = 7; dx <= 12; dx++) {
             for (int dz = 5; dz <= 6; dz++) set(dx, 0, dz, furniture("mcwfurnitures:dark_oak_table", TO_NEAR, slabTop(Blocks.DARK_OAK_SLAB)));
-            set(dx, 0, 4, mod(TO_NEAR, stairs(Blocks.DARK_OAK_STAIRS, TO_FAR), "yuushya:classroom_chair", "mcwfurnitures:dark_oak_chair"));
-            set(dx, 0, 7, mod(TO_FAR, stairs(Blocks.DARK_OAK_STAIRS, TO_NEAR), "yuushya:classroom_chair", "mcwfurnitures:dark_oak_chair"));
+            // У стула Yuushya модель развёрнута наоборот относительно facing, у Macaw's нет.
+            set(dx, 0, 4, has("yuushya:classroom_chair") ? mod(TO_FAR, null, "yuushya:classroom_chair")
+                    : furniture("mcwfurnitures:dark_oak_chair", TO_NEAR, stairs(Blocks.DARK_OAK_STAIRS, TO_FAR)));
+            set(dx, 0, 7, has("yuushya:classroom_chair") ? mod(TO_NEAR, null, "yuushya:classroom_chair")
+                    : furniture("mcwfurnitures:dark_oak_chair", TO_FAR, stairs(Blocks.DARK_OAK_STAIRS, TO_NEAR)));
         }
         // На столе то, что осталось с прошлого инструктажа: бумаги, планшет, кружка, пепельница, ноутбук.
         put(7, 1, 5, TO_NEAR, null, "moa_decor_science:documentos", "modernxl_ii:pileofpaper");
@@ -307,11 +310,11 @@ public final class LobbyBuilder {
         // Кофе Петровича.
         set(6, 0, 13, furniture("mcwfurnitures:dark_oak_counter", TO_FAR, Blocks.SPRUCE_PLANKS.defaultBlockState()));
         set(7, 0, 13, furniture("mcwfurnitures:dark_oak_counter", TO_FAR, Blocks.SPRUCE_PLANKS.defaultBlockState()));
-        set(7, 1, 13, mod(TO_FAR, Blocks.BREWING_STAND.defaultBlockState(), "yuushya:coffee_machine"));
+        set(7, 1, 13, mod(TO_NEAR, Blocks.BREWING_STAND.defaultBlockState(), "yuushya:coffee_machine"));
         set(6, 1, 13, mod(TO_FAR, Blocks.FLOWER_POT.defaultBlockState(), "yuushya:piled_paper_cups", "yuushya:paper_cup"));
         put(8, 0, 13, TO_FAR, null, "yuushya:water_dispenser");
         // Табличка «Выход» над запертыми дверями и огнетушитель у места появления.
-        put(9, 2, 13, TO_FAR, null, "yuushya:exit_sign");
+        put(9, 2, 13, TO_NEAR, null, "yuushya:exit_sign");
         put(11, 0, 13, TO_FAR, null, "yuushya:fire_extinguisher");
     }
 
@@ -441,6 +444,8 @@ public final class LobbyBuilder {
     }
 
     /**
+     * Внимание: у многих блоков Yuushya (часы, табличка «Выход», кофемашина, стулья) лицевая сторона смотрит
+     * против facing, поэтому для них в коде стоит противоположное направление (проверено по кадрам 2026-11-27).
      * Первый найденный блок из модов по списку (Yuushya, Modernxl, MOAdecor, Macaw's), лицом в facing (null: как есть).
      * Нет ни одного: ванильная замена и запись в лог.
      */

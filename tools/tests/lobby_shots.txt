@@ -3,14 +3,14 @@
 # «bh arena build hospital» в 2000 120 2000 ставит лобби в 1932 120 2030 (точка схемы dx, dz = 1952 - dx, 2044 - dz).
 # Место появления 1942 120 2031, лицом к дальней стене (юг). Кадры: run/screenshots/l10_*.png.
 
-lang ru_ru
-wait 60
 bh stop
 bh bot remove all
 bh tenant remove
 execute positioned 2000 120 2000 run bh arena build hospital
 expect Hospital built
 expect Lobby built at 1942, 120, 2031
+lang ru_ru
+wait 60
 time set midnight
 gamemode adventure Dev
 tp Dev 1942.5 120 2031.5 0 5
