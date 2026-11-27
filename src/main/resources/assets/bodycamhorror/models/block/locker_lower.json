@@ -1,0 +1,145 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "bodycamhorror:block/locker_side",
+    "side": "bodycamhorror:block/locker_side",
+    "top": "bodycamhorror:block/locker_top",
+    "front": "bodycamhorror:block/locker_front_lower",
+    "inside": "bodycamhorror:block/locker_inside",
+    "back": "bodycamhorror:block/locker_door_back",
+    "handle": "bodycamhorror:block/locker_handle"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#front",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#side",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "cullface": "south"
+        },
+        "east": {
+          "texture": "#side",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "cullface": "east"
+        },
+        "west": {
+          "texture": "#side",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "cullface": "west"
+        },
+        "down": {
+          "texture": "#top",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "cullface": "down"
+        }
+      }
+    },
+    {
+      "from": [
+        2.5,
+        9,
+        -0.6
+      ],
+      "to": [
+        3.5,
+        14,
+        0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#handle",
+          "uv": [
+            0,
+            0,
+            1.0,
+            5
+          ]
+        },
+        "south": {
+          "texture": "#handle",
+          "uv": [
+            0,
+            0,
+            1.0,
+            5
+          ]
+        },
+        "east": {
+          "texture": "#handle",
+          "uv": [
+            0,
+            0,
+            0.6,
+            5
+          ]
+        },
+        "west": {
+          "texture": "#handle",
+          "uv": [
+            0,
+            0,
+            0.6,
+            5
+          ]
+        },
+        "up": {
+          "texture": "#handle",
+          "uv": [
+            0,
+            0,
+            1.0,
+            0.6
+          ]
+        },
+        "down": {
+          "texture": "#handle",
+          "uv": [
+            0,
+            0,
+            1.0,
+            0.6
+          ]
+        }
+      }
+    }
+  ]
+}

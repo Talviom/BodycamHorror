@@ -38,6 +38,11 @@ public final class ModBlocks {
             BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_YELLOW).strength(-1f, 3600000f).sound(SoundType.GLASS).noLootTable().noOcclusion()
                     .lightLevel(s -> s.getValue(com.talviom.bodycamhorror.lobby.LobbyLampBlock.LIT) ? 11 : 2)));
 
+    /** Лобби: металлический шкафчик раздевалки в два блока, дверца открывается (LockerBlock). */
+    public static final RegistryObject<Block> LOCKER = BLOCKS.register("locker", () -> new com.talviom.bodycamhorror.lobby.LockerBlock(
+            BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5f, 6f).sound(SoundType.METAL).noLootTable().noOcclusion()));
+    public static final RegistryObject<Item> LOCKER_ITEM = ITEMS.register("locker", () -> new net.minecraft.world.item.DoubleHighBlockItem(LOCKER.get(), new Item.Properties()));
+
     /** Невидимый свет фонарика (убирает себя сам, см. BeamLightBlock). */
     public static final RegistryObject<Block> BEAM_LIGHT = BLOCKS.register("beam_light", () -> new com.talviom.bodycamhorror.flashlight.BeamLightBlock(
             BlockBehaviour.Properties.of().replaceable().noCollission().noLootTable().noOcclusion()
@@ -80,6 +85,7 @@ public final class ModBlocks {
             e.accept(GENERATOR_ITEM);
             e.accept(EMERGENCY_LAMP_ITEM);
             e.accept(EXIT_MARKER_ITEM);
+            e.accept(LOCKER_ITEM);
         }
         if (e.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             e.accept(FLASHLIGHT);

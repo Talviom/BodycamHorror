@@ -7,6 +7,7 @@ import com.talviom.bodycamhorror.gear.ModGear;
 import com.talviom.bodycamhorror.lobby.BriefSheetBlock;
 import com.talviom.bodycamhorror.lobby.BriefSheetBlockEntity;
 import com.talviom.bodycamhorror.lobby.LobbyLampBlock;
+import com.talviom.bodycamhorror.lobby.LockerBlock;
 import com.talviom.bodycamhorror.match.BhTeam;
 import com.talviom.bodycamhorror.match.MapData;
 import com.talviom.bodycamhorror.objective.TapeObjective;
@@ -60,7 +61,9 @@ import java.util.Set;
  * 9 стендов-памяток с записками от руки (тексты в lang-файлах, рисует BriefSheetRenderer).
  *
  * Координаты в коде «по схеме»: dx 0..19 слева направо, dz 0..13 от дальней стены к ближней (как на плане),
- * если стоять на месте появления лицом к дальней стене. Мебель из Macaw's Furniture, без мода ванильная замена.
+ * если стоять на месте появления лицом к дальней стене. Мебель и детали из модов сборки (Macaw's, Yuushya,
+ * ModernxlSurvival, MOAdecor SCIENCE; список блоков: docs/mod_blocks.md), без них ванильная замена.
+ * Шкафчики свои (LockerBlock): готовых металлических шкафчиков нет ни в одном моде.
  */
 public final class LobbyBuilder {
     /** Внутренность 20 x 14: стены на местных x = 0 и 21, z = 0 и 15; пол y = -1, потолок y = 5. */
@@ -141,11 +144,14 @@ public final class LobbyBuilder {
     }
 
     private void shell() {
-        BlockState lino = Blocks.BROWN_TERRACOTTA.defaultBlockState();
-        BlockState worn = Blocks.PACKED_MUD.defaultBlockState();
-        BlockState tile = Blocks.WHITE_TERRACOTTA.defaultBlockState();
-        BlockState plaster = Blocks.LIGHT_GRAY_CONCRETE.defaultBlockState();
-        BlockState stain = Blocks.ANDESITE.defaultBlockState();
+        // Пол из тёмной плитки с вытертыми до бетона местами, стены: внизу крашеная панель, выше побелка
+        // с потёками воды (Yuushya, Modernxl). Без модов прежние терракота, бетон и андезит.
+        BlockState lino = mod(null, Blocks.BROWN_TERRACOTTA.defaultBlockState(), "yuushya:smooth_dark_stonetile");
+        BlockState worn = mod(null, Blocks.PACKED_MUD.defaultBlockState(), "modernxl_ii:scraped_concrete_cold");
+        BlockState tile = mod(null, Blocks.WHITE_TERRACOTTA.defaultBlockState(), "yuushya:mink_worn_concrete");
+        BlockState plaster = mod(null, Blocks.LIGHT_GRAY_CONCRETE.defaultBlockState(), "yuushya:white_worn_concrete");
+        BlockState stainTop = mod(null, Blocks.ANDESITE.defaultBlockState(), "yuushya:water_stain_top");
+        BlockState stainLow = mod(null, plaster, "yuushya:water_stain_bottom");
         BlockState cornice = Blocks.SMOOTH_STONE.defaultBlockState();
         for (int x = 0; x <= W; x++) {
             for (int z = 0; z <= D; z++) {
@@ -155,8 +161,9 @@ public final class LobbyBuilder {
                 level.setBlock(base.offset(x, H, z), Blocks.SMOOTH_STONE.defaultBlockState(), 2);
                 level.setBlock(base.offset(x, H + 1, z), Blocks.STONE.defaultBlockState(), 2);
                 if (!outer) continue;
+                boolean stained = rnd.nextInt(8) == 0;
                 for (int y = 0; y < H; y++) {
-                    BlockState s = y < 2 ? tile : y == H - 1 ? cornice : (rnd.nextInt(10) == 0 ? stain : plaster);
+                    BlockState s = y < 2 ? tile : y == H - 1 ? cornice : !stained ? plaster : y == 3 ? stainTop : stainLow;
                     level.setBlock(base.offset(x, y, z), s, 2);
                 }
             }
@@ -167,7 +174,9 @@ public final class LobbyBuilder {
     }
 
     private void door(int dx, DoorHingeSide hinge) {
-        BlockState d = Blocks.IRON_DOOR.defaultBlockState().setValue(DoorBlock.FACING, TO_NEAR).setValue(DoorBlock.HINGE, hinge);
+        Block b = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("mcwdoors:metal_reinforced_door"));
+        if (!(b instanceof DoorBlock)) b = Blocks.IRON_DOOR;
+        BlockState d = b.defaultBlockState().setValue(DoorBlock.FACING, TO_NEAR).setValue(DoorBlock.HINGE, hinge);
         set(dx, 0, 14, d.setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
         set(dx, 1, 14, d.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
     }
@@ -179,6 +188,9 @@ public final class LobbyBuilder {
         set(15, 4, 11, ModBlocks.LAMP.get().defaultBlockState());
         set(18, 4, 11, ModBlocks.LAMP.get().defaultBlockState());
         set(16, 4, 13, ModBlocks.EMERGENCY_LAMP.get().defaultBlockState().setValue(EmergencyLampBlock.FLOOR, false));
+        // Потолочный вентилятор над столом инструктажа и камера наблюдения в дальнем углу.
+        put(10, 4, 5, null, null, "yuushya:ceiling_fan");
+        put(1, 4, 0, TO_NEAR, null, "yuushya:cctv_camera");
     }
 
     // ---------- дальняя стена ----------
@@ -196,32 +208,38 @@ public final class LobbyBuilder {
             set(dx, 2, 0, Blocks.BLACK_TERRACOTTA.defaultBlockState());
             set(dx, 3, 0, Blocks.BLACK_TERRACOTTA.defaultBlockState());
         }
-        set(9, 0, 0, furniture("mcwfurnitures:dark_oak_chair", TO_NEAR, stairs(Blocks.DARK_OAK_STAIRS, TO_FAR)));
+        set(9, 0, 0, mod(TO_NEAR, stairs(Blocks.DARK_OAK_STAIRS, TO_FAR),
+                "yuushya:office_chair_black_concrete", "modernxl_ii:officechair", "mcwfurnitures:dark_oak_chair"));
         set(10, 1, 1, Blocks.IRON_TRAPDOOR.defaultBlockState().setValue(TrapDoorBlock.FACING, TO_NEAR).setValue(TrapDoorBlock.HALF, Half.BOTTOM));
-        set(8, 1, 1, Blocks.LIGHTNING_ROD.defaultBlockState());
-        // Архив плёнок под доской пропавших.
+        set(8, 1, 1, mod(TO_NEAR, Blocks.LIGHTNING_ROD.defaultBlockState(), "yuushya:telephone_0"));
+        put(9, 1, 1, TO_NEAR, null, "yuushya:monitor_with_keyboard_and_mouse", "modernxl_ii:pcgamer_screen");
+        // Архив плёнок под доской пропавших, рядом коробки с тем, что не разобрали.
         for (int dx = 13; dx <= 18; dx++) set(dx, 0, 0, furniture("mcwfurnitures:dark_oak_bookshelf", TO_NEAR, Blocks.BOOKSHELF.defaultBlockState()));
+        put(12, 0, 0, TO_NEAR, null, "yuushya:big_package");
+        put(11, 0, 0, TO_NEAR, null, "yuushya:package_0");
+        put(19, 0, 1, TO_LEFT, null, "yuushya:fire_extinguisher");
         // Часы над дверью в никуда: в этом мире всегда полночь.
-        frame(7, 3, 0, TO_NEAR, new ItemStack(Items.CLOCK));
+        if (has("yuushya:round_clock_white_concrete")) put(7, 3, 0, TO_NEAR, null, "yuushya:round_clock_white_concrete");
+        else frame(7, 3, 0, TO_NEAR, new ItemStack(Items.CLOCK));
     }
 
     // ---------- шкафчики и площадки ----------
 
-    /** Шкафчики встроены в боковую стену, дверцы из железных люков; над ними полоса цвета команды. */
+    /** Ряд металлических шкафчиков (LockerBlock) вдоль боковой стены, один приоткрыт; над ними полоса цвета команды. */
     private void lockers(boolean alpha) {
         int wallDx = alpha ? -1 : 20;
         int cellDx = alpha ? 0 : 19;
         Direction plate = alpha ? TO_RIGHT : TO_LEFT;
         BlockState body = Blocks.LIGHT_GRAY_TERRACOTTA.defaultBlockState();
         BlockState band = (alpha ? Blocks.BLUE_TERRACOTTA : Blocks.RED_TERRACOTTA).defaultBlockState();
+        int ajar = alpha ? 7 : 5;
         for (int dz = 3; dz <= 10; dz++) {
             set(wallDx, 0, dz, body);
             set(wallDx, 1, dz, body);
             set(wallDx, 2, dz, band);
-            for (int y = 0; y <= 1; y++) {
-                set(cellDx, y, dz, Blocks.IRON_TRAPDOOR.defaultBlockState().setValue(TrapDoorBlock.FACING, plate)
-                        .setValue(TrapDoorBlock.OPEN, true).setValue(TrapDoorBlock.HALF, y == 0 ? Half.BOTTOM : Half.TOP));
-            }
+            BlockState locker = ModBlocks.LOCKER.get().defaultBlockState().setValue(LockerBlock.FACING, plate).setValue(LockerBlock.OPEN, dz == ajar);
+            set(cellDx, 0, dz, locker.setValue(LockerBlock.HALF, DoubleBlockHalf.LOWER));
+            set(cellDx, 1, dz, locker.setValue(LockerBlock.HALF, DoubleBlockHalf.UPPER));
         }
         sign(cellDx, 2, 6, plate, Component.translatable(alpha ? "bh.sign.alpha" : "bh.sign.bravo"), Component.translatable("bh.sign.stand_here"));
         // Площадка 3 x 3 в полу перед шкафчиками.
@@ -232,7 +250,7 @@ public final class LobbyBuilder {
         }
         // Лавки раздевалки вдоль шкафчиков, проход к площадке свободен.
         int benchDx = alpha ? 1 : 18;
-        for (int dz : new int[]{3, 4, 9, 10}) set(benchDx, 0, dz, slabBottom(Blocks.SPRUCE_SLAB));
+        for (int dz : new int[]{3, 4, 9, 10}) set(benchDx, 0, dz, mod(plate, slabBottom(Blocks.SPRUCE_SLAB), "yuushya:bench_raw_spruce_wood"));
     }
 
     // ---------- центр ----------
@@ -241,15 +259,24 @@ public final class LobbyBuilder {
         // Стол инструктажа 6 x 2, стулья с двух сторон.
         for (int dx = 7; dx <= 12; dx++) {
             for (int dz = 5; dz <= 6; dz++) set(dx, 0, dz, furniture("mcwfurnitures:dark_oak_table", TO_NEAR, slabTop(Blocks.DARK_OAK_SLAB)));
-            set(dx, 0, 4, furniture("mcwfurnitures:dark_oak_chair", TO_NEAR, stairs(Blocks.DARK_OAK_STAIRS, TO_FAR)));
-            set(dx, 0, 7, furniture("mcwfurnitures:dark_oak_chair", TO_FAR, stairs(Blocks.DARK_OAK_STAIRS, TO_NEAR)));
+            set(dx, 0, 4, mod(TO_NEAR, stairs(Blocks.DARK_OAK_STAIRS, TO_FAR), "yuushya:classroom_chair", "mcwfurnitures:dark_oak_chair"));
+            set(dx, 0, 7, mod(TO_FAR, stairs(Blocks.DARK_OAK_STAIRS, TO_NEAR), "yuushya:classroom_chair", "mcwfurnitures:dark_oak_chair"));
         }
+        // На столе то, что осталось с прошлого инструктажа: бумаги, планшет, кружка, пепельница, ноутбук.
+        put(7, 1, 5, TO_NEAR, null, "moa_decor_science:documentos", "modernxl_ii:pileofpaper");
+        put(8, 1, 6, TO_FAR, null, "yuushya:mug");
+        put(9, 1, 6, TO_FAR, null, "modernxl_ii:pileofpaper", "yuushya:list");
+        put(10, 1, 5, TO_NEAR, null, "moa_decor_science:portapapeles");
+        put(11, 1, 6, TO_FAR, null, "yuushya:ashtray");
+        put(12, 1, 5, TO_NEAR, null, "modernxl_ii:laptop_close", "yuushya:laptop");
+        put(13, 0, 5, TO_NEAR, null, "yuushya:wastepaper_basket");
         // Пульт «Запись»: тумба, на ней красная кнопка (её место в MapData: console).
         set(9, 0, 9, furniture("mcwfurnitures:dark_oak_counter", TO_NEAR, Blocks.POLISHED_DEEPSLATE.defaultBlockState()));
         set(10, 0, 9, furniture("mcwfurnitures:dark_oak_counter", TO_NEAR, Blocks.POLISHED_DEEPSLATE.defaultBlockState()));
+        put(10, 1, 9, TO_NEAR, null, "yuushya:classic_terminal");
         set(9, 1, 9, Blocks.CRIMSON_BUTTON.defaultBlockState().setValue(ButtonBlock.FACE, AttachFace.FLOOR).setValue(ButtonBlock.FACING, TO_NEAR));
         // Курилка: урна и лавка.
-        set(12, 0, 11, Blocks.CAULDRON.defaultBlockState());
+        set(12, 0, 11, mod(TO_NEAR, Blocks.CAULDRON.defaultBlockState(), "yuushya:recycle_bin_0", "yuushya:wastepaper_basket"));
         set(11, 0, 11, slabBottom(Blocks.SPRUCE_SLAB));
         set(11, 0, 10, slabBottom(Blocks.SPRUCE_SLAB));
     }
@@ -269,14 +296,23 @@ public final class LobbyBuilder {
         if (found.size() > 1) frame(3, 1, 13, TO_FAR, found.get(1));
         frame(1, 1, 13, TO_FAR, new ItemStack(ModGear.BATTERY.get()));
         frame(2, 1, 13, TO_FAR, new ItemStack(ModGear.BANDAGE.get()));
+        // Под стойкой ящики с патронами, в углу сейф, над стойкой аптечка.
+        put(1, 0, 13, TO_FAR, null, "yuushya:crate");
+        put(2, 0, 13, TO_FAR, null, "yuushya:package_1");
+        put(0, 0, 13, TO_RIGHT, null, "yuushya:tall_safe", "yuushya:safe");
+        put(1, 3, 13, TO_FAR, null, "moa_decor_science:botiquindepared");
         // Выдача учебного набора: тумбы у левой стены (места в MapData: kit, kit2).
         set(0, 0, 11, furniture("mcwfurnitures:spruce_double_drawer", TO_RIGHT, Blocks.BARREL.defaultBlockState()));
         set(0, 0, 12, furniture("mcwfurnitures:spruce_double_drawer", TO_RIGHT, Blocks.BARREL.defaultBlockState()));
         // Кофе Петровича.
         set(6, 0, 13, furniture("mcwfurnitures:dark_oak_counter", TO_FAR, Blocks.SPRUCE_PLANKS.defaultBlockState()));
         set(7, 0, 13, furniture("mcwfurnitures:dark_oak_counter", TO_FAR, Blocks.SPRUCE_PLANKS.defaultBlockState()));
-        set(7, 1, 13, Blocks.BREWING_STAND.defaultBlockState());
-        set(6, 1, 13, Blocks.FLOWER_POT.defaultBlockState());
+        set(7, 1, 13, mod(TO_FAR, Blocks.BREWING_STAND.defaultBlockState(), "yuushya:coffee_machine"));
+        set(6, 1, 13, mod(TO_FAR, Blocks.FLOWER_POT.defaultBlockState(), "yuushya:piled_paper_cups", "yuushya:paper_cup"));
+        put(8, 0, 13, TO_FAR, null, "yuushya:water_dispenser");
+        // Табличка «Выход» над запертыми дверями и огнетушитель у места появления.
+        put(9, 2, 13, TO_FAR, null, "yuushya:exit_sign");
+        put(11, 0, 13, TO_FAR, null, "yuushya:fire_extinguisher");
     }
 
     // ---------- ближний правый угол: тренировка ----------
@@ -365,8 +401,9 @@ public final class LobbyBuilder {
         set(19, 4, 0, Blocks.COBWEB.defaultBlockState());
         set(0, 4, 0, Blocks.COBWEB.defaultBlockState());
         // Трубы вдоль потолка у правой стены.
-        for (int dz = 0; dz <= 13; dz++) set(19, 4, dz, dz == 0 ? Blocks.COBWEB.defaultBlockState()
-                : Blocks.CHAIN.defaultBlockState().setValue(net.minecraft.world.level.block.ChainBlock.AXIS, Direction.Axis.Z));
+        BlockState pipe = mod(TO_FAR, Blocks.CHAIN.defaultBlockState().setValue(net.minecraft.world.level.block.ChainBlock.AXIS, Direction.Axis.Z),
+                "yuushya:pipe_horizontal");
+        for (int dz = 0; dz <= 13; dz++) set(19, 4, dz, dz == 0 ? Blocks.COBWEB.defaultBlockState() : pipe);
         set(19, 4, 11, Blocks.AIR.defaultBlockState());
         set(19, 4, 12, Blocks.AIR.defaultBlockState());
     }
@@ -401,6 +438,31 @@ public final class LobbyBuilder {
             return fallback;
         }
         return face(b.defaultBlockState(), facing);
+    }
+
+    /**
+     * Первый найденный блок из модов по списку (Yuushya, Modernxl, MOAdecor, Macaw's), лицом в facing (null: как есть).
+     * Нет ни одного: ванильная замена и запись в лог.
+     */
+    private BlockState mod(@javax.annotation.Nullable Direction facing, BlockState fallback, String... ids) {
+        for (String id : ids) {
+            Block b = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(id));
+            if (b != null && b != Blocks.AIR) return facing == null ? b.defaultBlockState() : face(b.defaultBlockState(), facing);
+        }
+        String key = String.join("|", ids);
+        if (!missing.contains(key)) missing.add(key);
+        return fallback;
+    }
+
+    /** Деталь из модов; без них ставится fallback, а если он null, место остаётся пустым. */
+    private void put(int dx, int y, int dz, @javax.annotation.Nullable Direction facing, @javax.annotation.Nullable BlockState fallback, String... ids) {
+        BlockState s = mod(facing, fallback, ids);
+        if (s != null) set(dx, y, dz, s);
+    }
+
+    private static boolean has(String id) {
+        Block b = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(id));
+        return b != null && b != Blocks.AIR;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

@@ -30,6 +30,15 @@ shot l10_lockers_alpha
 tp Dev 1939.5 120 2036.5 90 8
 wait 40
 shot l10_lockers_bravo
+tp Dev 1949.5 120 2037.5 -90 10
+wait 40
+shot l10_locker_close
+tp Dev 1942.5 120 2036.5 0 35
+wait 40
+shot l10_table
+tp Dev 1945.5 120 2034.5 180 5
+wait 40
+shot l10_coffee
 tp Dev 1938.5 120 2036.5 135 15
 wait 60
 shot l10_training
