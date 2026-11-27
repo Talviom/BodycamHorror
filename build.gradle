@@ -60,6 +60,9 @@ minecraft {
         }
         server {
             args '--nogui'
+            // Миксины Architectury (нужен Yuushya для -PbhFurniture) тоже ждут имена SRG: без пересчёта refmap сервер падает.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${project.buildDir}/createSrgToMcp/output.srg"
             // Готовый мир для сборки: tools/world/make-world.ps1 (gradlew runServer -PbhServerDir=... -PbhTest=...).
             if (project.hasProperty('bhServerDir')) {
                 workingDirectory project.file(project.property('bhServerDir'))
