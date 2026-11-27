@@ -24,10 +24,10 @@ shot l10_missing
 tp Dev 1943.5 120 2040.5 0 -18
 wait 60
 shot l10_monitors
-tp Dev 1944.5 120 2038.5 -90 5
+tp Dev 1946.5 120 2036.5 -90 8
 wait 60
 shot l10_lockers_alpha
-tp Dev 1944.5 120 2038.5 90 5
+tp Dev 1939.5 120 2036.5 90 8
 wait 40
 shot l10_lockers_bravo
 tp Dev 1938.5 120 2036.5 135 15

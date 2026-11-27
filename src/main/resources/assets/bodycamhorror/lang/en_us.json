@@ -290,7 +290,7 @@
   "bh.brief.gear.title": "3. GEAR",
   "bh.brief.gear.body": "At the start of every round: your squad's pistol, ammo for 2 magazines, a flashlight, a bandage.|You carry 20 things. TAB opens your gear, G drops what is in your hand.|Find the rest inside: ammo, bandages, batteries, sometimes a gun.|Gear is handed out fresh every round.",
   "bh.brief.light.title": "4. LIGHT",
-  "bh.brief.light.body": "Flashlight: T. The battery does not last. An empty one recharges by itself, but only to 15%.|Spare battery: hold it, RMB.|A breaker cuts the light around it, the generator cuts it in the whole building. Then only the red emergency lamps glow.|Breaker and generator: RMB or F. They are loud, whoever touches them gives himself away.",
+  "bh.brief.light.body": "Flashlight: T. The battery does not last. An empty one recharges by itself, but only to 15%%.|Spare battery: hold it, RMB.|A breaker cuts the light around it, the generator cuts it in the whole building. Then only the red emergency lamps glow.|Breaker and generator: RMB or F. They are loud, whoever touches them gives himself away.",
   "bh.brief.fear.title": "5. FEAR AND WOUNDS",
   "bh.brief.fear.body": "Darkness and wounds frighten you. Fear builds up by itself, you hear it in your heartbeat.|The stronger the fear, the worse: shaking hands, sounds that are not there.|Light nearby and bandaging calm you down.|Bandage: hold RMB for 2 seconds. You cannot shoot while bandaging.",
   "bh.brief.noise.title": "6. NOISE",

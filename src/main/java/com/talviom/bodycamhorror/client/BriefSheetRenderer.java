@@ -52,7 +52,7 @@ public class BriefSheetRenderer implements BlockEntityRenderer<BriefSheetBlockEn
     /** Подписи на схеме больницы: ключ и место в координатах плана (x, z), как в HospitalBuilder. */
     private static final Object[][] PLAN_LABELS = {
             {"bh.brief.plan.yard", 44, 30}, {"bh.brief.plan.admissions", 18, 18}, {"bh.brief.plan.kitchen", 70, 18},
-            {"bh.brief.plan.exit", 6, 26}, {"bh.brief.plan.exit", 82, 26}, {"bh.brief.plan.outbuilding", 45, -1},
+            {"bh.brief.plan.exit", 6, 26}, {"bh.brief.plan.exit", 82, 26}, {"bh.brief.plan.outbuilding", 25, -1},
             {"bh.brief.plan.entrance", 44, 56}};
 
     private final Font font;

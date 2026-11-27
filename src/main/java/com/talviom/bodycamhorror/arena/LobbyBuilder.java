@@ -312,7 +312,7 @@ public final class LobbyBuilder {
         sheet(1, 3, 0, TO_NEAR, "task_a", note, 0.15f, 0.05f, 0.62f, 0.62f, -6f);
         sheet(6, 3, 0, TO_NEAR, "match_a", note, 0.15f, 0.08f, 0.62f, 0.62f, 5f);
         // 7 «Связь и клавиши» рядом со столом дежурного, 6 мониторов над ним.
-        sheet(11, 1, 0, TO_NEAR, "comms", memo, 0.05f, 0.05f, 1.9f, 1.9f, 0f);
+        sheet(11, 1, 0, TO_NEAR, "comms", memo, 0.35f, 0.1f, 1.6f, 1.8f, 0f);
         sheet(11, 3, 0, TO_NEAR, "comms_a", note, 0.4f, 0.1f, 0.7f, 0.62f, -4f);
         int cam = 1;
         for (int y = 3; y >= 2; y--) {
