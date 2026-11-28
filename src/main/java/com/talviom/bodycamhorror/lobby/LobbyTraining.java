@@ -145,15 +145,17 @@ public final class LobbyTraining {
         }
     }
 
-    // ---------- учебная кассета ----------
+    // ---------- учебный образец (раньше кассета) ----------
 
     private static void tape(MinecraftServer server, ServerLevel level, MapData map) {
         BlockPos spot = map.lobbyPoint("tape");
         BlockPos exit = map.lobbyPoint("exit");
         if (spot == null || exit == null || !level.isLoaded(spot)) return;
         boolean onTable = level.getBlockState(spot).is(ModBlocks.TAPE_BLOCK.get());
-        if (onTable && tick % 60 == 0) {
-            play(level, spot, ModSounds.TAPE_HISS.get(), 0.35f, 0.85f + level.getRandom().nextFloat() * 0.2f);
+        // 0.9.8: учебный образец изредка бьётся о стекло и стонет (как в матче, только тише), колба при этом проступает.
+        if (onTable && tick % 700 == 0) {
+            play(level, spot, ModSounds.SPECIMEN_KNOCK.get(), 0.35f, 0.9f + level.getRandom().nextFloat() * 0.15f);
+            com.talviom.bodycamhorror.objective.TapeBlock.pulse(level, spot);
         }
         boolean someoneHasIt = false;
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
@@ -177,7 +179,7 @@ public final class LobbyTraining {
                 DELIVER.remove(p.getUUID());
                 TapeObjective.removeTapes(p);
                 TapeObjective.placeTapeBlock(level, spot, 0);
-                play(level, p.blockPosition(), ModSounds.TAPE_OUT.get(), 0.8f, 1f);
+                play(level, p.blockPosition(), ModSounds.SPECIMEN_OUT.get(), 0.8f, 1f);
                 p.displayClientMessage(TapeObjective.text(Component.translatable("bh.lobby.tape_done"), TapeObjective.BONE), true);
             }
         }

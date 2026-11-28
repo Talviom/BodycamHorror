@@ -19,23 +19,41 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * 0.9 (пункт 16): кассета, лежащая в мире, это блок с 3D-моделью VHS-кассеты, а не плоский предмет на полу.
- * Лежит на мебели (точки кассеты) или на полу, куда её уронили (смерть несущего, выброс на G).
+ * Цель раунда, лежащая в мире: с 0.9.8 это колба «ОБРАЗЕЦ №7» (существо в кровяной мути), до этого была VHS-кассета;
+ * id блока tape_block и предмета tape оставлены прежними. Модель: tools/assets/make_specimen.py.
+ * Стоит на мебели (точки цели) или на полу, куда её уронили (смерть несущего, выброс на G).
  * Подобрать: ПКМ пустой рукой или F с оружием в руках (клавиша взаимодействия TACZ, тег interact_key/whitelist).
- * Сама по себе блок ничего не роняет и не ломается: забрать её можно только подбором.
+ * Сам блок ничего не роняет и не ломается: забрать колбу можно только подбором.
  */
 public class TapeBlock extends HorizontalDirectionalBlock {
-    private static final VoxelShape NS = Block.box(3, 0, 5, 13, 2, 11);
-    private static final VoxelShape EW = Block.box(5, 0, 3, 11, 2, 13);
+    private static final VoxelShape NS = Block.box(4, 0, 4, 12, 14, 12);
+    private static final VoxelShape EW = NS;
+    /** 0.9.8: на пару секунд после звука существо проступает светом (модель tape_block_pulse, свет 4). */
+    public static final net.minecraft.world.level.block.state.properties.BooleanProperty PULSE =
+            net.minecraft.world.level.block.state.properties.BooleanProperty.create("pulse");
+    public static final int PULSE_TICKS = 50;
 
     public TapeBlock(Properties props) {
         super(props);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(PULSE, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(FACING, PULSE);
+    }
+
+    /** Звук из колбы: существо проступает светом и через PULSE_TICKS снова прячется. */
+    public static void pulse(net.minecraft.server.level.ServerLevel level, BlockPos pos) {
+        BlockState s = level.getBlockState(pos);
+        if (!(s.getBlock() instanceof TapeBlock b)) return;
+        level.setBlock(pos, s.setValue(PULSE, true), 3);
+        level.scheduleTick(pos, b, PULSE_TICKS);
+    }
+
+    @Override
+    public void tick(BlockState state, net.minecraft.server.level.ServerLevel level, BlockPos pos, net.minecraft.util.RandomSource random) {
+        if (state.getValue(PULSE)) level.setBlock(pos, state.setValue(PULSE, false), 3);
     }
 
     @Override

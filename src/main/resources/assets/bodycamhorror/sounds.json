@@ -262,5 +262,10 @@
         "stream": true
       }
     ]
-  }
+  },
+  "specimen_knock": { "sounds": ["bodycamhorror:specimen_thump1", "bodycamhorror:specimen_thump2", "bodycamhorror:specimen_moan1", "bodycamhorror:specimen_moan2"] },
+  "specimen_thump": { "sounds": ["bodycamhorror:specimen_thump1", "bodycamhorror:specimen_thump2"] },
+  "specimen_frenzy": { "sounds": ["bodycamhorror:specimen_frenzy"] },
+  "specimen_pickup": { "sounds": ["bodycamhorror:specimen_pickup"] },
+  "specimen_out": { "sounds": ["bodycamhorror:specimen_out"] }
 }

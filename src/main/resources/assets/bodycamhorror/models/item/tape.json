@@ -1,1 +1,3 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "bodycamhorror:item/tape" } }
+{
+  "parent": "bodycamhorror:block/tape_block"
+}

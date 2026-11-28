@@ -66,7 +66,8 @@ public final class ModBlocks {
     /** 0.9: кассета, лежащая в мире 3D-моделью (на мебели или на полу). Забрать только подбором, сломать нельзя. */
     public static final RegistryObject<Block> TAPE_BLOCK = BLOCKS.register("tape_block", () -> new com.talviom.bodycamhorror.objective.TapeBlock(
             BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(-1f, 3600000f).sound(SoundType.WOOD)
-                    .noLootTable().noOcclusion().noCollission().pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)));
+                    .noLootTable().noOcclusion().noCollission().pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)
+                    .lightLevel(st -> st.getValue(com.talviom.bodycamhorror.objective.TapeBlock.PULSE) ? 4 : 1)));
 
     private ModBlocks() {}
 

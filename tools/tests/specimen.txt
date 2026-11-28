@@ -1,0 +1,98 @@
+# 0.9.8 «ОБРАЗЕЦ №7» вместо кассеты: колба 3D-блоком на мебели, падает той же моделью, подбор ПКМ,
+# колба за спиной у несущего (вид от третьего лица). Бывший tape3d.txt.
+# Запуск: gradlew runClient -PbhTest=tools/tests/specimen.txt
+# «bh arena build facility» в 3000 120 3000: угол здания 3002 120 3002. В dev-клиенте нет Macaw's Furniture
+# и MOAdecor, поэтому в точках стоят бочки. Кадры: run/screenshots/098_*.png. Результат: [bh-test] DONE failures=0.
+
+bh stop
+bh bot remove all
+bh tenant remove
+execute positioned 3000 120 3000 run bh arena build facility
+expect Facility built
+expect 12 specimen points
+time set midnight
+gamemode adventure Dev
+# --- несущий в матче: колба у него за спиной ---
+bh team alpha Dev
+bh start test
+bh skip
+bh tenant remove
+clear Dev
+give Dev bodycamhorror:tape
+tp Dev 3006.5 120 3018.5 90 10
+wait 40
+slot 5
+wait 5
+hud off
+view back
+wait 20
+tp Dev 3006.5 120 3018.5 135 10
+wait 10
+shot 098_specimen_on_back
+view third
+wait 20
+shot 098_specimen_front
+view first
+hud on
+bh stop
+wait 40
+clear Dev
+wait 20
+
+# --- мебель стоит во всех 12 точках (без мода мебели вместо неё бочки) ---
+execute if block 3031 120 3011 minecraft:barrel
+expect passed
+execute if block 3035 126 3005 minecraft:barrel
+expect passed
+execute if block 3021 115 3025 minecraft:barrel
+expect passed
+
+# --- колба, попавшая в мир предметом, ложится на мебель 3D-блоком ---
+summon item 3031.5 120.6 3011.5 {Item:{id:"bodycamhorror:tape",Count:1b}}
+wait 5
+execute if block 3031 121 3011 bodycamhorror:tape_block
+expect passed
+execute if entity @e[type=item,x=3031,y=121,z=3011,distance=..3]
+reject passed
+tp Dev 3031.5 120 3013.5 180 30
+hud off
+wait 30
+shot 098_specimen_on_furniture
+hud on
+
+# --- выпавшая в воздухе колба падает на пол той же моделью ---
+summon item 3020.5 124.2 3018.5 {Item:{id:"bodycamhorror:tape",Count:1b}}
+wait 5
+execute if block 3020 120 3018 bodycamhorror:tape_block
+expect passed
+
+# --- подбор: ПКМ пустой рукой, подсказка «ВЗЯТЬ ОБРАЗЕЦ» ---
+tp Dev 3020.5 120 3016.6 0 40
+wait 30
+shot 098_specimen_hint
+use on
+wait 6
+use off
+wait 4
+execute unless block 3020 120 3018 bodycamhorror:tape_block
+expect passed
+clear Dev bodycamhorror:tape 0
+expect Found 1
+
+clear Dev
+
+# --- свечение в темноте (генератор выключен): глаз тлеет всегда, после звука проступает существо ---
+setblock 3026 115 3018 air
+setblock 3026 115 3018 bodycamhorror:generator[powered=false]
+setblock 3021 116 3025 bodycamhorror:tape_block[facing=south]
+tp Dev 3021.5 115 3027.6 180 25
+hud off
+wait 40
+shot 098_glow_calm
+setblock 3021 116 3025 bodycamhorror:tape_block[facing=south,pulse=true]
+wait 10
+shot 098_glow_pulse
+hud on
+setblock 3021 116 3025 air
+setblock 3026 115 3018 air
+setblock 3026 115 3018 bodycamhorror:generator[powered=true]

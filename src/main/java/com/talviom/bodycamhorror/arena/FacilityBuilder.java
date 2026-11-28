@@ -220,16 +220,17 @@ public final class FacilityBuilder {
         map.setExit(BhTeam.ALPHA, alphaExit);
         map.setExit(BhTeam.BRAVO, bravoExit);
 
-        // Кассета: на перпендикуляре к середине отрезка между выходами (одинаково далеко от обоих), на всех уровнях.
-        // 0.9: 12 точек (по 4 на этаж), в каждой мебель из Macaw's Furniture, кассета 3D-блоком лежит на ней.
+        // Цель раунда: на перпендикуляре к середине отрезка между выходами (одинаково далеко от обоих), на всех уровнях.
+        // 12 точек (по 4 на этаж). 0.9.8: колба «ОБРАЗЕЦ №7» стоит на лабораторных столах и тумбах (Macaw's Furniture),
+        // в подвале на бочках с токсичными отходами (MOAdecor SCIENCE: столов в нём нет, только мелочь и бочки).
         int[][] tape = {
                 {29, 0, 9}, {19, 0, 23}, {31, 0, 6}, {17, 0, 26},
                 {30, 6, 5}, {18, 6, 27}, {33, 6, 3}, {15, 6, 29},
                 {26, -5, 13}, {22, -5, 19}, {29, -5, 9}, {19, -5, 23}};
         String[] furniture = {
-                "mcwfurnitures:dark_oak_end_table", "mcwfurnitures:dark_oak_end_table", "mcwfurnitures:dark_oak_drawer", "mcwfurnitures:dark_oak_drawer",
-                "mcwfurnitures:spruce_desk", "mcwfurnitures:spruce_desk", "mcwfurnitures:spruce_double_drawer", "mcwfurnitures:spruce_double_drawer",
-                "mcwfurnitures:dark_oak_counter", "mcwfurnitures:dark_oak_counter", "mcwfurnitures:spruce_drawer", "mcwfurnitures:spruce_drawer"};
+                "mcwfurnitures:dark_oak_desk", "mcwfurnitures:dark_oak_desk", "mcwfurnitures:dark_oak_counter", "mcwfurnitures:dark_oak_counter",
+                "mcwfurnitures:spruce_desk", "mcwfurnitures:spruce_desk", "mcwfurnitures:spruce_counter", "mcwfurnitures:spruce_counter",
+                "moa_decor_science:barriltoxico", "moa_decor_science:barriltoxico", "moa_decor_science:barriltoxico", "moa_decor_science:barriltoxico"};
         for (int i = 0; i < tape.length; i++) {
             int[] t = tape[i];
             set(t[0], t[1], t[2], furniture(furniture[i]));
@@ -241,7 +242,7 @@ public final class FacilityBuilder {
 
     // ---------- помощники ----------
 
-    /** Мебель из Macaw's Furniture; без этого мода (dev-клиент) вместо неё бочка, на ней кассета лежит так же. */
+    /** Мебель из модов сборки; без мода (dev-клиент) вместо неё бочка, колба на ней стоит так же. */
     private static BlockState furniture(String id) {
         net.minecraft.world.level.block.Block b = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(new net.minecraft.resources.ResourceLocation(id));
         if (b == null || b == Blocks.AIR) return Blocks.BARREL.defaultBlockState();

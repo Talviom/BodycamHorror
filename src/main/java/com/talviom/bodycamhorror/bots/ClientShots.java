@@ -50,10 +50,14 @@ final class ClientShots {
     }
 
     /** Вид от первого лица или со спины (как F5). */
-    static void view(boolean third) {
+    static void view(String mode) {
         Minecraft mc = Minecraft.getInstance();
-        mc.execute(() -> mc.options.setCameraType(third ? net.minecraft.client.CameraType.THIRD_PERSON_FRONT
-                : net.minecraft.client.CameraType.FIRST_PERSON));
+        net.minecraft.client.CameraType type = switch (mode) {
+            case "third" -> net.minecraft.client.CameraType.THIRD_PERSON_FRONT;
+            case "back" -> net.minecraft.client.CameraType.THIRD_PERSON_BACK;
+            default -> net.minecraft.client.CameraType.FIRST_PERSON;
+        };
+        mc.execute(() -> mc.options.setCameraType(type));
     }
 
     /** Открыть чат (как T). */
