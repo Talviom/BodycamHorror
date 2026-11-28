@@ -189,7 +189,7 @@
   "bh.cmd.tenant_attacks_how": "Tenant attacks %s (%s)",
   "bh.pack.overrides": "Bodycam Horror overrides",
   "bh.poster": "poster",
-  "bh.cmd.hospital_built": "Hospital built: 2 floors, inner courtyard, outbuilding with morgue, %s lamps, 2 breakers, 1 generator, 6 spawns per team, %s loot points (pairs), 2 exits, %s tape points (barrels for now). %s",
+  "bh.cmd.hospital_built": "Hospital built: 2 floors, inner courtyard, outbuilding with morgue, %s lamps, 2 breakers, 1 generator, 6 spawns per team, %s loot points (pairs), 2 exits, %s round-objective points (on furniture, in pairs). %s",
   "bh.room.xray": "X-ray",
   "bh.room.xray.2": "room",
   "bh.room.admissions": "Admissions",
