@@ -1,18 +1,33 @@
 {
   "variants": {
-    "facing=north": {
+    "facing=north,pulse=false": {
       "model": "bodycamhorror:block/tape_block"
     },
-    "facing=east": {
+    "facing=north,pulse=true": {
+      "model": "bodycamhorror:block/tape_block_pulse"
+    },
+    "facing=east,pulse=false": {
       "model": "bodycamhorror:block/tape_block",
       "y": 90
     },
-    "facing=south": {
+    "facing=east,pulse=true": {
+      "model": "bodycamhorror:block/tape_block_pulse",
+      "y": 90
+    },
+    "facing=south,pulse=false": {
       "model": "bodycamhorror:block/tape_block",
       "y": 180
     },
-    "facing=west": {
+    "facing=south,pulse=true": {
+      "model": "bodycamhorror:block/tape_block_pulse",
+      "y": 180
+    },
+    "facing=west,pulse=false": {
       "model": "bodycamhorror:block/tape_block",
+      "y": 270
+    },
+    "facing=west,pulse=true": {
+      "model": "bodycamhorror:block/tape_block_pulse",
       "y": 270
     }
   }

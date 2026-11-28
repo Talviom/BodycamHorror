@@ -80,3 +80,19 @@ clear Dev bodycamhorror:tape 0
 expect Found 1
 
 clear Dev
+
+# --- свечение в темноте (генератор выключен): глаз тлеет всегда, после звука проступает существо ---
+setblock 3026 115 3018 air
+setblock 3026 115 3018 bodycamhorror:generator[powered=false]
+setblock 3021 116 3025 bodycamhorror:tape_block[facing=south]
+tp Dev 3021.5 115 3027.6 180 25
+hud off
+wait 40
+shot 098_glow_calm
+setblock 3021 116 3025 bodycamhorror:tape_block[facing=south,pulse=true]
+wait 10
+shot 098_glow_pulse
+hud on
+setblock 3021 116 3025 air
+setblock 3026 115 3018 air
+setblock 3026 115 3018 bodycamhorror:generator[powered=true]

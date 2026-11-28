@@ -34,7 +34,9 @@ import java.util.UUID;
  * Команда, чей игрок донесёт колбу до выхода своей стороны (/bh exit set) и простоит там несколько секунд,
  * выигрывает раунд. Перебить другую команду по-прежнему тоже победа.
  *
- * Несущий: страх растёт; у него колба стучит так же редко, но если Жилец ближе 15 блоков, то часто и громко.
+ * Звук: удар телом о стекло или стон из колбы (на полу раз в 30-40 с, у несущего раз в ~15 с; рядом с Жильцом
+ * только удары и громче). Со звуком существо на пару секунд проступает светом, глаз тлеет всегда.
+ * Несущий: страх растёт.
  * Жилец чувствует колбу: несущий для него всегда «шумит» (TenantHearing), поэтому охотится он чаще на него.
  * Другие видят колбу у несущего за спиной (SpecimenSync, клиент: SpecimenBackLayer).
  * Если на карте нет выходов или точек, режим выключен и раунд идёт как раньше.
@@ -49,9 +51,9 @@ public final class TapeObjective {
     /** Стук на полу и у несущего без Жильца рядом: раз в 30-40 с. */
     private static final int KNOCK_MIN = 600;
     private static final int KNOCK_RAND = 200;
-    /** У несущего, когда Жилец ближе TENANT_NEAR блоков: раз в 3-6 с. */
-    private static final int KNOCK_NEAR_MIN = 60;
-    private static final int KNOCK_NEAR_RAND = 60;
+    /** У несущего: раз в ~15 с (решение пользователя 28.11: частые удары раздражали). */
+    private static final int CARRIER_KNOCK_MIN = 260;
+    private static final int CARRIER_KNOCK_RAND = 80;
     private static final double TENANT_NEAR = 15;
 
     private final Random rnd = new Random();
@@ -156,7 +158,7 @@ public final class TapeObjective {
         if (!holder.getUUID().equals(carrier)) {
             carrier = holder.getUUID();
             deliverTicks = 0;
-            nextCarrierKnock = ticks + KNOCK_MIN + rnd.nextInt(KNOCK_RAND);
+            nextCarrierKnock = ticks + CARRIER_KNOCK_MIN + rnd.nextInt(CARRIER_KNOCK_RAND);
             SpecimenSync.carrier(server, holder);
         } else if (ticks % 100 == 0) {
             SpecimenSync.carrier(server, holder); // вошедшие позже тоже увидят колбу за спиной
@@ -180,12 +182,11 @@ public final class TapeObjective {
         }
         boolean tenantNear = !level.getEntitiesOfClass(com.talviom.bodycamhorror.tenant.TenantEntity.class,
                 holder.getBoundingBox().inflate(TENANT_NEAR)).isEmpty();
-        if (tenantNear && nextCarrierKnock - ticks > KNOCK_NEAR_MIN + KNOCK_NEAR_RAND) {
-            nextCarrierKnock = ticks + KNOCK_NEAR_MIN / 2 + rnd.nextInt(KNOCK_NEAR_RAND);
-        }
         if (ticks >= nextCarrierKnock) {
-            nextCarrierKnock = ticks + (tenantNear ? KNOCK_NEAR_MIN + rnd.nextInt(KNOCK_NEAR_RAND) : KNOCK_MIN + rnd.nextInt(KNOCK_RAND));
-            knock(level, holder.position(), tenantNear ? 1.3f : 0.7f, holder);
+            nextCarrierKnock = ticks + CARRIER_KNOCK_MIN + rnd.nextInt(CARRIER_KNOCK_RAND);
+            // Рядом Жилец: существо бьётся телом о стекло (громче), иначе удар или стон вперемешку.
+            knock(level, holder.position(), tenantNear ? 1.2f : 0.8f, holder, tenantNear);
+            SpecimenSync.pulse(server, holder);
         }
 
         int need = Math.max(1, BhConfig.TAPE_DELIVER_SECONDS.get() * 20);
@@ -260,13 +261,16 @@ public final class TapeObjective {
     }
 
     private void knockOnGround(ServerLevel level) {
-        for (ItemEntity e : tapesOnGround(level)) knock(level, e.position(), 0.8f, null);
-        for (BlockPos p : tapeBlocks(level)) knock(level, Vec3.atCenterOf(p), 0.8f, null);
+        for (ItemEntity e : tapesOnGround(level)) knock(level, e.position(), 0.8f, null, false);
+        for (BlockPos p : tapeBlocks(level)) {
+            knock(level, Vec3.atCenterOf(p), 0.8f, null, false);
+            TapeBlock.pulse(level, p);
+        }
     }
 
     /** Существо стучит по стеклу. Жилец тоже слышит этот стук. */
-    private void knock(ServerLevel level, Vec3 at, float volume, ServerPlayer carrier) {
-        play(level, at, ModSounds.SPECIMEN_KNOCK.get(), volume, 0.85f + rnd.nextFloat() * 0.25f);
+    private void knock(ServerLevel level, Vec3 at, float volume, ServerPlayer carrier, boolean thumpOnly) {
+        play(level, at, (thumpOnly ? ModSounds.SPECIMEN_THUMP : ModSounds.SPECIMEN_KNOCK).get(), volume, 0.9f + rnd.nextFloat() * 0.15f);
         com.talviom.bodycamhorror.tenant.TenantHearing.noise(level, at, 2f, 20, carrier, false, "specimen_knock");
     }
 
@@ -378,6 +382,7 @@ public final class TapeObjective {
         placeTapeBlock(level, spot, level.getRandom().nextInt(4));
         // 0.9.8: колба упала, существо несколько секунд бьётся о стекло: место слышно всем и Жильцу.
         play(level, Vec3.atCenterOf(spot), ModSounds.SPECIMEN_FRENZY.get(), 1.6f, 1.0f);
+        TapeBlock.pulse(level, spot);
         com.talviom.bodycamhorror.tenant.TenantHearing.noise(level, Vec3.atCenterOf(spot), 3f, 28, null, false, "specimen_drop");
         return true;
     }

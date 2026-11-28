@@ -13,6 +13,11 @@ public final class SpecimenSync {
     private SpecimenSync() {}
 
     public static void carrier(MinecraftServer server, @Nullable ServerPlayer carrier) {
-        BhNetwork.CHANNEL.send(PacketDistributor.ALL.noArg(), new SpecimenCarrierPacket(carrier == null ? -1 : carrier.getId()));
+        BhNetwork.CHANNEL.send(PacketDistributor.ALL.noArg(), new SpecimenCarrierPacket(carrier == null ? -1 : carrier.getId(), false));
+    }
+
+    /** Колба у несущего подала звук: на пару секунд существо проступает светом и у него за спиной. */
+    public static void pulse(MinecraftServer server, ServerPlayer carrier) {
+        BhNetwork.CHANNEL.send(PacketDistributor.ALL.noArg(), new SpecimenCarrierPacket(carrier.getId(), true));
     }
 }

@@ -926,7 +926,12 @@
           ],
           "texture": "#eye"
         }
-      }
+      },
+      "forge_data": {
+        "block_light": 9,
+        "sky_light": 9
+      },
+      "shade": false
     },
     {
       "name": "arm",

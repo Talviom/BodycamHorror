@@ -45,6 +45,7 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> RADIO_OFF = register("radio_off");
     // 0.9.8, «ОБРАЗЕЦ №7» вместо кассеты (tools/assets/make_specimen_sfx.py)
     public static final RegistryObject<SoundEvent> SPECIMEN_KNOCK = register("specimen_knock");
+    public static final RegistryObject<SoundEvent> SPECIMEN_THUMP = register("specimen_thump");
     public static final RegistryObject<SoundEvent> SPECIMEN_FRENZY = register("specimen_frenzy");
     public static final RegistryObject<SoundEvent> SPECIMEN_PICKUP = register("specimen_pickup");
     public static final RegistryObject<SoundEvent> SPECIMEN_OUT = register("specimen_out");

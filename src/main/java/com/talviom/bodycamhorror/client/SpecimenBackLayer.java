@@ -25,14 +25,16 @@ import net.minecraftforge.fml.common.Mod;
  */
 public class SpecimenBackLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
     private static int carrierId = -1;
+    private static long pulseUntilMs;
     private static ItemStack stack;
 
     public SpecimenBackLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent) {
         super(parent);
     }
 
-    public static void setCarrier(int entityId) {
+    public static void setCarrier(int entityId, boolean pulse) {
         carrierId = entityId;
+        if (pulse) pulseUntilMs = System.currentTimeMillis() + 2500;
     }
 
     @Override
@@ -47,6 +49,13 @@ public class SpecimenBackLayer extends RenderLayer<AbstractClientPlayer, PlayerM
         pose.mulPose(Axis.YP.rotationDegrees(180));
         pose.mulPose(Axis.XP.rotationDegrees(-8));
         pose.scale(1.2f, -1.2f, -1.2f);
+        // Глаз тлеет сам (модель); после звука существо проступает: свет плавно гаснет за 2,5 с.
+        long left = pulseUntilMs - System.currentTimeMillis();
+        if (left > 0) {
+            int boost = Math.round(9f * Math.min(1f, left / 2500f));
+            int block = Math.max(net.minecraft.client.renderer.LightTexture.block(light), boost);
+            light = net.minecraft.client.renderer.LightTexture.pack(block, net.minecraft.client.renderer.LightTexture.sky(light));
+        }
         Minecraft.getInstance().getItemRenderer().renderStatic(stack, ItemDisplayContext.FIXED, light,
                 OverlayTexture.NO_OVERLAY, pose, buffers, player.level(), player.getId());
         pose.popPose();
