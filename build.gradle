@@ -144,6 +144,14 @@ dependencies {
     }
     if (project.hasProperty('bhFurniture')) {
         runtimeOnly fg.deobf('blank:mcw-furniture:3.4.1-mc1.20.1forge')
+        // 0.9.8: бочки MOAdecor SCIENCE под колбой в подвале. У jar пробелы в имени, поэтому копия в build/fpdev.
+        def moaSrc = file("${project.findProperty('bhGameMods') ?: 'D:/Minecraft/game/mods'}/MOAdecor SCIENCE 1.20.1.jar")
+        def moaOut = file("$buildDir/fpdev/moadecor-science-1.20.1.jar")
+        if (moaSrc.exists() && !moaOut.exists()) {
+            moaOut.parentFile.mkdirs()
+            java.nio.file.Files.copy(moaSrc.toPath(), moaOut.toPath())
+        }
+        runtimeOnly fg.deobf('blank:moadecor-science:1.20.1')
     }
 }
 
