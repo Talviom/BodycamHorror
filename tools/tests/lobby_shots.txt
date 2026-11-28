@@ -53,6 +53,9 @@ shot l10_console
 tp Dev 1950.5 120 2033.5 -90 0
 wait 40
 shot l10_gear_stand
+tp Dev 1947.5 120 2032.5 -90 -28
+wait 40
+shot l10_kit_lamp
 hud on
 wait 20
 shot l10_hud_folder

@@ -113,6 +113,8 @@ public final class LobbyTraining {
     // ---------- щиток угла ----------
 
     private static void emergency(ServerLevel level, MapData map) {
+        BlockPos kitLamp = map.lobbyPoint("emergency_kit");
+        if (kitLamp != null) FORCED_EMERGENCY.add(kitLamp);  // лампа над выдачей набора горит всегда
         BlockPos breaker = map.lobbyPoint("breaker");
         BlockPos lamp = map.lobbyPoint("emergency");
         if (breaker == null || lamp == null || !level.isLoaded(breaker)) return;

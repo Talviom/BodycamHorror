@@ -120,6 +120,7 @@ public final class LobbyBuilder {
         map.setLobbyPoint("exit", at(18, 0, 12));
         map.setLobbyPoint("breaker", at(19, 1, 13));
         map.setLobbyPoint("emergency", at(16, 4, 13));
+        map.setLobbyPoint("emergency_kit", at(1, 4, 12));
         map.setLobbyPoint("flicker", at(3, 4, 8));
         map.setLobbyPoint("radio", at(10, 1, 1));
         map.setLobbyPoint("min", base.offset(1, 0, 1));
@@ -188,6 +189,11 @@ public final class LobbyBuilder {
         set(15, 4, 11, ModBlocks.LAMP.get().defaultBlockState());
         set(18, 4, 11, ModBlocks.LAMP.get().defaultBlockState());
         set(16, 4, 13, ModBlocks.EMERGENCY_LAMP.get().defaultBlockState().setValue(EmergencyLampBlock.FLOOR, false));
+        // Над выдачей набора: аварийная лампа, которая горит всегда (просьба 2026-11-28: там было темно, и пусть
+        // видно, как она выглядит в матче), и невидимый свет 10, чтобы снаряжение и памятку было видно без фонаря.
+        set(1, 4, 12, ModBlocks.EMERGENCY_LAMP.get().defaultBlockState().setValue(EmergencyLampBlock.FLOOR, false)
+                .setValue(EmergencyLampBlock.LIT, true));
+        set(1, 2, 11, Blocks.LIGHT.defaultBlockState().setValue(net.minecraft.world.level.block.LightBlock.LEVEL, 10));
         // Потолочный вентилятор над столом инструктажа и камера наблюдения в дальнем углу.
         put(10, 4, 5, null, null, "yuushya:ceiling_fan");
         put(1, 4, 0, TO_NEAR, null, "yuushya:cctv_camera");
