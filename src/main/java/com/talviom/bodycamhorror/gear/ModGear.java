@@ -47,7 +47,7 @@ public final class ModGear {
     public static final RegistryObject<BlockEntityType<com.talviom.bodycamhorror.lobby.BriefSheetBlockEntity>> BRIEF_SHEET_BE = BLOCK_ENTITIES.register("brief_sheet",
             () -> BlockEntityType.Builder.of(com.talviom.bodycamhorror.lobby.BriefSheetBlockEntity::new, BRIEF_SHEET.get()).build(null));
 
-    /** Лобби: магнитофон, из которого играет музыка лобби (TapeRecorderBlock). */
+    /** Лобби: граммофон (id прежний, tape_recorder), из которого играет музыка лобби (TapeRecorderBlock). */
     public static final RegistryObject<Block> TAPE_RECORDER = BLOCKS.register("tape_recorder", () -> new com.talviom.bodycamhorror.lobby.TapeRecorderBlock(
             net.minecraft.world.level.block.state.BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.COLOR_BLACK)
                     .strength(1f).sound(net.minecraft.world.level.block.SoundType.METAL).noLootTable().noOcclusion()));

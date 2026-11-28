@@ -27,16 +27,15 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import javax.annotation.Nullable;
 
 /**
- * Лобби: старый кассетный магнитофон. Пока PLAYING и матч не идёт, из него играет музыка лобби «с плёнки»
- * (звук у каждого игрока свой, client/music/RecorderMusic). Щелчок по магнитофону ставит на паузу или включает.
- * Модель и текстуры: tools/assets/make_recorder.py.
+ * Лобби: старый граммофон с трубой (до 2026-11-28 был магнитофон, id блока остался tape_recorder, чтобы не ломать миры).
+ * Пока PLAYING и матч не идёт, из него играет музыка лобби (звук у каждого игрока свой, client/music/RecorderMusic),
+ * пластинка крутится (client/GramophoneRenderer). Щелчок ставит на паузу или включает.
+ * Модель и текстуры: tools/assets/make_gramophone.py.
  */
 public class TapeRecorderBlock extends HorizontalDirectionalBlock implements EntityBlock {
     public static final BooleanProperty PLAYING = BooleanProperty.create("playing");
-    private static final VoxelShape[] SHAPES = {
-            Block.box(1, 0, 5, 15, 8, 11), // north / south
-            Block.box(5, 0, 1, 11, 8, 15)  // east / west
-    };
+    /** Ящик и труба над ним (раструб чуть выходит за блок, но коробки хватает, чтобы по нему кликать). */
+    private static final VoxelShape SHAPE = Block.box(1.5, 0, 1.5, 14.5, 16, 14.5);
 
     public TapeRecorderBlock(Properties props) {
         super(props);
@@ -50,7 +49,7 @@ public class TapeRecorderBlock extends HorizontalDirectionalBlock implements Ent
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return SHAPES[state.getValue(FACING).getAxis() == Direction.Axis.Z ? 0 : 1];
+        return SHAPE;
     }
 
     @Nullable
@@ -65,7 +64,9 @@ public class TapeRecorderBlock extends HorizontalDirectionalBlock implements Ent
         if (!level.isClientSide) {
             boolean playing = !state.getValue(PLAYING);
             level.setBlock(pos, state.setValue(PLAYING, playing), 3);
-            level.playSound(null, pos, SoundEvents.STONE_BUTTON_CLICK_ON, SoundSource.BLOCKS, 0.5f, playing ? 1.3f : 0.9f);
+            // Иглу опускают или поднимают: тихий деревянный щелчок.
+            level.playSound(null, pos, playing ? SoundEvents.WOODEN_BUTTON_CLICK_ON : SoundEvents.WOODEN_BUTTON_CLICK_OFF,
+                    SoundSource.BLOCKS, 0.45f, playing ? 1.2f : 0.9f);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
@@ -80,6 +81,9 @@ public class TapeRecorderBlock extends HorizontalDirectionalBlock implements Ent
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         if (!level.isClientSide || type != ModGear.TAPE_RECORDER_BE.get()) return null;
-        return (lvl, pos, st, be) -> com.talviom.bodycamhorror.client.music.RecorderMusic.tick(lvl, pos, st);
+        return (lvl, pos, st, be) -> {
+            com.talviom.bodycamhorror.client.music.RecorderMusic.tick(lvl, pos, st);
+            if (be instanceof TapeRecorderBlockEntity g) g.spinTick(st);
+        };
     }
 }

@@ -277,7 +277,7 @@ public final class LobbyBuilder {
         put(9, 1, 6, TO_FAR, null, "modernxl_ii:pileofpaper", "yuushya:list");
         put(10, 1, 5, TO_NEAR, null, "moa_decor_science:portapapeles");
         put(11, 1, 6, TO_FAR, null, "yuushya:ashtray");
-        // Магнитофон посреди стола, в центре комнаты, чтобы музыку было слышно ровно по всему лобби
+        // Граммофон (блок tape_recorder) посреди стола, в центре комнаты, чтобы музыку было слышно ровно по всему лобби
         // (просьба 2026-11-28; раньше стоял у кофе в углу). TapeRecorderBlock, RecorderMusic.
         set(10, 1, 6, ModGear.TAPE_RECORDER.get().defaultBlockState().setValue(com.talviom.bodycamhorror.lobby.TapeRecorderBlock.FACING, TO_NEAR)
                 .setValue(com.talviom.bodycamhorror.lobby.TapeRecorderBlock.PLAYING, true));
