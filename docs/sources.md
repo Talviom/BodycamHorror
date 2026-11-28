@@ -13,7 +13,7 @@
 |---|---|---|---|---|
 | Меню | `menu.ogg` | Cold Silence (Eponasoft) | CC0 | https://opengameart.org/content/cold-silence |
 | Лобби, временно | `lobby.ogg` | Abandoned passages (congusbongus) | CC0 | https://opengameart.org/content/abandoned-passages-horror-ambience-loop |
-| Лобби, магнитофон | `lobby_tape.ogg` | Sadness (Kistol), выбран пользователем 2026-11-28; мягко «через плёнку» (ffmpeg: моно, полоса 90–6500 Гц, лёгкое плавание, тихий шип) | CC0 | https://opengameart.org/content/sadness |
+| Лобби, магнитофон | `lobby_tape.ogg` | November Snow (cynicmusic), выбран пользователем 2026-11-28; автор уже записал его через магнитофон, у нас только моно, плавные края петли, −18 LUFS | CC0 | https://opengameart.org/content/november-snow |
 | Начало раунда | `round_start_1..4.ogg` | Searching (yd), четыре отрывка | CC0 | https://opengameart.org/content/searching |
 | Конец матча, победа | `match_won.ogg` | Dark Intro (Nikke) | CC0 | https://opengameart.org/content/dark-intro |
 | Конец матча, поражение | `match_lost.ogg` | Menacing Otherworld (Ruskerdax) | CC0 | https://opengameart.org/content/menacing-otherworld |
