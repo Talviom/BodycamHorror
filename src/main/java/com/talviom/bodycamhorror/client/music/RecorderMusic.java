@@ -10,19 +10,24 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Клиент: музыка лобби из магнитофона (TapeRecorderBlock). Звук стоит в точке магнитофона и слышен в радиусе
- * около 16 блоков (громкость «Музыкальные блоки»). Пока магнитофон слышно, общая музыка лобби молчит (MusicDirector).
+ * Клиент: музыка лобби из магнитофона (TapeRecorderBlock). Магнитофон стоит в центре лобби; в радиусе FLAT
+ * (вся комната) громкость ровная, дальше до HEAR плавно стихает (громкость «Музыкальные блоки»). Пока магнитофон слышно, общая музыка лобби молчит (MusicDirector).
  * Вызывается только из тика блок-сущности на клиенте, поэтому серверу этот класс не нужен.
  */
 public final class RecorderMusic {
     public static final ResourceLocation TRACK = new ResourceLocation(BodycamHorror.MOD_ID, "music.lobby_tape");
-    private static final double HEAR = 18;
+    private static final double HEAR = 20;
+    /** Громкость (просьбы 2026-11-28: 0.4, потом ещё на 30% тише). */
+    private static final float VOLUME = 0.28f;
+    /** До этого расстояния громкость ровная (вся комната 20 x 14 от центра), дальше плавно стихает к HEAR. */
+    private static final double FLAT = 13;
     private static final Map<BlockPos, Loop> PLAYING = new HashMap<>();
     private static long heardAt;
 
@@ -54,6 +59,12 @@ public final class RecorderMusic {
         }
     }
 
+    private static float levelAt(double distSqr) {
+        double d = Math.sqrt(distSqr);
+        if (d <= FLAT) return VOLUME;
+        return (float) (VOLUME * Math.max(0, 1 - (d - FLAT) / (HEAR - FLAT)));
+    }
+
     /** Бесконечная петля в точке магнитофона; сама замолкает, если магнитофон убрали или выключили. */
     private static final class Loop extends AbstractTickableSoundInstance {
         private final BlockPos pos;
@@ -66,8 +77,9 @@ public final class RecorderMusic {
             this.level = level;
             this.looping = true;
             this.delay = 0;
-            this.volume = 0.28f;  // тише: просьбы 2026-11-28 (0.4, потом ещё на 30%) (дальность LINEAR остаётся 16 блоков)
-            this.attenuation = SoundInstance.Attenuation.LINEAR;
+            // Громкость считаем сами (tick): по всей комнате ровно, без затухания с расстоянием.
+            this.attenuation = SoundInstance.Attenuation.NONE;
+            this.volume = levelAt(Minecraft.getInstance().player == null ? 0 : Minecraft.getInstance().player.distanceToSqr(Vec3.atCenterOf(pos)));
             this.x = pos.getX() + 0.5;
             this.y = pos.getY() + 0.3;
             this.z = pos.getZ() + 0.5;
@@ -78,6 +90,8 @@ public final class RecorderMusic {
             age++;
             BlockState s = level.getBlockState(pos);
             if (!(s.getBlock() instanceof TapeRecorderBlock) || !s.getValue(TapeRecorderBlock.PLAYING) || !MusicDirector.lobbyTime()) finish();
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player != null) volume = levelAt(mc.player.distanceToSqr(Vec3.atCenterOf(pos)));
         }
 
         void finish() {

@@ -277,6 +277,10 @@ public final class LobbyBuilder {
         put(9, 1, 6, TO_FAR, null, "modernxl_ii:pileofpaper", "yuushya:list");
         put(10, 1, 5, TO_NEAR, null, "moa_decor_science:portapapeles");
         put(11, 1, 6, TO_FAR, null, "yuushya:ashtray");
+        // Магнитофон посреди стола, в центре комнаты, чтобы музыку было слышно ровно по всему лобби
+        // (просьба 2026-11-28; раньше стоял у кофе в углу). TapeRecorderBlock, RecorderMusic.
+        set(10, 1, 6, ModGear.TAPE_RECORDER.get().defaultBlockState().setValue(com.talviom.bodycamhorror.lobby.TapeRecorderBlock.FACING, TO_NEAR)
+                .setValue(com.talviom.bodycamhorror.lobby.TapeRecorderBlock.PLAYING, true));
         put(12, 1, 5, TO_NEAR, null, "modernxl_ii:laptop_close", "yuushya:laptop");
         put(13, 0, 5, TO_NEAR, null, "yuushya:wastepaper_basket");
         // Пульт «Запись»: тумба, на ней красная кнопка (её место в MapData: console).
@@ -317,9 +321,7 @@ public final class LobbyBuilder {
         set(6, 0, 13, furniture("mcwfurnitures:dark_oak_counter", TO_FAR, Blocks.SPRUCE_PLANKS.defaultBlockState()));
         set(7, 0, 13, furniture("mcwfurnitures:dark_oak_counter", TO_FAR, Blocks.SPRUCE_PLANKS.defaultBlockState()));
         set(7, 1, 13, mod(TO_NEAR, Blocks.BREWING_STAND.defaultBlockState(), "yuushya:coffee_machine"));
-        // Магнитофон на стойке у места появления: из него играет музыка лобби (TapeRecorderBlock, RecorderMusic).
-        set(6, 1, 13, ModGear.TAPE_RECORDER.get().defaultBlockState().setValue(com.talviom.bodycamhorror.lobby.TapeRecorderBlock.FACING, TO_FAR)
-                .setValue(com.talviom.bodycamhorror.lobby.TapeRecorderBlock.PLAYING, true));
+        put(6, 1, 13, TO_FAR, null, "yuushya:piled_paper_cups", "yuushya:paper_cup");
         put(8, 0, 13, TO_FAR, null, "yuushya:water_dispenser");
         // Табличка «Выход» над запертыми дверями и огнетушитель у места появления.
         put(9, 2, 13, TO_NEAR, null, "yuushya:exit_sign");
