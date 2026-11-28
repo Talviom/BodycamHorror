@@ -104,7 +104,7 @@ public final class HorrorDirector {
                 playTo(target, "bodycamhorror:radio_static", target.position(), 0.5f, 0.8f);
             }
             case BREATH -> playTo(target, "bodycamhorror:tenant_breath", target.position().add(behind(target).scale(1.2)).add(0, 1.4, 0), 0.9f, 0.9f);
-            case TAPE_HISS -> playTo(target, "bodycamhorror:tape_hiss", around(target, 5, 9), 0.8f, 0.85f + rnd.nextFloat() * 0.2f);
+            case TAPE_HISS -> playTo(target, "bodycamhorror:specimen_knock", around(target, 5, 9), 0.8f, 0.85f + rnd.nextFloat() * 0.2f);
             case DOOR -> playTo(target, "bodycamhorror:door_slam", around(target, 5, 9), 1.0f, 0.9f + rnd.nextFloat() * 0.15f);
             case METAL -> playTo(target, "bodycamhorror:metal_bang", around(target, 14, 22), 1.0f, 0.85f + rnd.nextFloat() * 0.25f);
             case CRY -> playTo(target, "bodycamhorror:far_cry", around(target, 16, 24), 1.0f, 0.9f + rnd.nextFloat() * 0.15f);

@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public final class BhNetwork {
     /** Меняется при изменении пакетов: клиент и сервер разных версий мода не соединятся. */
-    private static final String PROTOCOL = "9";
+    private static final String PROTOCOL = "10";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(BodycamHorror.MOD_ID, "main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 
@@ -44,6 +44,9 @@ public final class BhNetwork {
                 DeathFxPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(23, SpectateCyclePacket.class, SpectateCyclePacket::encode, SpectateCyclePacket::decode,
                 SpectateCyclePacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        // 0.9.8: кто несёт «ОБРАЗЕЦ №7» (колба у него за спиной), id 30, ветка specimen, PROTOCOL 10.
+        CHANNEL.registerMessage(30, SpecimenCarrierPacket.class, SpecimenCarrierPacket::encode, SpecimenCarrierPacket::decode,
+                SpecimenCarrierPacket::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(4, OpenInventoryPacket.class, OpenInventoryPacket::encode, OpenInventoryPacket::decode,
                 OpenInventoryPacket::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }

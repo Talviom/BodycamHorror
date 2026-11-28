@@ -12,7 +12,7 @@
 bh stop
 bh bot remove all
 execute positioned 1000 120 1000 run bh arena build
-expect tape points
+expect specimen points
 publish false adventure 25565
 expect 25565
 waitplayers 2 3600

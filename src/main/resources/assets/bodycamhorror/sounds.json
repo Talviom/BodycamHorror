@@ -254,5 +254,9 @@
     "sounds": [
       "bodycamhorror:death_static"
     ]
-  }
+  },
+  "specimen_knock": { "sounds": ["bodycamhorror:specimen_knock1", "bodycamhorror:specimen_knock2", "bodycamhorror:specimen_knock3"] },
+  "specimen_frenzy": { "sounds": ["bodycamhorror:specimen_frenzy"] },
+  "specimen_pickup": { "sounds": ["bodycamhorror:specimen_pickup"] },
+  "specimen_out": { "sounds": ["bodycamhorror:specimen_out"] }
 }

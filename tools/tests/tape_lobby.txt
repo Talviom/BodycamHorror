@@ -10,7 +10,7 @@
 bh stop
 bh bot remove all
 execute positioned 1000 120 1000 run bh arena build
-expect tape points
+expect specimen points
 expect Lobby built at 988, 120, 1004
 
 # --- лобби: боты на площадках команд, скины видны ---
@@ -50,7 +50,7 @@ wait 10
 shot 060_ui_chat_banner
 screen close
 bh status
-expect Tape points: 4
+expect Specimen points: 4
 reject Lobby: none
 bh skip
 expect prep -> live
@@ -90,7 +90,7 @@ execute as Dev run bh horror fear 0
 
 # --- кассета: /bh tape test кладёт её в случайную точку ---
 bh tape test
-expect Tape dropped at
+expect Specimen placed at
 
 # --- плита выхода Alpha ---
 tp Dev 1004.5 121.4 1006.5 180 62

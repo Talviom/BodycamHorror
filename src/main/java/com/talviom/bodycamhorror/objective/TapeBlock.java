@@ -19,14 +19,15 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * 0.9 (пункт 16): кассета, лежащая в мире, это блок с 3D-моделью VHS-кассеты, а не плоский предмет на полу.
- * Лежит на мебели (точки кассеты) или на полу, куда её уронили (смерть несущего, выброс на G).
+ * Цель раунда, лежащая в мире: с 0.9.8 это колба «ОБРАЗЕЦ №7» (существо в кровяной мути), до этого была VHS-кассета;
+ * id блока tape_block и предмета tape оставлены прежними. Модель: tools/assets/make_specimen.py.
+ * Стоит на мебели (точки цели) или на полу, куда её уронили (смерть несущего, выброс на G).
  * Подобрать: ПКМ пустой рукой или F с оружием в руках (клавиша взаимодействия TACZ, тег interact_key/whitelist).
- * Сама по себе блок ничего не роняет и не ломается: забрать её можно только подбором.
+ * Сам блок ничего не роняет и не ломается: забрать колбу можно только подбором.
  */
 public class TapeBlock extends HorizontalDirectionalBlock {
-    private static final VoxelShape NS = Block.box(3, 0, 5, 13, 2, 11);
-    private static final VoxelShape EW = Block.box(5, 0, 3, 11, 2, 13);
+    private static final VoxelShape NS = Block.box(4, 0, 4, 12, 14, 12);
+    private static final VoxelShape EW = NS;
 
     public TapeBlock(Properties props) {
         super(props);

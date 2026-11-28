@@ -43,6 +43,11 @@ public final class ModSounds {
     // 0.9, рация на Z (tools/assets/make_radio.py)
     public static final RegistryObject<SoundEvent> RADIO_ON = register("radio_on");
     public static final RegistryObject<SoundEvent> RADIO_OFF = register("radio_off");
+    // 0.9.8, «ОБРАЗЕЦ №7» вместо кассеты (tools/assets/make_specimen_sfx.py)
+    public static final RegistryObject<SoundEvent> SPECIMEN_KNOCK = register("specimen_knock");
+    public static final RegistryObject<SoundEvent> SPECIMEN_FRENZY = register("specimen_frenzy");
+    public static final RegistryObject<SoundEvent> SPECIMEN_PICKUP = register("specimen_pickup");
+    public static final RegistryObject<SoundEvent> SPECIMEN_OUT = register("specimen_out");
     // 0.9.x интерфейс: экран гаснет при смерти (tools/assets/make_deathfx.py)
     public static final RegistryObject<SoundEvent> CRT_OFF = register("crt_off");
     public static final RegistryObject<SoundEvent> DEATH_STATIC = register("death_static");

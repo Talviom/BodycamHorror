@@ -14,17 +14,32 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
  * такой предмет не исчезает на земле, и подобрать его во время матча может только живой игрок.
  */
 public class TapeEvents {
+    /** Выпавшие колбы-предметы, которые на следующем тике станут 3D-блоком. */
+    private final java.util.List<ItemEntity> pending = new java.util.ArrayList<>();
+
     @SubscribeEvent
     public void onTapeJoinLevel(EntityJoinLevelEvent e) {
         if (e.getLevel().isClientSide()) return;
         if (!(e.getEntity() instanceof ItemEntity item) || !TapeObjective.isTape(item.getItem())) return;
-        // 0.9: выпавшая кассета (смерть, выброс на G) ложится на пол той же 3D-моделью, а не плоским предметом.
-        if (!e.loadedFromDisk() && e.getLevel() instanceof net.minecraft.server.level.ServerLevel sl
-                && item.getItem().getCount() == 1 && TapeObjective.dropAsBlock(sl, item)) {
-            e.setCanceled(true);
-            return;
-        }
         TapeObjective.protect(item);
+        // 0.9: выпавшая колба (смерть, выброс на G) ложится той же 3D-моделью, а не плоским предметом.
+        // 0.9.8: не сразу, а на следующем тике: команда /give бросает «ненастоящий» предмет для анимации
+        // (makeFakeItem уже после появления в мире), из него не должна вырастать вторая колба на полу.
+        if (!e.loadedFromDisk()) pending.add(item);
+    }
+
+    @SubscribeEvent
+    public void onTapePendingTick(net.minecraftforge.event.TickEvent.ServerTickEvent e) {
+        if (e.phase != net.minecraftforge.event.TickEvent.Phase.END || pending.isEmpty()) return;
+        java.util.List<ItemEntity> now = new java.util.ArrayList<>(pending);
+        pending.clear();
+        for (ItemEntity item : now) {
+            // Ненастоящий предмет /give живёт один тик (возраст почти предельный) или уже исчез.
+            if (!item.isAlive() || item.getAge() >= 5990 || item.getItem().getCount() != 1) continue;
+            if (item.level() instanceof net.minecraft.server.level.ServerLevel sl && TapeObjective.dropAsBlock(sl, item)) {
+                item.discard();
+            }
+        }
     }
 
     @SubscribeEvent

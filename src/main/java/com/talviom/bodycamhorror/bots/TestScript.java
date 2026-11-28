@@ -154,8 +154,9 @@ public final class TestScript {
                 boolean hold = line.substring(4).trim().equals("on");
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.holdUse(hold));
             } else if (line.startsWith("view ")) {
-                boolean third = line.substring(5).trim().equals("third");
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.view(third));
+                // view first | third (камера спереди) | back (камера за спиной, 0.9.8)
+                String mode = line.substring(5).trim();
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientShots.view(mode));
             } else if (line.startsWith("press ")) {
                 String label = line.substring(6).trim();
                 BodycamHorror.LOGGER.info(PREFIX + "> " + line);
