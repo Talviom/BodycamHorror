@@ -46,7 +46,7 @@ import java.util.Random;
  * (x, z) -> (88 - x, 60 - z). Команда A (запад) в приёмном покое, команда B (восток) на кухне у служебного входа.
  *
  * Строится всё, кроме мебели: её ставит пользователь. Особые комнаты подписаны табличками (текст из lang-файлов),
- * точки лута помечены табличками, места кассеты бочками (после мебели точки кассеты ставятся заново).
+ * точки лута помечены табличками, под целью раунда (12 мест, по 6 на этаж, парами) стоит мебель.
  */
 public final class HospitalBuilder {
     private static final int CX = 88;   // для отражения: x -> CX - x
@@ -1101,15 +1101,25 @@ public final class HospitalBuilder {
         map.setExit(BhTeam.ALPHA, alphaExit);
         map.setExit(BhTeam.BRAVO, bravoExit);
 
-        // Кассета: 12 мест на средней линии (x около 44) между выходами. Пока там бочки: пользователь ставит на их место
-        // свою мебель, после этого точки ставятся заново командой /bh tape add.
-        int[][] tape = {
-                {51, -3, -4}, {51, -3, 2}, {38, 0, 2}, {44, 0, -3}, {44, 0, 6}, {41, 5, 10},
-                {47, 5, 10}, {38, 0, 30}, {50, 0, 30}, {44, 0, 41}, {46, 5, 51}, {44, 0, 57}};
-        for (int[] t : tape) {
-            set(t[0], t[1] + 1, t[2], AIR);
-            set(t[0], t[1], t[2], Blocks.BARREL.defaultBlockState());
-            map.tapePoints().add(p(t[0], t[1], t[2]));
+        // Цель раунда (кассета, с 0.9.8 колба «ОБРАЗЕЦ №7»): 12 мест, по 6 на этаж, тремя парами на этаж.
+        // Вторая точка пары повёрнута на 180° вокруг (44, 30), как лут, поэтому путь от своего выхода до точки
+        // у обеих команд одинаковый. Под колбой мебель из Macaw's (без мода бочка), колба встаёт на неё сверху.
+        // В узких коридорах точек нет. Если пользователь расставит свою мебель, точки ставятся заново: /bh tape clear, add.
+        Object[][] goal = {
+                {20, 0, 11, "mcwfurnitures:dark_oak_double_drawer"},  // изолятор <-> архив
+                {32, 0, 50, "mcwfurnitures:dark_oak_desk"},           // регистратура <-> сестринская
+                {29, 0, 20, "mcwfurnitures:spruce_counter"},          // лаборатория <-> бельевая
+                {15, 5, 11, "mcwfurnitures:spruce_drawer"},           // палата 1 <-> палата 11
+                {30, 5, 49, "mcwfurnitures:dark_oak_counter"},        // пост медсестры <-> стерилизационная
+                {33, 5, 19, "mcwfurnitures:spruce_drawer"}};          // палата 13 <-> палата 7
+        for (Object[] g : goal) {
+            int x = (int) g[0], y = (int) g[1], z = (int) g[2];
+            BlockState f = furniture((String) g[3]);
+            for (int[] t : new int[][]{{x, z}, {CX - x, CZ - z}}) {
+                set(t[0], y + 1, t[1], AIR);
+                set(t[0], y, t[1], f);
+                map.tapePoints().add(p(t[0], y, t[1]));
+            }
         }
         map.setTenantHome(p(53, -3, -3));
         map.setDirty();
@@ -1117,6 +1127,13 @@ public final class HospitalBuilder {
     }
 
     // ---------- помощники ----------
+
+    /** Мебель из модов сборки; без мода (dev-клиент) вместо неё бочка, колба на ней стоит так же. */
+    private static BlockState furniture(String id) {
+        Block b = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(new net.minecraft.resources.ResourceLocation(id));
+        if (b == null || b == Blocks.AIR) return Blocks.BARREL.defaultBlockState();
+        return b.defaultBlockState();
+    }
 
     /** Пересчёт соединений решёток, стёкол и заборов после постройки. */
     private void reconnect() {
