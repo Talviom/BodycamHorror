@@ -66,7 +66,7 @@ public final class RecorderMusic {
             this.level = level;
             this.looping = true;
             this.delay = 0;
-            this.volume = 0.4f;  // тише: просьба 2026-11-28 (дальность LINEAR остаётся 16 блоков)
+            this.volume = 0.28f;  // тише: просьбы 2026-11-28 (0.4, потом ещё на 30%) (дальность LINEAR остаётся 16 блоков)
             this.attenuation = SoundInstance.Attenuation.LINEAR;
             this.x = pos.getX() + 0.5;
             this.y = pos.getY() + 0.3;
